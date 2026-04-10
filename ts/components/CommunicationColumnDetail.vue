@@ -91,13 +91,7 @@ interface Props {
 
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
-const nuisance = computed(() => {
-	return props.selectedCommunication?.public_report?.nuisance || null;
-});
 const session = useSessionStore();
-const water = computed(() => {
-	return props.selectedCommunication?.public_report?.water || null;
-});
 function openPhotoViewer(index: number) {
 	emit("viewImage", index);
 }

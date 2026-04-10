@@ -45,7 +45,7 @@
 					id="contact-name"
 					name="name"
 					placeholder="Enter your name"
-					v-model="modelValue.contact.name"
+					v-model="modelValue.reporter.name"
 				/>
 			</div>
 
@@ -61,7 +61,7 @@
 					id="contact-phone"
 					name="phone"
 					placeholder="(555) 123-4567"
-					v-model="modelValue.contact.phone"
+					v-model="modelValue.reporter.phone"
 				/>
 			</div>
 
@@ -72,7 +72,7 @@
 						class="form-check-input"
 						type="checkbox"
 						id="can-text"
-						v-model="modelValue.contact.can_text"
+						v-model="modelValue.reporter.can_text"
 					/>
 					<label class="form-check-label" for="can-text">
 						You may send text messages to this number
@@ -94,7 +94,7 @@
 					class="form-control"
 					id="contact-email"
 					placeholder="your.email@example.com"
-					v-model="modelValue.contact.email"
+					v-model="modelValue.reporter.email"
 				/>
 				<div class="form-text">
 					We'll send you a confirmation and any updates about this request
@@ -125,10 +125,9 @@
 import { ref } from "vue";
 
 import { router } from "@/rmo/router";
-import type { District } from "@/type/api";
+import type { District, PublicReport } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
-import type { Compliance } from "@/rmo/view/Compliance.vue";
 
 export interface Contact {
 	name: string;
@@ -138,11 +137,11 @@ export interface Contact {
 }
 interface Emits {
 	(e: "doContact"): void;
-	(e: "update:modelValue", value: Compliance): void;
+	(e: "update:modelValue", value: PublicReport): void;
 }
 interface Props {
 	district: District;
-	modelValue: Compliance;
+	modelValue: PublicReport;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();

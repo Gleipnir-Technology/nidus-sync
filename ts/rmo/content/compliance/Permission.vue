@@ -84,7 +84,7 @@
 								type="radio"
 								id="access-allowed"
 								:value="PermissionAccess.GRANTED"
-								v-model="modelValue.permission.access"
+								v-model="modelValue.access"
 								class="mt-1"
 							/>
 							<label for="access-allowed">
@@ -99,8 +99,7 @@
 					<!-- Conditional fields for Option 1 -->
 					<div
 						v-if="
-							modelValue.permission.access &&
-							modelValue.permission.access == PermissionAccess.GRANTED
+							modelValue.access && modelValue.access == PermissionAccess.GRANTED
 						"
 						class="conditional-section"
 					>
@@ -115,7 +114,7 @@
 								name="access_instructions"
 								placeholder="Example: Side gate on left, backyard near shed..."
 								rows="3"
-								v-model="modelValue.permission.access_instructions"
+								v-model="modelValue.access_instructions"
 							></textarea>
 						</div>
 
@@ -130,7 +129,7 @@
 								name="gate_code"
 								placeholder="Enter code if applicable"
 								type="text"
-								v-model="modelValue.permission.gate_code"
+								v-model="modelValue.gate_code"
 							/>
 						</div>
 
@@ -141,7 +140,7 @@
 									type="checkbox"
 									name="has_dog"
 									id="has_dog"
-									v-model="modelValue.permission.has_dog"
+									v-model="modelValue.has_dog"
 								/>
 								<label class="form-check-label" for="has_dog"
 									>Dog on Property?</label
@@ -149,7 +148,7 @@
 							</div>
 						</div>
 
-						<div class="dog-warning" v-if="modelValue.permission.has_dog">
+						<div class="dog-warning" v-if="modelValue.has_dog">
 							<small>
 								<i class="bi bi-exclamation-triangle"></i>
 								<strong>Important:</strong> Our staff will only enter if the dog
@@ -166,7 +165,7 @@
 								type="radio"
 								id="access-with-owner"
 								:value="PermissionAccess.WITH_OWNER"
-								v-model="modelValue.permission.access"
+								v-model="modelValue.access"
 								class="mt-1"
 							/>
 							<label for="access-with-owner">
@@ -182,8 +181,8 @@
 					<div
 						class="conditional-section"
 						v-if="
-							modelValue.permission.access &&
-							modelValue.permission.access == PermissionAccess.WITH_OWNER
+							modelValue.access &&
+							modelValue.access == PermissionAccess.WITH_OWNER
 						"
 					>
 						<div class="form-check mb-3">
@@ -192,7 +191,7 @@
 								type="checkbox"
 								id="request_scheduled"
 								name="request_scheduled"
-								v-model="modelValue.permission.wants_scheduled"
+								v-model="modelValue.wants_scheduled"
 							/>
 							<label class="form-check-label" for="request_scheduled">
 								I would like to request a scheduled visit
@@ -221,7 +220,7 @@
 								type="radio"
 								id="access-denied"
 								:value="PermissionAccess.DENIED"
-								v-model="modelValue.permission.access"
+								v-model="modelValue.access"
 								class="mt-1"
 							/>
 							<label for="access-denied">
@@ -237,8 +236,7 @@
 					<div
 						class="conditional-section"
 						v-if="
-							modelValue.permission.access &&
-							modelValue.permission.access == PermissionAccess.DENIED
+							modelValue.access && modelValue.access == PermissionAccess.DENIED
 						"
 					>
 						<div class="encouragement-box">
@@ -284,24 +282,19 @@ import { ref } from "vue";
 import { router } from "@/rmo/router";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
-import { type District, PermissionAccess } from "@/type/api";
-import type { Compliance } from "@/rmo/view/Compliance.vue";
+import {
+	type District,
+	PermissionAccess,
+	PublicReportCompliance,
+} from "@/type/api";
 
 interface Emits {
 	(e: "doPermission"): void;
-	(e: "update:modelValue", value: Compliance): void;
-}
-export interface Permission {
-	access?: PermissionAccess;
-	access_instructions: string;
-	availability_notes: string;
-	gate_code: string;
-	has_dog: boolean;
-	wants_scheduled: boolean;
+	(e: "update:modelValue", value: PublicReportCompliance): void;
 }
 interface Props {
 	district: District;
-	modelValue: Compliance;
+	modelValue: PublicReportCompliance;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();

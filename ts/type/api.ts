@@ -22,10 +22,29 @@ export interface Bounds {
 	min: Location;
 	max: Location;
 }
-export interface Contact {
+export interface ContactOptions {
+	can_text?: boolean;
+	email?: string;
 	has_email: boolean;
 	has_phone: boolean;
 	name?: string;
+	phone?: string;
+}
+export class Contact {
+	can_text?: boolean;
+	email?: string;
+	has_email: boolean;
+	has_phone: boolean;
+	name?: string;
+	phone?: string;
+	constructor(options?: ContactOptions) {
+		this.can_text = options?.can_text ?? false;
+		this.email = options?.email ?? "";
+		this.has_email = options?.has_email ?? false;
+		this.has_phone = options?.has_phone ?? false;
+		this.name = options?.name ?? "";
+		this.phone = options?.phone ?? "";
+	}
 }
 export interface District {
 	name: string;
@@ -114,7 +133,124 @@ export interface Image {
 	url_content: string;
 	uuid: string;
 }
-export interface Nuisance {
+export interface ComplianceUpdate {
+	address?: Address;
+	comments?: string;
+	contact?: Contact;
+	//id: string;
+	//images?: Image[];
+	location?: Location;
+	permission?: Permissions;
+	//uri: string;
+}
+export interface PublicReportDTO {
+	address: Address;
+	//compliance?: PublicReportCompliance;
+	created: string;
+	district: string;
+	id: string;
+	images: Image[];
+	location: Location;
+	log: LogEntryDTO[];
+	//nuisance?: Nuisance;
+	reporter: Contact;
+	status: string;
+	type: string;
+	//water?: Water;
+	uri: string;
+}
+export interface PublicReportOptions {
+	address: Address;
+	created: Date;
+	district: string;
+	id: string;
+	images: Image[];
+	location: Location;
+	log: LogEntry[];
+	reporter: Contact;
+	status: string;
+	type: string;
+	uri: string;
+}
+export interface PublicReportComplianceDTO {
+	access?: PermissionAccess;
+	access_instructions: string;
+	availability_notes: string;
+	comments: string;
+	gate_code: string;
+	has_dog: boolean;
+	wants_scheduled: boolean;
+}
+export class PublicReport {
+	address: Address;
+	created: Date;
+	district: string;
+	id: string;
+	images: Image[];
+	log: LogEntry[];
+	reporter: Contact;
+	status: string;
+	type: string;
+	uri: string;
+	location?: Location;
+	constructor(options?: PublicReportOptions) {
+		this.address = options?.address ?? new Address();
+		this.created = options?.created ?? new Date();
+		this.district = options?.district ?? "";
+		this.id = options?.id ?? "";
+		this.images = options?.images ?? [];
+		this.log = options?.log ?? [];
+		this.reporter = options?.reporter ?? new Contact();
+		this.status = options?.status ?? "";
+		this.type = options?.type ?? "";
+		this.uri = options?.uri ?? "";
+		this.location = options?.location ?? new Location();
+	}
+	static fromJSON(json: PublicReportDTO): PublicReport {
+		return new PublicReport({
+			address: json.address,
+			created: new Date(json.created),
+			district: json.district,
+			id: json.id,
+			images: json.images,
+			location: json.location,
+			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
+			reporter: json.reporter,
+			status: json.status,
+			type: json.type,
+			uri: json.uri,
+		});
+	}
+}
+export interface PublicReportComplianceOptions extends PublicReportOptions {
+	access?: PermissionAccess;
+	access_instructions: string;
+	availability_notes: string;
+	comments: string;
+	gate_code: string;
+	has_dog: boolean;
+	wants_scheduled: boolean;
+}
+export class PublicReportCompliance extends PublicReport {
+	access?: PermissionAccess;
+	access_instructions: string;
+	availability_notes: string;
+	comments: string;
+	gate_code: string;
+	has_dog: boolean;
+	wants_scheduled: boolean;
+	constructor(options?: PublicReportComplianceOptions) {
+		super(options);
+		this.access = options?.access;
+		this.access_instructions = options?.access_instructions ?? "";
+		this.availability_notes = options?.availability_notes ?? "";
+		this.comments = options?.comments ?? "";
+		this.gate_code = options?.gate_code ?? "";
+		this.has_dog = options?.has_dog ?? false;
+		this.wants_scheduled = options?.wants_scheduled ?? false;
+	}
+}
+export interface PublicReportNuisanceOptions extends PublicReportOptions {
 	additional_info: string;
 	duration: string;
 	is_location_backyard: boolean;
@@ -131,7 +267,43 @@ export interface Nuisance {
 	time_of_day_evening: boolean;
 	time_of_day_night: boolean;
 }
-export interface Water {
+export class PublicReportNuisance extends PublicReport {
+	additional_info: string;
+	duration: string;
+	is_location_backyard: boolean;
+	is_location_frontyard: boolean;
+	is_location_garden: boolean;
+	is_location_other: boolean;
+	is_location_pool: boolean;
+	source_container: boolean;
+	source_description: string;
+	source_gutter: boolean;
+	source_stagnant: boolean;
+	time_of_day_day: boolean;
+	time_of_day_early: boolean;
+	time_of_day_evening: boolean;
+	time_of_day_night: boolean;
+	constructor(options: PublicReportNuisanceOptions) {
+		super(options);
+		this.additional_info = options.additional_info;
+		this.duration = options.duration;
+		this.is_location_backyard = options.is_location_backyard;
+		this.is_location_frontyard = options.is_location_frontyard;
+		this.is_location_garden = options.is_location_garden;
+		this.is_location_other = options.is_location_other;
+		this.is_location_pool = options.is_location_pool;
+		this.source_container = options.source_container;
+		this.source_description = options.source_description;
+		this.source_gutter = options.source_gutter;
+		this.source_stagnant = options.source_stagnant;
+		this.time_of_day_day = options.time_of_day_day;
+		this.time_of_day_early = options.time_of_day_early;
+		this.time_of_day_evening = options.time_of_day_evening;
+		this.time_of_day_night = options.time_of_day_night;
+	}
+}
+
+export interface PublicReportWaterOptions extends PublicReportOptions {
 	access_comments: string;
 	access_gate: boolean;
 	access_fence: boolean;
@@ -147,55 +319,65 @@ export interface Water {
 	is_reporter_owner: boolean;
 	owner: Contact;
 }
-export interface PublicReportDTO {
-	address: Address;
-	created: string;
-	district: string;
-	id: string;
-	images: Image[];
-	location: Location;
-	log: LogEntryDTO[];
-	nuisance: Nuisance;
-	reporter: Contact;
-	status: string;
-	type: string;
-	water: Water;
-	uri: string;
-}
-export class PublicReport {
-	constructor(
-		public address: Address,
-		public created: Date,
-		public district: string,
-		public id: string,
-		public images: Image[],
-		public log: LogEntry[],
-		public reporter: Contact,
-		public status: string,
-		public type: string,
-		public uri: string,
-		public location?: Location,
-		public nuisance?: Nuisance,
-		public water?: Water,
-	) {}
-	static fromJSON(json: PublicReportDTO): PublicReport {
-		return new PublicReport(
-			json.address,
-			new Date(json.created),
-			json.district,
-			json.id,
-			json.images,
-			json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
-			json.reporter,
-			json.status,
-			json.type,
-			json.uri,
-			json.location,
-			json.nuisance,
-			json.water,
-		);
+export class PublicReportWater extends PublicReport {
+	access_comments: string;
+	access_gate: boolean;
+	access_fence: boolean;
+	access_locked: boolean;
+	access_dog: boolean;
+	access_other: boolean;
+	comments: string;
+	has_adult: boolean;
+	has_backyard_permission: boolean;
+	has_larvae: boolean;
+	has_pupae: boolean;
+	is_reporter_confidential: boolean;
+	is_reporter_owner: boolean;
+	owner: Contact;
+	constructor(options: PublicReportWaterOptions) {
+		super(options);
+		this.access_comments = options.access_comments;
+		this.access_gate = options.access_gate;
+		this.access_fence = options.access_fence;
+		this.access_locked = options.access_locked;
+		this.access_dog = options.access_dog;
+		this.access_other = options.access_other;
+		this.comments = options.comments;
+		this.has_adult = options.has_adult;
+		this.has_backyard_permission = options.has_backyard_permission;
+		this.has_larvae = options.has_larvae;
+		this.has_pupae = options.has_pupae;
+		this.is_reporter_confidential = options.is_reporter_confidential;
+		this.is_reporter_owner = options.is_reporter_owner;
+		this.owner = options.owner;
 	}
 }
+/*
+	address: new Address(),
+	comments: "",
+	contact: {
+		name: "",
+		phone: "",
+		can_text: true,
+		email: "",
+	},
+	id: "",
+	images: [],
+	location: {
+		latitude: 0,
+		longitude: 0,
+	},
+	permission: {
+		access: PermissionAccess.UNSELECTED,
+		access_instructions: "",
+		availability_notes: "",
+		gate_code: "",
+		has_dog: false,
+		wants_scheduled: false,
+	},
+	uri: "",
+});
+*/
 export interface CommunicationDTO {
 	created: string;
 	id: string;

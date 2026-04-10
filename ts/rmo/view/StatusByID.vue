@@ -94,8 +94,8 @@
 					</div>
 				</div>
 				<NuisanceReportDetail
-					:nuisance="report.nuisance"
-					v-if="report.nuisance"
+					:nuisance="report as PublicReportNuisance"
+					v-if="report instanceof PublicReportNuisance"
 				/>
 			</div>
 		</div>
@@ -151,7 +151,7 @@ import NuisanceReportDetail from "@/rmo/components/NuisanceReportDetail.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
-import type { District, PublicReport } from "@/type/api";
+import { type District, PublicReport, PublicReportNuisance } from "@/type/api";
 import { formatReportID, formatTimeRelative } from "@/format";
 
 // Props

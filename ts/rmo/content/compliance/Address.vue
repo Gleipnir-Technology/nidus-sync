@@ -30,20 +30,19 @@
 import { computed, ref } from "vue";
 
 import { router } from "@/rmo/router";
-import type { District } from "@/type/api";
+import type { District, PublicReport } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
-import { Compliance } from "@/rmo/view/Compliance.vue";
 import { Camera } from "@/type/map";
 
 interface Emits {
 	(e: "doAddress"): void;
-	(e: "update:modelValue", value: Compliance): void;
+	(e: "update:modelValue", value: PublicReport): void;
 }
 interface Props {
 	district: District;
-	modelValue: Compliance;
+	modelValue: PublicReport;
 }
 const emit = defineEmits<Emits>();
 const error = ref<string>("");

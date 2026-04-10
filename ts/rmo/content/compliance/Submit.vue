@@ -155,25 +155,21 @@
 						<div class="summary-value">
 							<span
 								class="status-badge status-provided"
-								v-if="modelValue.permission?.access == PermissionAccess.GRANTED"
+								v-if="modelValue.access == PermissionAccess.GRANTED"
 							>
 								<i class="bi bi-check-circle"></i> Entry permitted without owner
 								present
 							</span>
 							<span
 								class="status-badge status-provided"
-								v-else-if="
-									modelValue.permission?.access == PermissionAccess.WITH_OWNER
-								"
+								v-else-if="modelValue.access == PermissionAccess.WITH_OWNER"
 							>
 								<i class="bi bi-check-circle"></i> Entry permitted with owner
 								present
 							</span>
 							<span
 								class="status-badge status-not-provided"
-								v-else-if="
-									modelValue.permission?.access == PermissionAccess.DENIED
-								"
+								v-else-if="modelValue.access == PermissionAccess.DENIED"
 							>
 								<i class="bi bi-x-circle"></i> Entry denied
 							</span>
@@ -189,8 +185,8 @@
 					<h3><i class="bi bi-person"></i> Contact Information</h3>
 					<div class="summary-item">
 						<div class="summary-label">Name</div>
-						<div class="summary-value" v-if="modelValue.contact?.name">
-							{{ modelValue.contact.name }}
+						<div class="summary-value" v-if="modelValue.reporter?.name">
+							{{ modelValue.reporter.name }}
 						</div>
 						<div class="summary-value status-badge status-not-provided" v-else>
 							<i class="bi bi-x-circle"></i> Not provided
@@ -198,9 +194,9 @@
 					</div>
 					<div class="summary-item">
 						<div class="summary-label">Phone</div>
-						<div class="summary-value" v-if="modelValue.contact?.phone">
-							{{ modelValue.contact.phone }}
-							<small class="text-muted" v-if="modelValue.contact?.can_text"
+						<div class="summary-value" v-if="modelValue.reporter?.phone">
+							{{ modelValue.reporter.phone }}
+							<small class="text-muted" v-if="modelValue.reporter?.can_text"
 								>(texting OK)</small
 							>
 						</div>
@@ -210,8 +206,8 @@
 					</div>
 					<div class="summary-item">
 						<div class="summary-label">Email</div>
-						<div class="summary-value" v-if="modelValue.contact?.email">
-							{{ modelValue.contact?.email }}
+						<div class="summary-value" v-if="modelValue.reporter?.email">
+							{{ modelValue.reporter?.email }}
 						</div>
 						<div class="summary-value status-badge status-not-provided" v-else>
 							<i class="bi bi-x-circle"></i> Not provided
@@ -244,14 +240,17 @@
 import { router } from "@/rmo/router";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
-import { type District, PermissionAccess } from "@/type/api";
-import type { Compliance } from "@/rmo/view/Compliance.vue";
+import {
+	type District,
+	PermissionAccess,
+	PublicReportCompliance,
+} from "@/type/api";
 
 interface Emits {
 	(e: "doSubmit"): void;
 }
 interface Props {
-	modelValue: Compliance;
+	modelValue: PublicReportCompliance;
 	district: District;
 }
 const emit = defineEmits<Emits>();

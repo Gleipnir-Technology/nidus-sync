@@ -50,10 +50,10 @@
 	/>
 </template>
 <script setup lang="ts">
-import type { Nuisance } from "@/type/api";
+import type { PublicReportNuisance } from "@/type/api";
 import ReportDetailEntry from "@/rmo/components/ReportDetailEntry.vue";
 interface Props {
-	nuisance: Nuisance;
+	nuisance: PublicReportNuisance;
 }
 const props = defineProps<Props>();
 </script>

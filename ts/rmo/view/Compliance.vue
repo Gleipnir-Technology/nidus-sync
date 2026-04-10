@@ -29,7 +29,7 @@ body > .container-fluid {
 					@doEvidence="doEvidence"
 					@doContact="doContact"
 					@doPermission="doPermission"
-					v-model="compliance"
+					v-model="report"
 				/>
 			</LoadingOverlay>
 		</router-view>
@@ -49,66 +49,25 @@ import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
-import type { District, PublicReport } from "@/type/api";
+import {
+	type ComplianceUpdate,
+	type District,
+	PublicReport,
+	PublicReportCompliance,
+} from "@/type/api";
 import { Address, Location, PermissionAccess } from "@/type/api";
 import { type Contact } from "@/rmo/content/compliance/Contact.vue";
-import { type Permission } from "@/rmo/content/compliance/Permission.vue";
 
-export interface Compliance {
-	address: Address;
-	comments: string;
-	contact: Contact;
-	id: string;
-	images: Image[];
-	location: Location;
-	permission: Permission;
-	uri: string;
-}
-interface ComplianceUpdate {
-	address?: Address;
-	comments?: string;
-	contact?: Contact;
-	//id: string;
-	//images?: Image[];
-	location?: Location;
-	permission?: Permission;
-	//uri: string;
-}
 interface Props {
 	slug: string;
 }
 
 const districtStore = useStoreDistrict();
 
-const compliance = ref<Compliance>({
-	address: new Address(),
-	comments: "",
-	contact: {
-		name: "",
-		phone: "",
-		can_text: true,
-		email: "",
-	},
-	id: "",
-	images: [],
-	location: {
-		latitude: 0,
-		longitude: 0,
-	},
-	permission: {
-		access: PermissionAccess.UNSELECTED,
-		access_instructions: "",
-		availability_notes: "",
-		gate_code: "",
-		has_dog: false,
-		wants_scheduled: false,
-	},
-	uri: "",
-});
 const isLoading = ref<boolean>(true);
 const isUploading = ref<boolean>(false);
 const props = defineProps<Props>();
-const report = ref<PublicReport | null>();
+const report = ref<PublicReportCompliance>(new PublicReportCompliance());
 const district = computedAsync(async (): Promise<District | undefined> => {
 	const districts = await districtStore.list();
 	return districts.find((district: District) => district.slug == props.slug);
@@ -139,22 +98,43 @@ async function createReport(client_id: string, loc?: GeolocationPosition) {
 	}
 	const body = await resp.json();
 	storeLocal.setExistingComplianceReportURI(body.uri);
-	compliance.value.uri = body.uri;
+	report.value!.uri = body.uri;
 }
 function doAddress() {
-	console.log("address done", compliance.value.address);
+	if (!report.value) {
+		console.log("can't do address, null report");
+		return;
+	}
+	console.log("address done", report.value.address);
 	updateReport({
-		address: compliance.value.address,
+		address: report.value.address,
 	});
 }
-function doEvidence() {
-	uploadImages(compliance.value.images);
+function doEvidence(images: Image[]) {
+	if (!report.value) {
+		console.log("can't do evidence, null report");
+		return;
+	}
+	uploadImages(images);
+	if (report.value.comments) {
+		updateReport({
+			comments: report.value.comments,
+		});
+	}
 }
 function doContact() {
-	console.log("contact", compliance.value.contact);
+	if (!report.value) {
+		console.log("can't do contact, null report");
+		return;
+	}
+	console.log("contact", report.value.reporter);
 }
 function doPermission() {
-	console.log("permission", compliance.value.permission);
+	if (!report.value) {
+		console.log("can't do permission, null report");
+		return;
+	}
+	console.log("permission", report.value);
 }
 async function fetchExistingReport(report_uri: string) {
 	isLoading.value = true;
@@ -171,17 +151,17 @@ async function fetchExistingReport(report_uri: string) {
 		return;
 	}
 	const body = await resp.json();
-	compliance.value.id = body.id;
-	compliance.value.uri = body.uri;
-	compliance.value.address = body.address;
+	report.value.id = body.id;
+	report.value.uri = body.uri;
+	report.value.address = body.address;
 	isLoading.value = false;
 }
 async function updateReport(updates: ComplianceUpdate) {
-	if (!compliance.value.uri) {
+	if (!report.value.uri) {
 		console.log("Refusing to update report without URI");
 		return;
 	}
-	const resp = await fetch(compliance.value.uri, {
+	const resp = await fetch(report.value.uri, {
 		method: "PUT",
 		body: JSON.stringify(updates),
 		headers: {
@@ -200,7 +180,7 @@ async function uploadImages(images: Image[]) {
 	images.map(async (image, index) => {
 		formData.append(`image[${index}]`, image.file, image.name);
 	});
-	const url = `${compliance.value.uri}/image`;
+	const url = `${report.value.uri}/image`;
 	const response = await fetch(url, {
 		body: formData,
 		method: "POST",
@@ -231,9 +211,9 @@ onMounted(() => {
 	storeLocation
 		.get()
 		.then((loc: GeolocationPosition) => {
-			compliance.value.location = loc.coords;
+			report.value.location = loc.coords;
 			updateReport({
-				location: compliance.value.location,
+				location: report.value.location,
 			});
 		})
 		.catch((e) => {

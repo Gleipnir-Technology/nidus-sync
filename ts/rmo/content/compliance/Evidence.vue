@@ -110,7 +110,7 @@
 			<!-- Upload Area -->
 			<div class="mb-4">
 				<label class="form-label fw-semibold">Photos</label>
-				<ImageUpload v-model="modelValue.images" />
+				<ImageUpload v-model="images" />
 			</div>
 
 			<!-- Photo Previews -->
@@ -166,25 +166,25 @@
 import { ref } from "vue";
 
 import { router } from "@/rmo/router";
-import type { District } from "@/type/api";
+import type { District, PublicReportCompliance } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
-import type { Compliance } from "@/rmo/view/Compliance.vue";
 
 interface Emits {
-	(e: "update:modelValue", value: Compliance): void;
-	(e: "doEvidence"): void;
+	(e: "update:modelValue", value: PublicReportCompliance): void;
+	(e: "doEvidence", images: Image[]): void;
 }
 interface Props {
 	district: District;
-	modelValue: Compliance;
+	modelValue: PublicReportCompliance;
 }
 const emit = defineEmits<Emits>();
+const images = ref<Image[]>([]);
 const props = defineProps<Props>();
 function doContinue() {
 	emit("update:modelValue", props.modelValue);
-	emit("doEvidence");
+	emit("doEvidence", images.value);
 	router.push("./permission");
 }
 </script>
