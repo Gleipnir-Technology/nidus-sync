@@ -97,9 +97,15 @@ func PublicReportUpdate(ctx context.Context, report_id string, report_setter mod
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
-	err = report.Update(ctx, txn, &report_setter)
-	if err != nil {
-		return nil, fmt.Errorf("update report: %w", err)
+	// Avoid attempting to perform an empty update
+	if report_setter.LatlngAccuracyValue.IsValue() ||
+		report_setter.ReporterEmail.IsValue() ||
+		report_setter.ReporterName.IsValue() ||
+		report_setter.ReporterPhone.IsValue() {
+		err = report.Update(ctx, txn, &report_setter)
+		if err != nil {
+			return nil, fmt.Errorf("update report: %w", err)
+		}
 	}
 	if address != nil {
 		err = reportUpdateAddress(ctx, txn, report, *address)

@@ -151,3 +151,55 @@ type GeocodeSource struct {
 	Source   string `json:"source"`
 	SourceID string `json:"source_id"`
 }
+
+func (gf GeocodeFeature) CountryCode() string {
+	if gf.Properties.CountryCode != "" {
+		return gf.Properties.CountryCode
+	}
+	if gf.Properties.Context.ISO3166A3 != "" {
+		return gf.Properties.Context.ISO3166A3
+	}
+	if gf.Properties.Context.WhosOnFirst.Country.Abbreviation != "" {
+		return gf.Properties.Context.WhosOnFirst.Country.Abbreviation
+	}
+	return ""
+}
+func (gf GeocodeFeature) Locality() string {
+	if gf.Properties.Locality != "" {
+		return gf.Properties.Locality
+	}
+	if gf.Properties.Context.WhosOnFirst.Locality.Name != "" {
+		return gf.Properties.Context.WhosOnFirst.Locality.Name
+	}
+	return ""
+}
+func (gf GeocodeFeature) Number() string {
+	return gf.Properties.AddressComponents.Number
+}
+func (gf GeocodeFeature) PostalCode() string {
+	if gf.Properties.PostalCode != "" {
+		return gf.Properties.PostalCode
+	}
+	if gf.Properties.AddressComponents.PostalCode != "" {
+		return gf.Properties.AddressComponents.PostalCode
+	}
+	return ""
+}
+func (gf GeocodeFeature) Region() string {
+	if gf.Properties.Region != "" {
+		return gf.Properties.Region
+	}
+	if gf.Properties.Context.WhosOnFirst.Region.Name != "" {
+		return gf.Properties.Context.WhosOnFirst.Region.Name
+	}
+	return ""
+}
+func (gf GeocodeFeature) Street() string {
+	if gf.Properties.Street != "" {
+		return gf.Properties.Street
+	}
+	if gf.Properties.AddressComponents.Street != "" {
+		return gf.Properties.AddressComponents.Street
+	}
+	return ""
+}
