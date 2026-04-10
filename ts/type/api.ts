@@ -6,15 +6,15 @@ export enum PermissionAccess {
 }
 export class Address {
 	constructor(
-		public country: string,
-		public gid: string,
-		public locality: string,
-		public number: string,
-		public postal_code: string,
-		public raw: string,
-		public region: string,
-		public street: string,
-		public unit: string,
+		public country: string = "",
+		public gid: string = "",
+		public locality: string = "",
+		public number: string = "",
+		public postal_code: string = "",
+		public raw: string = "",
+		public region: string = "",
+		public street: string = "",
+		public unit: string = "",
 	) {}
 }
 export interface Bounds {

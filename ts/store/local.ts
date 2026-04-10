@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 
 export const useStoreLocal = defineStore("local", () => {
-	function getSessionID(): string {
+	function getClientID(): string {
 		let id = localStorage.getItem("session_id");
 		if (id) {
 			return id;
@@ -11,6 +11,6 @@ export const useStoreLocal = defineStore("local", () => {
 		return id;
 	}
 	return {
-		getSessionID,
+		getClientID,
 	};
 });
