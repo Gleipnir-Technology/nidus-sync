@@ -4,11 +4,13 @@ import (
 	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 )
 
 type Address struct {
 	Country    string    `db:"country" json:"country"`
 	GID        string    `db:"gid" json:"gid" schema:"gid"`
+	ID         *int32    `db:"id" json:"-" schema:"-"`
 	Locality   string    `db:"locality" json:"locality"`
 	Location   *Location `db:"location" json:"location" schema:"location"`
 	Number     string    `db:"number" json:"number"`
@@ -24,4 +26,22 @@ func (a Address) String() string {
 }
 func (a Address) CountryEnum() enums.Countrytype {
 	return enums.CountrytypeUsa
+}
+func AddressFromModel(m *models.Address) Address {
+	return Address{
+		Country:  m.Country.String(),
+		GID:      m.Gid,
+		ID:       &m.ID,
+		Locality: m.Locality,
+		Location: &Location{
+			Latitude:  m.LocationY.GetOr(0.0),
+			Longitude: m.LocationX.GetOr(0.0),
+		},
+		Number:     m.Number,
+		PostalCode: m.PostalCode,
+		Raw:        "",
+		Region:     m.Region,
+		Street:     m.Street,
+		Unit:       m.Unit,
+	}
 }

@@ -87,7 +87,7 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 		return nil, errors.New("no contact methods available")
 	}
 }
-func PublicReportUpdate(ctx context.Context, report_id string, report_setter models.PublicreportReportSetter, location *types.Location) (*types.Report, error) {
+func PublicReportUpdate(ctx context.Context, report_id string, report_setter models.PublicreportReportSetter, address *types.Address, location *types.Location) (*types.Report, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
@@ -100,6 +100,12 @@ func PublicReportUpdate(ctx context.Context, report_id string, report_setter mod
 	err = report.Update(ctx, txn, &report_setter)
 	if err != nil {
 		return nil, fmt.Errorf("update report: %w", err)
+	}
+	if address != nil {
+		err = reportUpdateAddress(ctx, txn, report, *address)
+		if err != nil {
+			return nil, fmt.Errorf("update address: %w", err)
+		}
 	}
 	if location != nil {
 		err = reportUpdateLocation(ctx, txn, report.ID, *location)
@@ -253,6 +259,16 @@ func reportFromID(ctx context.Context, report_id string) (*models.PublicreportRe
 		return nil, err
 	}
 	return report, nil
+}
+func reportUpdateAddress(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, address types.Address) error {
+	err := report.Update(ctx, txn, &models.PublicreportReportSetter{
+		AddressGid: omit.From(address.GID),
+		AddressRaw: omit.From(address.Raw),
+	})
+	if err != nil {
+		return fmt.Errorf("update report: %w", err)
+	}
+	return nil
 }
 func reportUpdateLocation(ctx context.Context, txn bob.Executor, id int32, location types.Location) error {
 	h3cell, _ := location.H3Cell()

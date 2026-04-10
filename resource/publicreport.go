@@ -73,10 +73,6 @@ func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publi
 		return nil, nhttp.NewBadRequest("You must provide an ID")
 	}
 	report_setter := models.PublicreportReportSetter{}
-	if prf.Address != nil {
-		report_setter.AddressGid = omit.From(prf.Address.GID)
-		report_setter.AddressRaw = omit.From(prf.Address.Raw)
-	}
 	if prf.Location != nil {
 		//report_setter.Latitude = omit.From(prf.Location.Latitude)
 		//report_setter.Longitude = omit.From(prf.Location.Longitude)
@@ -95,7 +91,7 @@ func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publi
 			report_setter.ReporterPhone = omit.From(*prf.Reporter.Phone)
 		}
 	}
-	report, err := platform.PublicReportUpdate(ctx, public_id, report_setter, prf.Location)
+	report, err := platform.PublicReportUpdate(ctx, public_id, report_setter, prf.Address, prf.Location)
 	if err != nil {
 		return nil, nhttp.NewError("update report: %w", err)
 	}

@@ -408,7 +408,6 @@ const frameMarkers = () => {
 watch(
 	() => props.modelValue,
 	(newCamera) => {
-		console.log("New map camera", newCamera);
 		if (map.value && newCamera) {
 			map.value.panTo(
 				{
@@ -427,7 +426,6 @@ watch(
 watch(
 	() => props.markers,
 	() => {
-		console.log("New map markers", props.markers);
 		updateMarkers();
 	},
 	{ deep: true },
