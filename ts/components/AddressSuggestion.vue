@@ -111,7 +111,7 @@ watch(
 
 // Methods
 function handleInput() {
-	const text = searchText.value.trim();
+	const text = searchText.value;
 
 	// Clear previous timer
 	if (debounceTimer.value) {
