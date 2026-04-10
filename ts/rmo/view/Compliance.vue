@@ -138,6 +138,7 @@ async function createReport(client_id: string, loc?: GeolocationPosition) {
 	}
 	const body = await resp.json();
 	storeLocal.setExistingComplianceReportURI(body.uri);
+	compliance.value.uri = body.uri;
 }
 function doAddress() {
 	console.log("address done", compliance.value.address);
@@ -175,6 +176,10 @@ async function fetchExistingReport(report_uri: string) {
 	isLoading.value = false;
 }
 async function updateReport(updates: ComplianceUpdate) {
+	if (!compliance.value.uri) {
+		console.log("Refusing to update report without URI");
+		return;
+	}
 	const resp = await fetch(compliance.value.uri, {
 		method: "PUT",
 		body: JSON.stringify(updates),
