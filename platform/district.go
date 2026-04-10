@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -39,7 +40,7 @@ func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models
 		return nil, errors.New("too many organizations")
 	}
 }
-func MatchDistrict(ctx context.Context, longitude, latitude float64, images []ImageUpload) (*int32, error) {
+func matchDistrict(ctx context.Context, location *types.Location, images []ImageUpload) (*int32, error) {
 	var err error
 	var org *models.Organization
 	for _, image := range images {
@@ -58,27 +59,29 @@ func MatchDistrict(ctx context.Context, longitude, latitude float64, images []Im
 			return &org.ID, nil
 		}
 	}
-	if longitude == 0 || latitude == 0 {
-		org, err = DistrictCatchall(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("get catchall: %w", err)
+	if location != nil {
+		if location.Longitude == 0 || location.Latitude == 0 {
+			org, err = DistrictCatchall(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("get catchall: %w", err)
+			}
+			log.Debug().Int32("id", org.ID).Msg("No location from images, no latlng for the report itself, using catchall")
+			return &org.ID, nil
 		}
-		log.Debug().Int32("id", org.ID).Msg("No location from images, no latlng for the report itself, using catchall")
-		return &org.ID, nil
-	}
-	org, err = DistrictForLocation(ctx, longitude, latitude)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get district for location")
-		return nil, fmt.Errorf("Failed to get district for location: %w", err)
+		org, err = DistrictForLocation(ctx, location.Longitude, location.Latitude)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to get district for location")
+			return nil, fmt.Errorf("Failed to get district for location: %w", err)
+		}
 	}
 	if org == nil {
 		org, err = DistrictCatchall(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("get catchall: %w", err)
 		}
-		log.Debug().Err(err).Float64("lng", longitude).Float64("lat", latitude).Int32("id", org.ID).Msg("No district match by report location, using catchall")
+		log.Debug().Err(err).Int32("id", org.ID).Msg("No district match by report location, using catchall")
 		return &org.ID, nil
 	}
-	log.Debug().Err(err).Int32("org_id", org.ID).Float64("lng", longitude).Float64("lat", latitude).Msg("Found district match by report location")
+	log.Debug().Err(err).Int32("org_id", org.ID).Msg("Found district match by report location")
 	return &org.ID, nil
 }

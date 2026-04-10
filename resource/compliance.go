@@ -31,10 +31,10 @@ type compliance struct {
 	URI      string `json:"uri"`
 }
 type complianceForm struct {
+	ClientID   string          `schema:"client_id"`
 	DistrictID string          `schema:"district"`
 	Location   *types.Location `schema:"location"`
 	Locator    *Locator        `schema:"locator"`
-	ClientID   string          `schema:"client_id"`
 }
 
 func (res *complianceR) Create(ctx context.Context, r *http.Request, n complianceForm) (*compliance, *nhttp.ErrorWithStatus) {

@@ -152,7 +152,7 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 		return nil, fmt.Errorf("Failed to save image uploads: %w", err)
 	}
 	var organization_id *int32
-	organization_id, err = MatchDistrict(ctx, location.Longitude, location.Latitude, images)
+	organization_id, err = matchDistrict(ctx, location, images)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to match district")
 	}
