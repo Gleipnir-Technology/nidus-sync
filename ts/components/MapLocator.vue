@@ -177,7 +177,8 @@ interface Emits {
 
 // Props
 interface Props {
-	modelValue: Camera | null;
+	initialCamera?: Camera;
+	modelValue: Camera;
 	markers?: Marker[];
 }
 
@@ -225,12 +226,7 @@ function deactivateMap() {
 function initializeMap() {
 	if (!mapContainer.value) return;
 
-	let bounds = boundsDefault();
-	if (props.markers.length > 0) {
-		bounds = boundsMarkers(props.markers);
-	}
 	const _map = new maplibregl.Map({
-		bounds: bounds,
 		container: mapContainer.value,
 		style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
 		// Disable interactions by default
@@ -239,6 +235,30 @@ function initializeMap() {
 		scrollZoom: false,
 		touchZoomRotate: false,
 	});
+	if (props.markers.length > 0) {
+		_map.fitBounds(boundsMarkers(props.markers));
+	} else if (props.initialCamera) {
+		_map.jumpTo({
+			center: [
+				props.initialCamera.location.longitude,
+				props.initialCamera.location.latitude,
+			],
+			zoom: props.initialCamera.zoom,
+		});
+	} else if (
+		props.modelValue.location.latitude != 0 ||
+		props.modelValue.location.longitude != 0
+	) {
+		_map.jumpTo({
+			center: [
+				props.modelValue.location.longitude,
+				props.modelValue.location.latitude,
+			],
+			zoom: props.modelValue.zoom,
+		});
+	} else {
+		_map.fitBounds(boundsDefault());
+	}
 	_map.addControl(new maplibregl.NavigationControl(), "top-left");
 	map.value = _map;
 	_map.on("click", (e: maplibregl.MapLayerMouseEvent) => {

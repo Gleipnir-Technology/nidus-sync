@@ -43,7 +43,8 @@ import { useStoreDistrict } from "@/rmo/store/district";
 import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
 import Intro from "@/rmo/content/compliance/Intro.vue";
-import { type District, PermissionAccess, type PublicReport } from "@/type/api";
+import type { District, Location, PublicReport } from "@/type/api";
+import { PermissionAccess } from "@/type/api";
 import { Locator } from "@/type/map";
 import { type Contact } from "@/rmo/content/compliance/Contact.vue";
 import { type Permission } from "@/rmo/content/compliance/Permission.vue";
@@ -51,6 +52,7 @@ import { type Permission } from "@/rmo/content/compliance/Permission.vue";
 export interface Compliance {
 	comments: string;
 	contact: Contact;
+	location: Location;
 	locator: Locator;
 	images: Image[];
 	permission: Permission;
@@ -70,6 +72,10 @@ const compliance = ref<Compliance>({
 		email: "",
 	},
 	images: [],
+	location: {
+		latitude: 0,
+		longitude: 0,
+	},
 	locator: {
 		address: {
 			country: "",
@@ -134,6 +140,7 @@ onMounted(() => {
 	storeLocation
 		.get()
 		.then((loc: GeolocationPosition) => {
+			compliance.value.location = loc.coords;
 			createReport(session_id, loc);
 		})
 		.catch((e) => {

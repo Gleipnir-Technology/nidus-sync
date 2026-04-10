@@ -1,13 +1,19 @@
 import maplibregl from "maplibre-gl";
-import type { Address, Location } from "@/type/api";
+import { Address, Location } from "@/type/api";
 
-export interface Camera {
+export class Camera {
 	location: Location;
 	zoom: number;
+	constructor(location: Location = new Location(), zoom: number = 0) {
+		this.location = location;
+		this.zoom = zoom;
+	}
 }
-export interface Locator {
-	address: Address;
-	location: Location;
+export class Locator {
+	constructor(
+		public address: Address,
+		public location: Location,
+	) {}
 }
 export type MoveEndEventInternal = maplibregl.MapLibreEvent<
 	| maplibregl.MapMouseEvent

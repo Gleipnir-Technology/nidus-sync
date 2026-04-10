@@ -50,10 +50,11 @@
 		<label class="form-label fw-semibold">Location Preview</label>
 		<div class="map-container">
 			<MapLocator
-				v-model="currentCamera"
+				:initialCamera="initialCamera"
 				:markers="markers"
 				@click="doMapClick"
 				@marker-drag-end="doMapMarkerDragEnd"
+				v-model="currentCamera"
 			/>
 		</div>
 	</div>
@@ -64,17 +65,18 @@ import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import type { Address, Geocode, GeocodeSuggestion, Location } from "@/type/api";
 import { useGeocodeStore } from "@/store/geocode";
-import type { Camera, Locator } from "@/type/map";
+import { Camera, Locator } from "@/type/map";
 import type { Marker } from "@/types";
 
 interface Emits {
 	(e: "update:modelValue", value: Locator): void;
 }
 interface Props {
+	initialCamera?: Camera;
 	modelValue: Locator;
 }
 const address = ref<string>("");
-const currentCamera = ref<Camera | null>(null);
+const currentCamera = ref<Camera>(new Camera());
 const emit = defineEmits<Emits>();
 const geocode = useGeocodeStore();
 const markers = computed((): Marker[] => {

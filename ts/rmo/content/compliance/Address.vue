@@ -10,7 +10,10 @@
 				Please enter the address so we can match your response with our records.
 			</p>
 
-			<AddressAndMapLocator v-model="modelValue.locator" />
+			<AddressAndMapLocator
+				:initialCamera="initialCamera"
+				v-model="modelValue.locator"
+			/>
 
 			<div class="d-flex gap-2 mt-4">
 				<RouterLink class="btn btn-outline-secondary" to="../compliance">
@@ -24,7 +27,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 import { router } from "@/rmo/router";
 import type { District } from "@/type/api";
@@ -32,7 +35,7 @@ import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { Compliance } from "@/rmo/view/Compliance.vue";
-import { Locator } from "@/type/map";
+import { Camera, Locator } from "@/type/map";
 
 interface Emits {
 	(e: "doLocator"): void;
@@ -45,6 +48,15 @@ interface Props {
 const emit = defineEmits<Emits>();
 const error = ref<string>("");
 const props = defineProps<Props>();
+const initialCamera = computed((): Camera | undefined => {
+	if (props.modelValue.location) {
+		return {
+			location: props.modelValue.location,
+			zoom: 15,
+		};
+	}
+	return undefined;
+});
 function doContinue() {
 	emit("update:modelValue", props.modelValue);
 	emit("doLocator");

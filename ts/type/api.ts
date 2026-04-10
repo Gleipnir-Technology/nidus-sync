@@ -4,16 +4,18 @@ export enum PermissionAccess {
 	UNSELECTED = "unselected",
 	WITH_OWNER = "with-owner",
 }
-export interface Address {
-	country: string;
-	gid: string;
-	locality: string;
-	number: string;
-	postal_code: string;
-	raw: string;
-	region: string;
-	street: string;
-	unit: string;
+export class Address {
+	constructor(
+		public country: string,
+		public gid: string,
+		public locality: string,
+		public number: string,
+		public postal_code: string,
+		public raw: string,
+		public region: string,
+		public street: string,
+		public unit: string,
+	) {}
 }
 export interface Bounds {
 	min: Location;
@@ -32,10 +34,15 @@ export interface District {
 	url_logo: string;
 	url_website: string;
 }
-export interface Location {
+export class Location {
 	accuracy?: number;
 	latitude: number;
 	longitude: number;
+	constructor(latitude: number = 0, longitude: number = 0, accuracy?: number) {
+		this.accuracy = accuracy;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
 }
 export interface GeocodeSuggestion {
 	detail: string;
