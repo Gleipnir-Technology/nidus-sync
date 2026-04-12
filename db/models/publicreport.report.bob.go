@@ -29,12 +29,6 @@ import (
 // PublicreportReport is an object representing the database table.
 type PublicreportReport struct {
 	AddressRaw             string                             `db:"address_raw" `
-	AddressNumber          string                             `db:"address_number" `
-	AddressStreet          string                             `db:"address_street" `
-	AddressLocality        string                             `db:"address_locality" `
-	AddressRegion          string                             `db:"address_region" `
-	AddressPostalCode      string                             `db:"address_postal_code" `
-	AddressCountry         string                             `db:"address_country" `
 	AddressID              null.Val[int32]                    `db:"address_id" `
 	Created                time.Time                          `db:"created" `
 	Location               null.Val[string]                   `db:"location" `
@@ -92,16 +86,10 @@ type publicreportReportR struct {
 func buildPublicreportReportColumns(alias string) publicreportReportColumns {
 	return publicreportReportColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_raw", "address_number", "address_street", "address_locality", "address_region", "address_postal_code", "address_country", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "location_latitude", "location_longitude", "address_gid", "client_uuid",
+			"address_raw", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "location_latitude", "location_longitude", "address_gid", "client_uuid",
 		).WithParent("publicreport.report"),
 		tableAlias:             alias,
 		AddressRaw:             psql.Quote(alias, "address_raw"),
-		AddressNumber:          psql.Quote(alias, "address_number"),
-		AddressStreet:          psql.Quote(alias, "address_street"),
-		AddressLocality:        psql.Quote(alias, "address_locality"),
-		AddressRegion:          psql.Quote(alias, "address_region"),
-		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
-		AddressCountry:         psql.Quote(alias, "address_country"),
 		AddressID:              psql.Quote(alias, "address_id"),
 		Created:                psql.Quote(alias, "created"),
 		Location:               psql.Quote(alias, "location"),
@@ -131,12 +119,6 @@ type publicreportReportColumns struct {
 	expr.ColumnsExpr
 	tableAlias             string
 	AddressRaw             psql.Expression
-	AddressNumber          psql.Expression
-	AddressStreet          psql.Expression
-	AddressLocality        psql.Expression
-	AddressRegion          psql.Expression
-	AddressPostalCode      psql.Expression
-	AddressCountry         psql.Expression
 	AddressID              psql.Expression
 	Created                psql.Expression
 	Location               psql.Expression
@@ -174,12 +156,6 @@ func (publicreportReportColumns) AliasedAs(alias string) publicreportReportColum
 // Generated columns are not included
 type PublicreportReportSetter struct {
 	AddressRaw             omit.Val[string]                             `db:"address_raw" `
-	AddressNumber          omit.Val[string]                             `db:"address_number" `
-	AddressStreet          omit.Val[string]                             `db:"address_street" `
-	AddressLocality        omit.Val[string]                             `db:"address_locality" `
-	AddressRegion          omit.Val[string]                             `db:"address_region" `
-	AddressPostalCode      omit.Val[string]                             `db:"address_postal_code" `
-	AddressCountry         omit.Val[string]                             `db:"address_country" `
 	AddressID              omitnull.Val[int32]                          `db:"address_id" `
 	Created                omit.Val[time.Time]                          `db:"created" `
 	Location               omitnull.Val[string]                         `db:"location" `
@@ -203,27 +179,9 @@ type PublicreportReportSetter struct {
 }
 
 func (s PublicreportReportSetter) SetColumns() []string {
-	vals := make([]string, 0, 27)
+	vals := make([]string, 0, 21)
 	if s.AddressRaw.IsValue() {
 		vals = append(vals, "address_raw")
-	}
-	if s.AddressNumber.IsValue() {
-		vals = append(vals, "address_number")
-	}
-	if s.AddressStreet.IsValue() {
-		vals = append(vals, "address_street")
-	}
-	if s.AddressLocality.IsValue() {
-		vals = append(vals, "address_locality")
-	}
-	if s.AddressRegion.IsValue() {
-		vals = append(vals, "address_region")
-	}
-	if s.AddressPostalCode.IsValue() {
-		vals = append(vals, "address_postal_code")
-	}
-	if s.AddressCountry.IsValue() {
-		vals = append(vals, "address_country")
 	}
 	if !s.AddressID.IsUnset() {
 		vals = append(vals, "address_id")
@@ -291,24 +249,6 @@ func (s PublicreportReportSetter) SetColumns() []string {
 func (s PublicreportReportSetter) Overwrite(t *PublicreportReport) {
 	if s.AddressRaw.IsValue() {
 		t.AddressRaw = s.AddressRaw.MustGet()
-	}
-	if s.AddressNumber.IsValue() {
-		t.AddressNumber = s.AddressNumber.MustGet()
-	}
-	if s.AddressStreet.IsValue() {
-		t.AddressStreet = s.AddressStreet.MustGet()
-	}
-	if s.AddressLocality.IsValue() {
-		t.AddressLocality = s.AddressLocality.MustGet()
-	}
-	if s.AddressRegion.IsValue() {
-		t.AddressRegion = s.AddressRegion.MustGet()
-	}
-	if s.AddressPostalCode.IsValue() {
-		t.AddressPostalCode = s.AddressPostalCode.MustGet()
-	}
-	if s.AddressCountry.IsValue() {
-		t.AddressCountry = s.AddressCountry.MustGet()
 	}
 	if !s.AddressID.IsUnset() {
 		t.AddressID = s.AddressID.MustGetNull()
@@ -378,167 +318,131 @@ func (s *PublicreportReportSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 27)
+		vals := make([]bob.Expression, 21)
 		if s.AddressRaw.IsValue() {
 			vals[0] = psql.Arg(s.AddressRaw.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressNumber.IsValue() {
-			vals[1] = psql.Arg(s.AddressNumber.MustGet())
+		if !s.AddressID.IsUnset() {
+			vals[1] = psql.Arg(s.AddressID.MustGetNull())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressStreet.IsValue() {
-			vals[2] = psql.Arg(s.AddressStreet.MustGet())
+		if s.Created.IsValue() {
+			vals[2] = psql.Arg(s.Created.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressLocality.IsValue() {
-			vals[3] = psql.Arg(s.AddressLocality.MustGet())
+		if !s.Location.IsUnset() {
+			vals[3] = psql.Arg(s.Location.MustGetNull())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressRegion.IsValue() {
-			vals[4] = psql.Arg(s.AddressRegion.MustGet())
+		if !s.H3cell.IsUnset() {
+			vals[4] = psql.Arg(s.H3cell.MustGetNull())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressPostalCode.IsValue() {
-			vals[5] = psql.Arg(s.AddressPostalCode.MustGet())
+		if s.ID.IsValue() {
+			vals[5] = psql.Arg(s.ID.MustGet())
 		} else {
 			vals[5] = psql.Raw("DEFAULT")
 		}
 
-		if s.AddressCountry.IsValue() {
-			vals[6] = psql.Arg(s.AddressCountry.MustGet())
+		if s.LatlngAccuracyType.IsValue() {
+			vals[6] = psql.Arg(s.LatlngAccuracyType.MustGet())
 		} else {
 			vals[6] = psql.Raw("DEFAULT")
 		}
 
-		if !s.AddressID.IsUnset() {
-			vals[7] = psql.Arg(s.AddressID.MustGetNull())
+		if s.LatlngAccuracyValue.IsValue() {
+			vals[7] = psql.Arg(s.LatlngAccuracyValue.MustGet())
 		} else {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if s.Created.IsValue() {
-			vals[8] = psql.Arg(s.Created.MustGet())
+		if s.MapZoom.IsValue() {
+			vals[8] = psql.Arg(s.MapZoom.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.Location.IsUnset() {
-			vals[9] = psql.Arg(s.Location.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[9] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.H3cell.IsUnset() {
-			vals[10] = psql.Arg(s.H3cell.MustGetNull())
+		if s.PublicID.IsValue() {
+			vals[10] = psql.Arg(s.PublicID.MustGet())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if s.ID.IsValue() {
-			vals[11] = psql.Arg(s.ID.MustGet())
+		if s.ReporterName.IsValue() {
+			vals[11] = psql.Arg(s.ReporterName.MustGet())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if s.LatlngAccuracyType.IsValue() {
-			vals[12] = psql.Arg(s.LatlngAccuracyType.MustGet())
+		if s.ReporterEmail.IsValue() {
+			vals[12] = psql.Arg(s.ReporterEmail.MustGet())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if s.LatlngAccuracyValue.IsValue() {
-			vals[13] = psql.Arg(s.LatlngAccuracyValue.MustGet())
+		if s.ReporterPhone.IsValue() {
+			vals[13] = psql.Arg(s.ReporterPhone.MustGet())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if s.MapZoom.IsValue() {
-			vals[14] = psql.Arg(s.MapZoom.MustGet())
+		if !s.ReporterContactConsent.IsUnset() {
+			vals[14] = psql.Arg(s.ReporterContactConsent.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
 		}
 
-		if s.OrganizationID.IsValue() {
-			vals[15] = psql.Arg(s.OrganizationID.MustGet())
+		if s.ReportType.IsValue() {
+			vals[15] = psql.Arg(s.ReportType.MustGet())
 		} else {
 			vals[15] = psql.Raw("DEFAULT")
 		}
 
-		if s.PublicID.IsValue() {
-			vals[16] = psql.Arg(s.PublicID.MustGet())
+		if !s.Reviewed.IsUnset() {
+			vals[16] = psql.Arg(s.Reviewed.MustGetNull())
 		} else {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterName.IsValue() {
-			vals[17] = psql.Arg(s.ReporterName.MustGet())
+		if !s.ReviewerID.IsUnset() {
+			vals[17] = psql.Arg(s.ReviewerID.MustGetNull())
 		} else {
 			vals[17] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterEmail.IsValue() {
-			vals[18] = psql.Arg(s.ReporterEmail.MustGet())
+		if s.Status.IsValue() {
+			vals[18] = psql.Arg(s.Status.MustGet())
 		} else {
 			vals[18] = psql.Raw("DEFAULT")
 		}
 
-		if s.ReporterPhone.IsValue() {
-			vals[19] = psql.Arg(s.ReporterPhone.MustGet())
+		if s.AddressGid.IsValue() {
+			vals[19] = psql.Arg(s.AddressGid.MustGet())
 		} else {
 			vals[19] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ReporterContactConsent.IsUnset() {
-			vals[20] = psql.Arg(s.ReporterContactConsent.MustGetNull())
+		if !s.ClientUUID.IsUnset() {
+			vals[20] = psql.Arg(s.ClientUUID.MustGetNull())
 		} else {
 			vals[20] = psql.Raw("DEFAULT")
-		}
-
-		if s.ReportType.IsValue() {
-			vals[21] = psql.Arg(s.ReportType.MustGet())
-		} else {
-			vals[21] = psql.Raw("DEFAULT")
-		}
-
-		if !s.Reviewed.IsUnset() {
-			vals[22] = psql.Arg(s.Reviewed.MustGetNull())
-		} else {
-			vals[22] = psql.Raw("DEFAULT")
-		}
-
-		if !s.ReviewerID.IsUnset() {
-			vals[23] = psql.Arg(s.ReviewerID.MustGetNull())
-		} else {
-			vals[23] = psql.Raw("DEFAULT")
-		}
-
-		if s.Status.IsValue() {
-			vals[24] = psql.Arg(s.Status.MustGet())
-		} else {
-			vals[24] = psql.Raw("DEFAULT")
-		}
-
-		if s.AddressGid.IsValue() {
-			vals[25] = psql.Arg(s.AddressGid.MustGet())
-		} else {
-			vals[25] = psql.Raw("DEFAULT")
-		}
-
-		if !s.ClientUUID.IsUnset() {
-			vals[26] = psql.Arg(s.ClientUUID.MustGetNull())
-		} else {
-			vals[26] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -550,54 +454,12 @@ func (s PublicreportReportSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportReportSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 27)
+	exprs := make([]bob.Expression, 0, 21)
 
 	if s.AddressRaw.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "address_raw")...),
 			psql.Arg(s.AddressRaw),
-		}})
-	}
-
-	if s.AddressNumber.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_number")...),
-			psql.Arg(s.AddressNumber),
-		}})
-	}
-
-	if s.AddressStreet.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_street")...),
-			psql.Arg(s.AddressStreet),
-		}})
-	}
-
-	if s.AddressLocality.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_locality")...),
-			psql.Arg(s.AddressLocality),
-		}})
-	}
-
-	if s.AddressRegion.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_region")...),
-			psql.Arg(s.AddressRegion),
-		}})
-	}
-
-	if s.AddressPostalCode.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_postal_code")...),
-			psql.Arg(s.AddressPostalCode),
-		}})
-	}
-
-	if s.AddressCountry.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "address_country")...),
-			psql.Arg(s.AddressCountry),
 		}})
 	}
 
@@ -2137,12 +1999,6 @@ func (publicreportReport0 *PublicreportReport) AttachSignals(ctx context.Context
 
 type publicreportReportWhere[Q psql.Filterable] struct {
 	AddressRaw             psql.WhereMod[Q, string]
-	AddressNumber          psql.WhereMod[Q, string]
-	AddressStreet          psql.WhereMod[Q, string]
-	AddressLocality        psql.WhereMod[Q, string]
-	AddressRegion          psql.WhereMod[Q, string]
-	AddressPostalCode      psql.WhereMod[Q, string]
-	AddressCountry         psql.WhereMod[Q, string]
 	AddressID              psql.WhereNullMod[Q, int32]
 	Created                psql.WhereMod[Q, time.Time]
 	Location               psql.WhereNullMod[Q, string]
@@ -2174,12 +2030,6 @@ func (publicreportReportWhere[Q]) AliasedAs(alias string) publicreportReportWher
 func buildPublicreportReportWhere[Q psql.Filterable](cols publicreportReportColumns) publicreportReportWhere[Q] {
 	return publicreportReportWhere[Q]{
 		AddressRaw:             psql.Where[Q, string](cols.AddressRaw),
-		AddressNumber:          psql.Where[Q, string](cols.AddressNumber),
-		AddressStreet:          psql.Where[Q, string](cols.AddressStreet),
-		AddressLocality:        psql.Where[Q, string](cols.AddressLocality),
-		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
-		AddressPostalCode:      psql.Where[Q, string](cols.AddressPostalCode),
-		AddressCountry:         psql.Where[Q, string](cols.AddressCountry),
 		AddressID:              psql.WhereNull[Q, int32](cols.AddressID),
 		Created:                psql.Where[Q, time.Time](cols.Created),
 		Location:               psql.WhereNull[Q, string](cols.Location),

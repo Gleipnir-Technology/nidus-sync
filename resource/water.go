@@ -70,14 +70,9 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 		accuracy = *w.Location.Accuracy
 	}
 	setter_report := models.PublicreportReportSetter{
-		AddressRaw:        omit.From(address.Raw),
-		AddressCountry:    omit.From(""),
-		AddressNumber:     omit.From(""),
-		AddressLocality:   omit.From(""),
-		AddressPostalCode: omit.From(""),
-		AddressRegion:     omit.From(""),
-		AddressStreet:     omit.From(""),
-		Created:           omit.From(time.Now()),
+		AddressGid: omit.From(address.GID),
+		AddressRaw: omit.From(address.Raw),
+		Created:    omit.From(time.Now()),
 		//H3cell:       omitnull.From(geospatial.Cell.String()),
 		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),
 		LatlngAccuracyValue: omit.From(accuracy),

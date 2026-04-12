@@ -81,15 +81,9 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	log.Info().Str("address.raw", address.Raw).Str("address.gid", address.GID).Msg("making nuisance")
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
-		AddressCountry:    omit.From(""),
-		AddressGid:        omit.From(address.GID),
-		AddressNumber:     omit.From(""),
-		AddressLocality:   omit.From(""),
-		AddressPostalCode: omit.From(""),
-		AddressRaw:        omit.From(address.Raw),
-		AddressRegion:     omit.From(""),
-		AddressStreet:     omit.From(""),
-		Created:           omit.From(time.Now()),
+		AddressGid: omit.From(address.GID),
+		AddressRaw: omit.From(address.Raw),
+		Created:    omit.From(time.Now()),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
 		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),
 		LatlngAccuracyValue: omit.From(accuracy),

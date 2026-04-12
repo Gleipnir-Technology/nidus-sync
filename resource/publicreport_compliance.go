@@ -12,6 +12,8 @@ import (
 	//"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	"github.com/gorilla/mux"
 	//"github.com/rs/zerolog/log"
 )
 
@@ -30,18 +32,26 @@ type compliance struct {
 	URI      string `json:"uri"`
 }
 
-func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportForm) (*compliance, *nhttp.ErrorWithStatus) {
+func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicreportByIDCompliance(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
+	return report, nil
+}
+func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*compliance, *nhttp.ErrorWithStatus) {
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
-		AddressCountry:    omit.From(""),
-		AddressGid:        omit.From(""),
-		AddressNumber:     omit.From(""),
-		AddressLocality:   omit.From(""),
-		AddressPostalCode: omit.From(""),
-		AddressRaw:        omit.From(""),
-		AddressRegion:     omit.From(""),
-		AddressStreet:     omit.From(""),
-		Created:           omit.From(time.Now()),
+		AddressGid: omit.From(""),
+		AddressRaw: omit.From(""),
+		Created:    omit.From(time.Now()),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
 		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),
 		LatlngAccuracyValue: omit.From(float32(0.0)),

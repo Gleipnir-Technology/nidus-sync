@@ -96,7 +96,7 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 		return nil, errors.New("no contact methods available")
 	}
 }
-func PublicReportUpdate(ctx context.Context, report_id string, report_setter models.PublicreportReportSetter, address *types.Address, location *types.Location) (*types.PublicReport, error) {
+func PublicReportUpdateCompliance(ctx context.Context, report_id string, report_setter models.PublicreportReportSetter, address *types.Address, location *types.Location) (*types.PublicReport, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)

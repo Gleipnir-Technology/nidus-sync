@@ -40,20 +40,6 @@ func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query Query
 	populateReportURI(report, res.router)
 	return report, nil
 }
-func (res *publicreportR) ByIDCompliance(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	public_id := vars["id"]
-	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provid an ID")
-	}
-	report, err := platform.PublicreportByIDCompliance(ctx, public_id)
-	if err != nil {
-		return nil, nhttp.NewError("get report: %w", err)
-	}
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
-	return report, nil
-}
 func (res *publicreportR) ByIDNuisance(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
@@ -104,21 +90,17 @@ func (res *publicreportR) ImageCreate(ctx context.Context, r *http.Request, n nu
 	return &image{Status: "ok"}, nil
 }
 
-type complianceForm struct {
-	Comments *string `schema:"comments"`
-}
-
-type publicreportForm struct {
+type publicreportComplianceForm struct {
 	Address    *types.Address  `schema:"address"`
 	ClientID   string          `schema:"client_id"`
-	Compliance *complianceForm `schema:"compliance"`
+	Comments   *string         `schema:"comments"`
 	DistrictID string          `schema:"district"`
 	Location   *types.Location `schema:"location"`
 	Locator    *Locator        `schema:"locator"`
 	Reporter   *types.Contact  `schema:"reporter"`
 }
 
-func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publicreportForm) (*types.PublicReport, *nhttp.ErrorWithStatus) {
+func (res *publicreportR) UpdateCompliance(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReport, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
@@ -143,7 +125,7 @@ func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publi
 			report_setter.ReporterPhone = omit.From(*prf.Reporter.Phone)
 		}
 	}
-	report, err := platform.PublicReportUpdate(ctx, public_id, report_setter, prf.Address, prf.Location)
+	report, err := platform.PublicReportUpdateCompliance(ctx, public_id, report_setter, prf.Address, prf.Location)
 	if err != nil {
 		return nil, nhttp.NewError("update report: %w", err)
 	}

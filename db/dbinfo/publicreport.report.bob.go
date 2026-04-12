@@ -24,60 +24,6 @@ var PublicreportReports = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		AddressNumber: column{
-			Name:      "address_number",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressStreet: column{
-			Name:      "address_street",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressLocality: column{
-			Name:      "address_locality",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressRegion: column{
-			Name:      "address_region",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressPostalCode: column{
-			Name:      "address_postal_code",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		AddressCountry: column{
-			Name:      "address_country",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		AddressID: column{
 			Name:      "address_id",
 			DBType:    "integer",
@@ -369,12 +315,6 @@ var PublicreportReports = Table[
 
 type publicreportReportColumns struct {
 	AddressRaw             column
-	AddressNumber          column
-	AddressStreet          column
-	AddressLocality        column
-	AddressRegion          column
-	AddressPostalCode      column
-	AddressCountry         column
 	AddressID              column
 	Created                column
 	Location               column
@@ -401,7 +341,7 @@ type publicreportReportColumns struct {
 
 func (c publicreportReportColumns) AsSlice() []column {
 	return []column{
-		c.AddressRaw, c.AddressNumber, c.AddressStreet, c.AddressLocality, c.AddressRegion, c.AddressPostalCode, c.AddressCountry, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid, c.ClientUUID,
+		c.AddressRaw, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid, c.ClientUUID,
 	}
 }
 
