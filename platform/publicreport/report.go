@@ -8,16 +8,14 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	//"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	//"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
 
-func ReportsForOrganization(ctx context.Context, org_id int32) ([]*types.Report, error) {
+func ReportsForOrganization(ctx context.Context, org_id int32) ([]*types.PublicReport, error) {
 	query := reportQuery()
 	query.Apply(
 		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
@@ -25,8 +23,8 @@ func ReportsForOrganization(ctx context.Context, org_id int32) ([]*types.Report,
 	)
 	return reportQueryToRows(ctx, query)
 }
-func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQuery]) ([]*types.Report, error) {
-	rows, err := bob.All(ctx, db.PGInstance.BobDB, query, scan.StructMapper[types.Report]())
+func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQuery]) ([]*types.PublicReport, error) {
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, query, scan.StructMapper[types.PublicReport]())
 
 	if err != nil {
 		return nil, fmt.Errorf("get reports: %w", err)
@@ -51,16 +49,8 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 	if err != nil {
 		return nil, fmt.Errorf("log entries for reports: %w", err)
 	}
-	nuisances_by_report_id, err := nuisancesByReportID(ctx, report_ids)
-	if err != nil {
-		return nil, fmt.Errorf("nuisances: %w", err)
-	}
-	waters_by_report_id, err := watersByReportID(ctx, report_ids)
-	if err != nil {
-		return nil, fmt.Errorf("waters: %w", err)
-	}
 
-	results := make([]*types.Report, len(rows))
+	results := make([]*types.PublicReport, len(rows))
 	for i, row := range rows {
 		if row.Address.ID != nil {
 			address, ok := addresses_by_id[*row.Address.ID]
@@ -77,8 +67,6 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 			row.Images = []types.Image{}
 		}
 		row.Log = logs_by_report_id[row.ID]
-		row.Nuisance = nuisances_by_report_id[row.ID]
-		row.Water = waters_by_report_id[row.ID]
 		if row.Location.Latitude == 0.0 || row.Location.Longitude == 0.0 {
 			row.Location = nil
 		}
@@ -86,7 +74,7 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 	}
 	return results, nil
 }
-func Report(ctx context.Context, public_id string) (*types.Report, error) {
+func Report(ctx context.Context, public_id string) (*types.PublicReport, error) {
 	query := reportQuery()
 	query.Apply(
 		sm.Where(psql.Quote("publicreport", "report", "public_id").EQ(psql.Arg(public_id))),
@@ -100,7 +88,7 @@ func Report(ctx context.Context, public_id string) (*types.Report, error) {
 	}
 	return reports[0], nil
 }
-func Reports(ctx context.Context, org_id int32, ids []int32) ([]*types.Report, error) {
+func Reports(ctx context.Context, org_id int32, ids []int32) ([]*types.PublicReport, error) {
 	query := reportQuery()
 	query.Apply(
 		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),

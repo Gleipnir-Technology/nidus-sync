@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/aarondl/opt/omit"
@@ -25,7 +26,7 @@ func Publicreport(r *router) *publicreportR {
 	}
 }
 
-func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.Report, *nhttp.ErrorWithStatus) {
+func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReport, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
@@ -42,12 +43,8 @@ func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query Query
 			return nil, nhttp.NewError("district uri: %w", err)
 		}
 	}
-	uri, err := res.router.IDStrToURI("publicreport.ByIDGet", report.PublicID)
-	if err != nil {
-		return nil, nhttp.NewError("uri: %w", err)
-	}
+	populateReportURI(report, res.router)
 	report.District = &district_uri
-	report.URI = uri
 	return report, nil
 }
 
@@ -86,14 +83,7 @@ type publicreportForm struct {
 	Reporter   *types.Contact  `schema:"reporter"`
 }
 
-func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publicreportForm) (*types.Report, *nhttp.ErrorWithStatus) {
-	/*
-		uploads, err := html.ExtractImageUploads(r)
-		log.Info().Int("len", len(uploads)).Msg("extracted compliance uploads")
-		if err != nil {
-			return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
-		}
-	*/
+func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publicreportForm) (*types.PublicReport, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
@@ -123,4 +113,24 @@ func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publi
 		return nil, nhttp.NewError("update report: %w", err)
 	}
 	return report, nil
+}
+
+func populateReportURI(report *types.PublicReport, r *router) error {
+	var route_name string
+	switch report.Type {
+	case "compliance":
+		route_name = "publicreport.ByIDGet"
+	case "nuisance":
+		route_name = "publicreport.nuisance.ByIDGet"
+	case "water":
+		route_name = "publicreport.water.ByIDGet"
+	default:
+		return fmt.Errorf("Unrecognized report type '%s'", report.Type)
+	}
+	uri, err := r.IDStrToURI(route_name, report.PublicID)
+	if err != nil {
+		return nhttp.NewError("uri: %w", err)
+	}
+	report.URI = uri
+	return nil
 }

@@ -26,17 +26,17 @@ import (
 )
 
 type Signal struct {
-	Address   *types.Address `db:"address" json:"address"`
-	Addressed *time.Time     `db:"addressed" json:"addressed"`
-	Addressor *int32         `db:"addressor" json:"addressor"`
-	Created   time.Time      `db:"created" json:"created"`
-	Creator   int32          `db:"creator" json:"creator"`
-	ID        int32          `db:"id" json:"id"`
-	Location  types.Location `db:"location" json:"location"`
-	Pool      *Pool          `db:"pool" json:"pool"`
-	Report    *types.Report  `db:"report" json:"report"`
-	Species   *string        `db:"species" json:"species"`
-	Type      string         `db:"type" json:"type"`
+	Address   *types.Address      `db:"address" json:"address"`
+	Addressed *time.Time          `db:"addressed" json:"addressed"`
+	Addressor *int32              `db:"addressor" json:"addressor"`
+	Created   time.Time           `db:"created" json:"created"`
+	Creator   int32               `db:"creator" json:"creator"`
+	ID        int32               `db:"id" json:"id"`
+	Location  types.Location      `db:"location" json:"location"`
+	Pool      *Pool               `db:"pool" json:"pool"`
+	Report    *types.PublicReport `db:"report" json:"report"`
+	Species   *string             `db:"species" json:"species"`
+	Type      string              `db:"type" json:"type"`
 }
 
 // Create a lead from the given signal and site
@@ -212,7 +212,7 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 		pool_map[pool.ID] = pool
 		log.Debug().Int32("pool", pool.ID).Msg("Added to map")
 	}
-	report_map := make(map[int32]*types.Report, len(report_ids))
+	report_map := make(map[int32]*types.PublicReport, len(report_ids))
 	for _, report := range reports {
 		report_map[report.ID] = report
 	}
