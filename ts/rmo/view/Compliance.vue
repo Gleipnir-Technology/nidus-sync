@@ -84,7 +84,7 @@ async function createReport(client_id: string, loc?: GeolocationPosition) {
 	} else {
 		formData.append("location.accuracy", "0");
 		formData.append("location.latitude", "0");
-		formData.append("longitude", "0");
+		formData.append("location.longitude", "0");
 	}
 	const resp = await fetch("/api/rmo/compliance", {
 		method: "POST",
