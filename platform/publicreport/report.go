@@ -30,18 +30,25 @@ func ByID(ctx context.Context, public_id string) (*types.PublicReport, error) {
 	return reports[0], nil
 }
 func ByIDCompliance(ctx context.Context, public_id string) (*types.PublicReportCompliance, error) {
-	query := reportQuery()
-	query.Apply(
-		sm.Where(psql.Quote("publicreport", "report", "public_id").EQ(psql.Arg(public_id))),
-	)
-	reports, err := reportQueryToRows(ctx, query)
+	report, err := ByID(ctx, public_id)
 	if err != nil {
-		return nil, fmt.Errorf("query to rows: %w", err)
+		return nil, fmt.Errorf("base report byid: %w", err)
 	}
-	if len(reports) != 1 {
-		return nil, fmt.Errorf("reports returned: %d", len(reports))
+	return compliance(ctx, public_id, report)
+}
+func ByIDNuisance(ctx context.Context, public_id string) (*types.PublicReportNuisance, error) {
+	report, err := ByID(ctx, public_id)
+	if err != nil {
+		return nil, fmt.Errorf("base report byid: %w", err)
 	}
-	return compliance(ctx, public_id, reports[0])
+	return nuisance(ctx, public_id, report)
+}
+func ByIDWater(ctx context.Context, public_id string) (*types.PublicReportWater, error) {
+	report, err := ByID(ctx, public_id)
+	if err != nil {
+		return nil, fmt.Errorf("base report byid: %w", err)
+	}
+	return water(ctx, public_id, report)
 }
 func ReportsForOrganization(ctx context.Context, org_id int32) ([]*types.PublicReport, error) {
 	query := reportQuery()
@@ -125,6 +132,21 @@ func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error
 		return 0, fmt.Errorf("query count: %w", err)
 	}
 	return row.Count, nil
+}
+func copyReportContent(src *types.PublicReport, dst *types.PublicReport) {
+	dst.Address = src.Address
+	dst.Created = src.Created
+	dst.ID = src.ID
+	dst.Images = src.Images
+	dst.Location = src.Location
+	dst.Log = src.Log
+	dst.DistrictID = src.DistrictID
+	dst.District = src.District
+	dst.PublicID = src.PublicID
+	dst.Reporter = src.Reporter
+	dst.Status = src.Status
+	dst.Type = src.Type
+	dst.URI = src.URI
 }
 func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
 	return psql.Select(

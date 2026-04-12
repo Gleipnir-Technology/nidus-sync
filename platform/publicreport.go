@@ -32,12 +32,10 @@ func PublicreportByIDCompliance(ctx context.Context, report_id string) (*types.P
 	return publicreport.ByIDCompliance(ctx, report_id)
 }
 func PublicreportByIDNuisance(ctx context.Context, report_id string) (*types.PublicReportNuisance, error) {
-	//return publicreport.ByIDNuisance(ctx, report_id)
-	return nil, nil
+	return publicreport.ByIDNuisance(ctx, report_id)
 }
 func PublicreportByIDWater(ctx context.Context, report_id string) (*types.PublicReportWater, error) {
-	//return publicreport.ByIDWater(ctx, report_id)
-	return nil, nil
+	return publicreport.ByIDWater(ctx, report_id)
 }
 func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
 	report, err := publicReportFromID(ctx, report_id)

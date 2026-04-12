@@ -1,7 +1,6 @@
 package publicreport
 
 import (
-/*
 	"context"
 	"fmt"
 
@@ -14,12 +13,10 @@ import (
 	//"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
-*/
 )
 
-/*
-func nuisancesByReportID(ctx context.Context, report_ids []int32) (map[int32]*types.Nuisance, error) {
-	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+func nuisance(ctx context.Context, public_id string, report *types.PublicReport) (*types.PublicReportNuisance, error) {
+	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"additional_info",
 			"duration",
@@ -40,32 +37,12 @@ func nuisancesByReportID(ctx context.Context, report_ids []int32) (map[int32]*ty
 		),
 		sm.From("publicreport.nuisance"),
 		sm.Where(psql.Quote("report_id").EQ(
-			psql.Any(report_ids),
+			psql.Arg(report.ID),
 		)),
-	), scan.StructMapper[types.Nuisance]())
+	), scan.StructMapper[types.PublicReportNuisance]())
 	if err != nil {
 		return nil, fmt.Errorf("query nuisance: %w", err)
 	}
-	results := make(map[int32]*types.Nuisance, len(rows))
-	for _, row := range rows {
-		results[row.ReportID] = &types.Nuisance{
-			AdditionalInfo:      row.AdditionalInfo,
-			Duration:            row.Duration,
-			IsLocationBackyard:  row.IsLocationBackyard,
-			IsLocationFrontyard: row.IsLocationFrontyard,
-			IsLocationGarden:    row.IsLocationGarden,
-			IsLocationOther:     row.IsLocationOther,
-			IsLocationPool:      row.IsLocationPool,
-			SourceContainer:     row.SourceContainer,
-			SourceDescription:   row.SourceDescription,
-			SourceGutter:        row.SourceGutter,
-			SourceStagnant:      row.SourceStagnant,
-			TODDay:              row.TODDay,
-			TODEarly:            row.TODEarly,
-			TODEvening:          row.TODEvening,
-			TODNight:            row.TODNight,
-		}
-	}
-	return results, nil
+	copyReportContent(report, &row.PublicReport)
+	return &row, nil
 }
-*/

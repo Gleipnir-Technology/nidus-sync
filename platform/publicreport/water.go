@@ -1,7 +1,6 @@
 package publicreport
 
 import (
-/*
 	"context"
 	"fmt"
 
@@ -15,12 +14,10 @@ import (
 	//"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
-*/
 )
 
-/*
-func watersByReportID(ctx context.Context, report_ids []int32) (map[int32]*types.Water, error) {
-	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+func water(ctx context.Context, public_id string, report *types.PublicReport) (*types.PublicReportWater, error) {
+	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"access_comments",
 			"access_gate",
@@ -42,32 +39,12 @@ func watersByReportID(ctx context.Context, report_ids []int32) (map[int32]*types
 		),
 		sm.From("publicreport.water"),
 		sm.Where(psql.Quote("report_id").EQ(
-			psql.Any(report_ids),
+			psql.Arg(report.ID),
 		)),
-	), scan.StructMapper[types.Water]())
+	), scan.StructMapper[types.PublicReportWater]())
 	if err != nil {
 		return nil, fmt.Errorf("query water: %w", err)
 	}
-	results := make(map[int32]*types.Water, len(rows))
-	for _, row := range rows {
-		results[row.ReportID] = &types.Water{
-			AccessComments:         row.AccessComments,
-			AccessGate:             row.AccessGate,
-			AccessFence:            row.AccessFence,
-			AccessLocked:           row.AccessLocked,
-			AccessDog:              row.AccessDog,
-			AccessOther:            row.AccessOther,
-			Comments:               row.Comments,
-			HasAdult:               row.HasAdult,
-			HasBackyardPermission:  row.HasBackyardPermission,
-			HasLarvae:              row.HasLarvae,
-			HasPupae:               row.HasPupae,
-			IsReporterConfidential: row.IsReporterConfidential,
-			IsReporterOwner:        row.IsReporterOwner,
-			Owner:                  row.Owner,
-			ReportID:               row.ReportID,
-		}
-	}
-	return results, nil
+	copyReportContent(report, &row.PublicReport)
+	return &row, nil
 }
-*/

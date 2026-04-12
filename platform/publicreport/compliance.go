@@ -40,18 +40,3 @@ func compliance(ctx context.Context, public_id string, report *types.PublicRepor
 	return &row, nil
 
 }
-func copyReportContent(src *types.PublicReport, dst *types.PublicReport) {
-	dst.Address = src.Address
-	dst.Created = src.Created
-	dst.ID = src.ID
-	dst.Images = src.Images
-	dst.Location = src.Location
-	dst.Log = src.Log
-	dst.DistrictID = src.DistrictID
-	dst.District = src.District
-	dst.PublicID = src.PublicID
-	dst.Reporter = src.Reporter
-	dst.Status = src.Status
-	dst.Type = src.Type
-	dst.URI = src.URI
-}
