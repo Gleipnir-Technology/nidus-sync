@@ -18,7 +18,7 @@ import (
 func ByID(ctx context.Context, public_id string) (*types.PublicReport, error) {
 	query := reportQuery()
 	query.Apply(
-		sm.Where(psql.Quote("publicreport", "report", "public_id").EQ(psql.Arg(public_id))),
+		sm.Where(psql.Quote("r", "public_id").EQ(psql.Arg(public_id))),
 	)
 	reports, err := reportQueryToRows(ctx, query)
 	if err != nil {
@@ -53,8 +53,8 @@ func ByIDWater(ctx context.Context, public_id string) (*types.PublicReportWater,
 func ReportsForOrganization(ctx context.Context, org_id int32) ([]*types.PublicReport, error) {
 	query := reportQuery()
 	query.Apply(
-		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
-		sm.Where(psql.Quote("publicreport", "report", "reviewed").IsNull()),
+		sm.Where(psql.Quote("r", "organization_id").EQ(psql.Arg(org_id))),
+		sm.Where(psql.Quote("r", "reviewed").IsNull()),
 	)
 	return reportQueryToRows(ctx, query)
 }
@@ -112,8 +112,8 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 func Reports(ctx context.Context, org_id int32, ids []int32) ([]*types.PublicReport, error) {
 	query := reportQuery()
 	query.Apply(
-		sm.Where(psql.Quote("publicreport", "report", "organization_id").EQ(psql.Arg(org_id))),
-		sm.Where(psql.Quote("publicreport", "report", "id").EQ(psql.Any(ids))),
+		sm.Where(psql.Quote("r", "organization_id").EQ(psql.Arg(org_id))),
+		sm.Where(psql.Quote("r", "id").EQ(psql.Any(ids))),
 	)
 	return reportQueryToRows(ctx, query)
 }
@@ -151,28 +151,32 @@ func copyReportContent(src *types.PublicReport, dst *types.PublicReport) {
 func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
 	return psql.Select(
 		sm.Columns(
-			"address_country AS \"address.country\"",
-			"address_id AS \"address.id\"",
-			"address_gid AS \"address.gid\"",
-			"address_locality AS \"address.locality\"",
-			"address_number AS \"address.number\"",
-			"address_postal_code AS \"address.postal_code\"",
-			"address_raw AS \"address.raw\"",
-			"address_region AS \"address.region\"",
-			"address_street AS \"address.street\"",
-			"created",
-			"id",
-			"latlng_accuracy_value AS \"location.accuracy\"",
-			"COALESCE(ST_Y(location::geometry::geometry(point, 4326)), 0.0) AS \"location.latitude\"",
-			"COALESCE(ST_X(location::geometry::geometry(point, 4326)), 0.0) AS \"location.longitude\"",
-			"organization_id",
-			"public_id",
-			"report_type",
-			"reporter_email AS \"reporter.email\"",
-			"reporter_name AS \"reporter.name\"",
-			"reporter_phone AS \"reporter.phone\"",
-			"status",
+			"a.country AS \"address.country\"",
+			"a.id AS \"address.id\"",
+			"a.gid AS \"address.gid\"",
+			"a.locality AS \"address.locality\"",
+			"a.number_ AS \"address.number\"",
+			"a.postal_code AS \"address.postal_code\"",
+			"a AS \"address.raw\"",
+			"a.region AS \"address.region\"",
+			"a.street AS \"address.street\"",
+			"r.created",
+			"r.id",
+			"r.latlng_accuracy_value AS \"location.accuracy\"",
+			"COALESCE(ST_Y(r.location::geometry::geometry(point, 4326)), 0.0) AS \"location.latitude\"",
+			"COALESCE(ST_X(r.location::geometry::geometry(point, 4326)), 0.0) AS \"location.longitude\"",
+			"r.organization_id",
+			"r.public_id",
+			"r.report_type",
+			"r.reporter_email AS \"reporter.email\"",
+			"r.reporter_name AS \"reporter.name\"",
+			"r.reporter_phone AS \"reporter.phone\"",
+			"r.status",
 		),
-		sm.From("publicreport.report"),
+		sm.From("publicreport.report").As("r"),
+		sm.InnerJoin("address").As("a").OnEQ(
+			psql.Quote("r", "address_id"),
+			psql.Quote("a", "id"),
+		),
 	)
 }
