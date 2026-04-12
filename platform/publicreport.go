@@ -29,7 +29,7 @@ func PublicreportByID(ctx context.Context, report_id string) (*types.PublicRepor
 	return publicreport.Report(ctx, report_id)
 }
 func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
-	report, err := reportFromID(ctx, report_id)
+	report, err := publicReportFromID(ctx, report_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
 	}
@@ -55,7 +55,7 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 	}
 	defer txn.Rollback(ctx)
 
-	report, err := reportFromID(ctx, report_id)
+	report, err := publicReportFromID(ctx, report_id)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
@@ -93,7 +93,7 @@ func PublicReportUpdate(ctx context.Context, report_id string, report_setter mod
 		return nil, fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
-	report, err := reportFromID(ctx, report_id)
+	report, err := publicReportFromID(ctx, report_id)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
@@ -108,13 +108,13 @@ func PublicReportUpdate(ctx context.Context, report_id string, report_setter mod
 		}
 	}
 	if address != nil {
-		err = reportUpdateAddress(ctx, txn, report, *address)
+		err = publicReportUpdateAddress(ctx, txn, report, *address)
 		if err != nil {
 			return nil, fmt.Errorf("update address: %w", err)
 		}
 	}
 	if location != nil {
-		err = reportUpdateLocation(ctx, txn, report.ID, *location)
+		err = publicReportUpdateLocation(ctx, txn, report.ID, *location)
 		if err != nil {
 			return nil, fmt.Errorf("update location: %w", err)
 		}
@@ -125,8 +125,11 @@ func PublicReportUpdate(ctx context.Context, report_id string, report_setter mod
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOReport, org_id, report_id)
 }
-func ReportComplianceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_compliance models.PublicreportComplianceSetter) (*models.PublicreportReport, error) {
-	return reportCreate(ctx, setter_report, nil, nil, nil, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+func PublicReportsForOrganization(ctx context.Context, org_id int32) ([]*types.PublicReport, error) {
+	return publicreport.ReportsForOrganization(ctx, org_id)
+}
+func PublicReportComplianceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_compliance models.PublicreportComplianceSetter) (*models.PublicreportReport, error) {
+	return publicReportCreate(ctx, setter_report, nil, nil, nil, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_compliance.ReportID = omit.From(report_id)
 		_, err := models.PublicreportCompliances.Insert(&setter_compliance).One(ctx, txn)
 		if err != nil {
@@ -135,14 +138,14 @@ func ReportComplianceCreate(ctx context.Context, setter_report models.Publicrepo
 		return nil
 	})
 }
-func ReportImageCreate(ctx context.Context, report_id string, images []ImageUpload) error {
+func PublicReportImageCreate(ctx context.Context, report_id string, images []ImageUpload) error {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
 
-	report, err := reportFromID(ctx, report_id)
+	report, err := publicReportFromID(ctx, report_id)
 	if err != nil {
 		return fmt.Errorf("report from ID: %w", err)
 	}
@@ -167,8 +170,8 @@ func ReportImageCreate(ctx context.Context, report_id string, images []ImageUplo
 	txn.Commit(ctx)
 	return nil
 }
-func ReportNuisanceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_nuisance models.PublicreportNuisanceSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return reportCreate(ctx, setter_report, &location, &address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+func PublicReportNuisanceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_nuisance models.PublicreportNuisanceSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
+	return publicReportCreate(ctx, setter_report, &location, &address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_nuisance.ReportID = omit.From(report_id)
 		_, err := models.PublicreportNuisances.Insert(&setter_nuisance).One(ctx, txn)
 		if err != nil {
@@ -178,8 +181,8 @@ func ReportNuisanceCreate(ctx context.Context, setter_report models.Publicreport
 	})
 }
 
-func ReportWaterCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_water models.PublicreportWaterSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return reportCreate(ctx, setter_report, &location, &address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+func PublicReportWaterCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_water models.PublicreportWaterSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
+	return publicReportCreate(ctx, setter_report, &location, &address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_water.ReportID = omit.From(report_id)
 		_, err := models.PublicreportWaters.Insert(&setter_water).One(ctx, txn)
 		if err != nil {
@@ -191,7 +194,7 @@ func ReportWaterCreate(ctx context.Context, setter_report models.PublicreportRep
 
 type funcSetReportDetail = func(context.Context, bob.Executor, int32) error
 
-func reportCreate(ctx context.Context, setter_report models.PublicreportReportSetter, location *types.Location, address *Address, images []ImageUpload, detail_setter funcSetReportDetail) (result *models.PublicreportReport, err error) {
+func publicReportCreate(ctx context.Context, setter_report models.PublicreportReportSetter, location *types.Location, address *Address, images []ImageUpload, detail_setter funcSetReportDetail) (result *models.PublicreportReport, err error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
@@ -243,7 +246,7 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 	if location != nil {
 		l := *location
 		if l.Latitude != 0 && l.Longitude != 0 {
-			reportUpdateLocation(ctx, txn, result.ID, l)
+			publicReportUpdateLocation(ctx, txn, result.ID, l)
 		}
 	}
 	log.Info().Str("public_id", public_id).Int32("id", result.ID).Msg("Created base report")
@@ -289,7 +292,7 @@ func reportCreate(ctx context.Context, setter_report models.PublicreportReportSe
 	}
 	return result, nil
 }
-func reportFromID(ctx context.Context, report_id string) (*models.PublicreportReport, error) {
+func publicReportFromID(ctx context.Context, report_id string) (*models.PublicreportReport, error) {
 	report, err := models.PublicreportReports.Query(
 		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
 	).One(ctx, db.PGInstance.BobDB)
@@ -298,7 +301,7 @@ func reportFromID(ctx context.Context, report_id string) (*models.PublicreportRe
 	}
 	return report, nil
 }
-func reportUpdateAddress(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, address types.Address) error {
+func publicReportUpdateAddress(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, address types.Address) error {
 	err := report.Update(ctx, txn, &models.PublicreportReportSetter{
 		AddressGid: omit.From(address.GID),
 		AddressRaw: omit.From(address.Raw),
@@ -308,7 +311,7 @@ func reportUpdateAddress(ctx context.Context, txn bob.Executor, report *models.P
 	}
 	return nil
 }
-func reportUpdateLocation(ctx context.Context, txn bob.Executor, id int32, location types.Location) error {
+func publicReportUpdateLocation(ctx context.Context, txn bob.Executor, id int32, location types.Location) error {
 	h3cell, _ := location.H3Cell()
 	geom_query, _ := location.GeometryQuery()
 	_, err := psql.Update(
