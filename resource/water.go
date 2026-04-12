@@ -111,7 +111,7 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 		OwnerPhone:             omit.From(w.OwnerPhone),
 		//ReportID               omit.Val[int32]
 	}
-	report, err := platform.ReportWaterCreate(ctx, setter_report, setter_water, w.Location, address, uploads)
+	report, err := platform.PublicReportWaterCreate(ctx, setter_report, setter_water, w.Location, address, uploads)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to save new report: %w", err)
 	}

@@ -67,7 +67,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		ReportPhoneCanText: omitnull.FromPtr[bool](nil),
 		WantsScheduled:     omitnull.FromPtr[bool](nil),
 	}
-	report, err := platform.ReportComplianceCreate(ctx, setter_report, setter_compliance)
+	report, err := platform.PublicReportComplianceCreate(ctx, setter_report, setter_compliance)
 	if err != nil {
 		return nil, nhttp.NewError("create compliance report: %w", err)
 	}

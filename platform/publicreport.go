@@ -26,7 +26,18 @@ import (
 )
 
 func PublicreportByID(ctx context.Context, report_id string) (*types.PublicReport, error) {
-	return publicreport.Report(ctx, report_id)
+	return publicreport.ByID(ctx, report_id)
+}
+func PublicreportByIDCompliance(ctx context.Context, report_id string) (*types.PublicReportCompliance, error) {
+	return publicreport.ByIDCompliance(ctx, report_id)
+}
+func PublicreportByIDNuisance(ctx context.Context, report_id string) (*types.PublicReportNuisance, error) {
+	//return publicreport.ByIDNuisance(ctx, report_id)
+	return nil, nil
+}
+func PublicreportByIDWater(ctx context.Context, report_id string) (*types.PublicReportWater, error) {
+	//return publicreport.ByIDWater(ctx, report_id)
+	return nil, nil
 }
 func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
 	report, err := publicReportFromID(ctx, report_id)
@@ -120,7 +131,7 @@ func PublicReportUpdate(ctx context.Context, report_id string, report_setter mod
 		}
 	}
 	txn.Commit(ctx)
-	return publicreport.Report(ctx, report_id)
+	return publicreport.ByID(ctx, report_id)
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOReport, org_id, report_id)

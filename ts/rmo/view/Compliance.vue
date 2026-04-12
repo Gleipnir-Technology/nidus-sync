@@ -151,6 +151,7 @@ async function fetchExistingReport(report_uri: string) {
 		return;
 	}
 	const body = await resp.json();
+	report.value.comments = body.comments;
 	report.value.id = body.id;
 	report.value.images = body.images;
 	report.value.uri = body.uri;

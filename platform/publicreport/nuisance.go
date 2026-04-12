@@ -1,6 +1,7 @@
 package publicreport
 
 import (
+/*
 	"context"
 	"fmt"
 
@@ -13,8 +14,10 @@ import (
 	//"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
+*/
 )
 
+/*
 func nuisancesByReportID(ctx context.Context, report_ids []int32) (map[int32]*types.Nuisance, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
@@ -65,3 +68,4 @@ func nuisancesByReportID(ctx context.Context, report_ids []int32) (map[int32]*ty
 	}
 	return results, nil
 }
+*/

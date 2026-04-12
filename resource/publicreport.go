@@ -36,15 +36,50 @@ func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query Query
 	if err != nil {
 		return nil, nhttp.NewError("get report: %w", err)
 	}
-	var district_uri string
-	if report.DistrictID != nil {
-		district_uri, err = res.router.IDToURI("district.ByIDGet", int(*report.DistrictID))
-		if err != nil {
-			return nil, nhttp.NewError("district uri: %w", err)
-		}
-	}
+	populateDistrictURI(report, res.router)
 	populateReportURI(report, res.router)
-	report.District = &district_uri
+	return report, nil
+}
+func (res *publicreportR) ByIDCompliance(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicreportByIDCompliance(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
+	return report, nil
+}
+func (res *publicreportR) ByIDNuisance(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicreportByIDNuisance(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
+	return report, nil
+}
+func (res *publicreportR) ByIDWater(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicreportByIDWater(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
 	return report, nil
 }
 
@@ -65,7 +100,7 @@ func (res *publicreportR) ImageCreate(ctx context.Context, r *http.Request, n nu
 		return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
 	}
 
-	platform.ReportImageCreate(ctx, public_id, uploads)
+	platform.PublicReportImageCreate(ctx, public_id, uploads)
 	return &image{Status: "ok"}, nil
 }
 
@@ -115,6 +150,18 @@ func (res *publicreportR) Update(ctx context.Context, r *http.Request, prf publi
 	return report, nil
 }
 
+func populateDistrictURI(report *types.PublicReport, r *router) error {
+	var district_uri string
+	var err error
+	if report.DistrictID != nil {
+		district_uri, err = r.IDToURI("district.ByIDGet", int(*report.DistrictID))
+		if err != nil {
+			return nhttp.NewError("district uri: %w", err)
+		}
+	}
+	report.District = &district_uri
+	return nil
+}
 func populateReportURI(report *types.PublicReport, r *router) error {
 	var route_name string
 	switch report.Type {

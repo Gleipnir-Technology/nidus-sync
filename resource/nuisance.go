@@ -122,7 +122,7 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 		TodEvening:        omit.From(n.TODEvening),
 		TodNight:          omit.From(n.TODNight),
 	}
-	report, err := platform.ReportNuisanceCreate(ctx, setter_report, setter_nuisance, n.Location, address, uploads)
+	report, err := platform.PublicReportNuisanceCreate(ctx, setter_report, setter_nuisance, n.Location, address, uploads)
 	if err != nil {
 		return nil, nhttp.NewError("create nuisance report: %w", err)
 	}

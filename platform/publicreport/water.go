@@ -1,6 +1,7 @@
 package publicreport
 
 import (
+/*
 	"context"
 	"fmt"
 
@@ -14,8 +15,10 @@ import (
 	//"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
+*/
 )
 
+/*
 func watersByReportID(ctx context.Context, report_ids []int32) (map[int32]*types.Water, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
@@ -67,3 +70,4 @@ func watersByReportID(ctx context.Context, report_ids []int32) (map[int32]*types
 	}
 	return results, nil
 }
+*/

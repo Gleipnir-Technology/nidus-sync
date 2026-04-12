@@ -56,7 +56,7 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 		comms[i] = communication{
 			Created:      report.Created,
 			ID:           report.PublicID,
-			PublicReport: report,
+			PublicReport: *report,
 			Type:         "publicreport." + string(report.Type),
 		}
 	}
