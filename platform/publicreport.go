@@ -216,19 +216,12 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	}
 	setter_report.PublicID = omit.From(public_id)
 
-	// If we've got an locality value it was set by geocoding so we should save it
 	var addr *models.Address
-	if address != nil && location != nil {
+	if address != nil && address.GID != "" {
 		a := *address
-		l := *location
-		if a.Locality != "" && l.Latitude != 0 && l.Longitude != 0 {
-			addr, err = geocode.EnsureAddress(ctx, txn, a, types.Location{
-				Latitude:  l.Latitude,
-				Longitude: l.Longitude,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("Failed to ensure address: %w", err)
-			}
+		addr, err = geocode.EnsureAddress(ctx, txn, a)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to ensure address: %w", err)
 		}
 	}
 

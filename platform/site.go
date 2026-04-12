@@ -83,7 +83,7 @@ func siteFromAddressRaw(ctx context.Context, txn bob.Tx, user User, address stri
 	if err != nil {
 		return nil, fmt.Errorf("geocode: %w", err)
 	}
-	a, err := geocode.EnsureAddress(ctx, txn, geo.Address, geo.Location)
+	a, err := geocode.EnsureAddress(ctx, txn, geo.Address)
 	if err != nil {
 		return nil, fmt.Errorf("ensure address: %w", err)
 	}
@@ -96,7 +96,7 @@ func siteFromLocation(ctx context.Context, txn bob.Tx, user User, location Locat
 		return nil, fmt.Errorf("reverse geocode: %w", err)
 	}
 	// Ensure we have an address at that newly created location
-	a, err := geocode.EnsureAddress(ctx, txn, resp.Address, resp.Location)
+	a, err := geocode.EnsureAddress(ctx, txn, resp.Address)
 	if err != nil {
 		return nil, fmt.Errorf("ensure address: %w", err)
 	}

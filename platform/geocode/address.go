@@ -7,6 +7,7 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	//bobtypes "github.com/Gleipnir-Technology/bob/types"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -17,21 +18,19 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
+type _rowWithID struct {
+	ID int32 `db:"id"`
+}
+
 // Ensure the provided address exists. If it doesn't add it to the database.
-func EnsureAddress(ctx context.Context, txn bob.Executor, a types.Address, l types.Location) (*models.Address, error) {
+func EnsureAddress(ctx context.Context, txn bob.Executor, a types.Address) (*models.Address, error) {
 	address, err := models.Addresses.Query(
-		models.SelectWhere.Addresses.Country.EQ(a.Country),
-		models.SelectWhere.Addresses.Locality.EQ(a.Locality),
-		models.SelectWhere.Addresses.Number.EQ(a.Number),
-		models.SelectWhere.Addresses.PostalCode.EQ(a.PostalCode),
-		models.SelectWhere.Addresses.Region.EQ(a.Region),
-		models.SelectWhere.Addresses.Street.EQ(a.Street),
-		models.SelectWhere.Addresses.Unit.EQ(a.Unit),
+		models.SelectWhere.Addresses.Gid.EQ(a.GID),
 	).One(ctx, txn)
 	if err == nil {
 		return address, nil
 	}
-	id, err := insertAddress(ctx, txn, a, l)
+	id, err := insertAddress(ctx, txn, a)
 	if err != nil {
 		return nil, fmt.Errorf("insert address: %w", err)
 	}
@@ -61,11 +60,8 @@ func ensureAddressFromFeature(ctx context.Context, txn bob.Executor, feature sta
 	if err != nil {
 		return 0, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", lat, lng)
 	}
-	type _row struct {
-		ID int32 `db:"id"`
-	}
-	row, err := bob.One(ctx, txn, psql.Insert(
-		im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
+	query := addressQuery()
+	query.Apply(
 		im.Values(
 			psql.Arg(feature.CountryCode()),
 			psql.Arg(time.Now()),
@@ -80,24 +76,23 @@ func ensureAddressFromFeature(ctx context.Context, txn bob.Executor, feature sta
 			psql.Arg(feature.Street()),
 			psql.Raw("''"),
 		),
-		im.Returning("id"),
-	), scan.StructMapper[_row]())
+	)
+	row, err := bob.One(ctx, txn, query, scan.StructMapper[_rowWithID]())
 	log.Info().Int32("id", row.ID).Msg("inserted address")
 	if err != nil {
 		return 0, fmt.Errorf("insert: %w", err)
 	}
 	return row.ID, nil
 }
-func insertAddress(ctx context.Context, txn bob.Executor, address types.Address, location types.Location) (*int32, error) {
-	cell, err := h3utils.GetCell(location.Longitude, location.Latitude, 15)
+func insertAddress(ctx context.Context, txn bob.Executor, address types.Address) (*int32, error) {
+	lng := address.Location.Longitude
+	lat := address.Location.Latitude
+	cell, err := h3utils.GetCell(lng, lat, 15)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", location.Longitude, location.Latitude)
+		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", lat, lng)
 	}
-	type _row struct {
-		ID int32 `db:"id"`
-	}
-	row, err := bob.One(ctx, txn, psql.Insert(
-		im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
+	query := addressQuery()
+	query.Apply(
 		im.Values(
 			psql.Arg(address.Country),
 			psql.Arg(time.Now()),
@@ -105,21 +100,59 @@ func insertAddress(ctx context.Context, txn bob.Executor, address types.Address,
 			psql.Arg(cell),
 			psql.Raw("DEFAULT"),
 			psql.Arg(address.Locality),
-			psql.F("ST_Point", location.Longitude, location.Latitude, 4326),
+			psql.F("ST_Point", address.Location.Longitude, address.Location.Latitude, 4326),
 			psql.Arg(address.Number),
 			psql.Arg(address.PostalCode),
 			psql.Arg(address.Region),
 			psql.Arg(address.Street),
 			psql.Raw("''"),
 		),
-		im.Returning("id"),
-	), scan.StructMapper[_row]())
+	)
+	row, err := bob.One(ctx, txn, query, scan.StructMapper[_rowWithID]())
 	if err != nil {
 		return nil, fmt.Errorf("insert: %w", err)
 	}
-
 	return &row.ID, nil
 }
-func insertAddresses(ctx context.Context, txn bob.Executor, features []stadia.GeocodeFeature) error {
-	return nil
+func insertAddresses(ctx context.Context, txn bob.Executor, features []stadia.GeocodeFeature) ([]int32, error) {
+	query := addressQuery()
+	for _, feature := range features {
+		lng := feature.Geometry.Coordinates[0]
+		lat := feature.Geometry.Coordinates[1]
+		cell, err := h3utils.GetCell(lng, lat, 15)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", lat, lng)
+		}
+		query.Apply(
+			im.Values(
+				psql.Arg(feature.CountryCode()),
+				psql.Arg(time.Now()),
+				psql.Arg(feature.Properties.GID),
+				psql.Arg(cell.String()),
+				psql.Raw("DEFAULT"),
+				psql.Arg(feature.Locality()),
+				psql.F("ST_Point", lng, lat, 4326),
+				psql.Arg(feature.Number()),
+				psql.Arg(feature.PostalCode()),
+				psql.Arg(feature.Region()),
+				psql.Arg(feature.Street()),
+				psql.Raw("''"),
+			),
+		)
+	}
+	rows, err := bob.All(ctx, txn, query, scan.StructMapper[_rowWithID]())
+	if err != nil {
+		return nil, fmt.Errorf("insert: %w", err)
+	}
+	results := make([]int32, len(rows))
+	for _, row := range rows {
+		results = append(results, row.ID)
+	}
+	return results, nil
+}
+func addressQuery() bob.BaseQuery[*dialect.InsertQuery] {
+	return psql.Insert(
+		im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
+		im.Returning("id"),
+	)
 }
