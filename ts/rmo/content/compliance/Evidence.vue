@@ -113,20 +113,15 @@
 				<ImageUpload v-model="images" />
 			</div>
 
-			<!-- Photo Previews -->
-			<div id="photo-previews" class="mb-4">
-				<!-- Thumbnails will be dynamically added here -->
-				<div class="row g-2" id="preview-container" style="display: none">
-					<!-- Example preview structure (hidden by default, shown when photos added):
-											<div class="col-4">
-													<div class="photo-preview">
-															<img src="..." alt="Preview">
-															<button type="button" class="remove-btn" data-index="0">
-																	<i class="bi bi-x-lg"></i>
-															</button>
-													</div>
-											</div>
-											-->
+			<div class="mb-4" v-if="modelValue.images.length > 0">
+				<div class="alert alert-primary" role="alert">
+					You've already added {{ modelValue.images.length }} image{{
+						modelValue.images.length == 1 ? "" : "s"
+					}}
+					to this report. If you add images below, they will replace the image{{
+						modelValue.images.length == 1 ? "" : "s"
+					}}
+					already on this report.
 				</div>
 			</div>
 
