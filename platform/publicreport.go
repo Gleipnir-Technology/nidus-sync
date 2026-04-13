@@ -37,8 +37,8 @@ func PublicreportByIDNuisance(ctx context.Context, report_id string) (*types.Pub
 func PublicreportByIDWater(ctx context.Context, report_id string) (*types.PublicReportWater, error) {
 	return publicreport.ByIDWater(ctx, report_id)
 }
-func PublicreportInvalid(ctx context.Context, user User, report_id string) error {
-	report, err := publicReportFromID(ctx, report_id)
+func PublicreportInvalid(ctx context.Context, user User, public_id string) error {
+	report, err := publicReportFromID(ctx, public_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
 	}
@@ -53,18 +53,18 @@ func PublicreportInvalid(ctx context.Context, user User, report_id string) error
 	})
 
 	log.Info().Int32("id", report.ID).Msg("Report marked as invalid")
-	event.Updated(event.TypeRMOPublicReport, user.Organization.ID, report_id)
+	event.Updated(event.TypeRMOPublicReport, user.Organization.ID, public_id)
 	return nil
 }
 
-func PublicReportMessageCreate(ctx context.Context, user User, report_id, message string) (message_id *int32, err error) {
+func PublicReportMessageCreate(ctx context.Context, user User, public_id, message string) (message_id *int32, err error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
 
-	report, err := publicReportFromID(ctx, report_id)
+	report, err := publicReportFromID(ctx, public_id)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
@@ -72,7 +72,7 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 		return nil, fmt.Errorf("user is from a different organization")
 	}
 	if report.ReporterPhone != "" {
-		log.Debug().Str("report_id", report_id).Msg("contacting via phone")
+		log.Debug().Str("public_id", public_id).Msg("contacting via phone")
 		p, err := text.ParsePhoneNumber(report.ReporterPhone)
 		if err != nil {
 			return nil, fmt.Errorf("parse phone: %w", err)
@@ -85,24 +85,24 @@ func PublicReportMessageCreate(ctx context.Context, user User, report_id, messag
 		//log.Debug().Int32("msg_id", *msg_id).Msg("Created text.ReportMessage")
 		return msg_id, nil
 	} else if report.ReporterEmail != "" {
-		msg_id, err := email.ReportMessage(ctx, int32(user.ID), report_id, report.ReporterEmail, message)
+		msg_id, err := email.ReportMessage(ctx, int32(user.ID), public_id, report.ReporterEmail, message)
 		if err != nil {
 			return nil, fmt.Errorf("send email: %w", err)
 		}
 		txn.Commit(ctx)
 		return msg_id, nil
 	} else {
-		log.Debug().Str("report_id", report_id).Msg("contacting via email")
+		log.Debug().Str("public_id", public_id).Msg("contacting via email")
 		return nil, errors.New("no contact methods available")
 	}
 }
-func PublicReportUpdateCompliance(ctx context.Context, report_id string, report_setter models.PublicreportReportSetter, address *types.Address, location *types.Location) (*types.PublicReport, error) {
+func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_setter models.PublicreportReportSetter, address *types.Address, location *types.Location) (*types.PublicReport, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
-	report, err := publicReportFromID(ctx, report_id)
+	report, err := publicReportFromID(ctx, public_id)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
@@ -129,7 +129,7 @@ func PublicReportUpdateCompliance(ctx context.Context, report_id string, report_
 		}
 	}
 	txn.Commit(ctx)
-	return publicreport.ByID(ctx, report_id)
+	return publicreport.ByID(ctx, public_id)
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOPublicReport, org_id, report_id)
@@ -147,14 +147,14 @@ func PublicReportComplianceCreate(ctx context.Context, setter_report models.Publ
 		return nil
 	})
 }
-func PublicReportImageCreate(ctx context.Context, report_id string, images []ImageUpload) error {
+func PublicReportImageCreate(ctx context.Context, public_id string, images []ImageUpload) error {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
 
-	report, err := publicReportFromID(ctx, report_id)
+	report, err := publicReportFromID(ctx, public_id)
 	if err != nil {
 		return fmt.Errorf("report from ID: %w", err)
 	}
@@ -294,9 +294,9 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	}
 	return result, nil
 }
-func publicReportFromID(ctx context.Context, report_id string) (*models.PublicreportReport, error) {
+func publicReportFromID(ctx context.Context, public_id string) (*models.PublicreportReport, error) {
 	report, err := models.PublicreportReports.Query(
-		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
+		models.SelectWhere.PublicreportReports.PublicID.EQ(public_id),
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, err

@@ -127,7 +127,7 @@ func (res *publicreportR) UpdateCompliance(ctx context.Context, r *http.Request,
 	}
 	report, err := platform.PublicReportUpdateCompliance(ctx, public_id, report_setter, prf.Address, prf.Location)
 	if err != nil {
-		return nil, nhttp.NewError("update report: %w", err)
+		return nil, nhttp.NewError("platform update report compliance: %w", err)
 	}
 	return report, nil
 }

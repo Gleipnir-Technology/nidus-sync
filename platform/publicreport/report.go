@@ -151,14 +151,14 @@ func copyReportContent(src *types.PublicReport, dst *types.PublicReport) {
 func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
 	return psql.Select(
 		sm.Columns(
-			"a.country AS \"address.country\"",
+			"COALESCE(a.country, '') AS \"address.country\"",
 			"a.id AS \"address.id\"",
-			"a.gid AS \"address.gid\"",
-			"a.locality AS \"address.locality\"",
-			"a.number_ AS \"address.number\"",
-			"a.postal_code AS \"address.postal_code\"",
-			"a.region AS \"address.region\"",
-			"a.street AS \"address.street\"",
+			"COALESCE(a.gid, '') AS \"address.gid\"",
+			"COALESCE(a.locality, '') AS \"address.locality\"",
+			"COALESCE(a.number_, '') AS \"address.number\"",
+			"COALESCE(a.postal_code, '') AS \"address.postal_code\"",
+			"COALESCE(a.region, '') AS \"address.region\"",
+			"COALESCE(a.street, '') AS \"address.street\"",
 			"r.address_raw AS \"address.raw\"",
 			"r.created",
 			"r.id",
@@ -174,7 +174,7 @@ func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
 			"r.status",
 		),
 		sm.From("publicreport.report").As("r"),
-		sm.InnerJoin("address").As("a").OnEQ(
+		sm.LeftJoin("address").As("a").OnEQ(
 			psql.Quote("r", "address_id"),
 			psql.Quote("a", "id"),
 		),
