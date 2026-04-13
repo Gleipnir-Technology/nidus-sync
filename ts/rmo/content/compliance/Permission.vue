@@ -82,8 +82,8 @@
 						<input
 							type="radio"
 							id="access-allowed"
-							:value="PermissionAccess.GRANTED"
-							v-model="modelValue.access"
+							:value="PermissionType.GRANTED"
+							v-model="modelValue.permission_type"
 							class="mt-1"
 						/>
 						<label for="access-allowed">
@@ -98,7 +98,8 @@
 				<!-- Conditional fields for Option 1 -->
 				<div
 					v-if="
-						modelValue.access && modelValue.access == PermissionAccess.GRANTED
+						modelValue.permission_type &&
+						modelValue.permission_type == PermissionType.GRANTED
 					"
 					class="conditional-section"
 				>
@@ -163,8 +164,8 @@
 						<input
 							type="radio"
 							id="access-with-owner"
-							:value="PermissionAccess.WITH_OWNER"
-							v-model="modelValue.access"
+							:value="PermissionType.WITH_OWNER"
+							v-model="modelValue.permission_type"
 							class="mt-1"
 						/>
 						<label for="access-with-owner">
@@ -180,8 +181,8 @@
 				<div
 					class="conditional-section"
 					v-if="
-						modelValue.access &&
-						modelValue.access == PermissionAccess.WITH_OWNER
+						modelValue.permission_type &&
+						modelValue.permission_type == PermissionType.WITH_OWNER
 					"
 				>
 					<div class="form-check mb-3">
@@ -208,6 +209,7 @@
 							name="availability_notes"
 							rows="3"
 							placeholder="Example: Available weekday mornings, please call before visiting..."
+							v-model="modelValue.availability_notes"
 						></textarea>
 					</div>
 				</div>
@@ -218,8 +220,8 @@
 						<input
 							type="radio"
 							id="access-denied"
-							:value="PermissionAccess.DENIED"
-							v-model="modelValue.access"
+							:value="PermissionType.DENIED"
+							v-model="modelValue.permission_type"
 							class="mt-1"
 						/>
 						<label for="access-denied">
@@ -235,7 +237,8 @@
 				<div
 					class="conditional-section"
 					v-if="
-						modelValue.access && modelValue.access == PermissionAccess.DENIED
+						modelValue.permission_type &&
+						modelValue.permission_type == PermissionType.DENIED
 					"
 				>
 					<div class="encouragement-box">
@@ -276,13 +279,13 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { router } from "@/rmo/router";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import {
 	type District,
-	PermissionAccess,
+	PermissionType,
 	PublicReportCompliance,
 } from "@/type/api";
 

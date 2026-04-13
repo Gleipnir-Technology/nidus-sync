@@ -1,8 +1,21 @@
-export enum PermissionAccess {
+export enum PermissionType {
 	DENIED = "denied",
 	GRANTED = "granted",
 	UNSELECTED = "unselected",
 	WITH_OWNER = "with-owner",
+}
+
+function isPermissionType(value: string): value is PermissionType {
+	return Object.values(PermissionType).includes(value as PermissionType);
+}
+function toPermissionType(
+	value: string,
+	defaultValue: PermissionType = PermissionType.UNSELECTED,
+): PermissionType {
+	if (Object.values(PermissionType).includes(value as PermissionType)) {
+		return value as PermissionType;
+	}
+	return defaultValue;
 }
 export class Address {
 	constructor(
@@ -178,15 +191,6 @@ export interface PublicReportOptions {
 	type: string;
 	uri: string;
 }
-export interface PublicReportComplianceDTO {
-	access?: PermissionAccess;
-	access_instructions: string;
-	availability_notes: string;
-	comments: string;
-	gate_code: string;
-	has_dog: boolean;
-	wants_scheduled: boolean;
-}
 export class PublicReport {
 	address: Address;
 	created: Date;
@@ -229,30 +233,32 @@ export class PublicReport {
 	}
 }
 export interface PublicReportComplianceOptions extends PublicReportOptions {
-	access?: PermissionAccess;
 	access_instructions: string;
 	availability_notes: string;
 	comments: string;
 	gate_code: string;
 	has_dog: boolean;
+	permission_type: PermissionType;
 	wants_scheduled: boolean;
 }
 export class PublicReportCompliance extends PublicReport {
-	access?: PermissionAccess;
 	access_instructions: string;
 	availability_notes: string;
 	comments: string;
 	gate_code: string;
 	has_dog: boolean;
+	permission_type: PermissionType;
 	wants_scheduled: boolean;
 	constructor(options?: PublicReportComplianceOptions) {
 		super(options);
-		this.access = options?.access;
 		this.access_instructions = options?.access_instructions ?? "";
 		this.availability_notes = options?.availability_notes ?? "";
 		this.comments = options?.comments ?? "";
 		this.gate_code = options?.gate_code ?? "";
 		this.has_dog = options?.has_dog ?? false;
+		this.permission_type = toPermissionType(
+			options?.permission_type ?? PermissionType.UNSELECTED,
+		);
 		this.wants_scheduled = options?.wants_scheduled ?? false;
 	}
 }
@@ -374,7 +380,7 @@ export class PublicReportWater extends PublicReport {
 		longitude: 0,
 	},
 	permission: {
-		access: PermissionAccess.UNSELECTED,
+		access: PermissionType.UNSELECTED,
 		access_instructions: "",
 		availability_notes: "",
 		gate_code: "",

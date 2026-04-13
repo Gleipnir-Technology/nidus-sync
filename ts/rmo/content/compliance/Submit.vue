@@ -155,21 +155,23 @@
 						<div class="summary-value">
 							<span
 								class="status-badge status-provided"
-								v-if="modelValue.access == PermissionAccess.GRANTED"
+								v-if="modelValue.permission_type == PermissionType.GRANTED"
 							>
 								<i class="bi bi-check-circle"></i> Entry permitted without owner
 								present
 							</span>
 							<span
 								class="status-badge status-provided"
-								v-else-if="modelValue.access == PermissionAccess.WITH_OWNER"
+								v-else-if="
+									modelValue.permission_type == PermissionType.WITH_OWNER
+								"
 							>
 								<i class="bi bi-check-circle"></i> Entry permitted with owner
 								present
 							</span>
 							<span
 								class="status-badge status-not-provided"
-								v-else-if="modelValue.access == PermissionAccess.DENIED"
+								v-else-if="modelValue.permission_type == PermissionType.DENIED"
 							>
 								<i class="bi bi-x-circle"></i> Entry denied
 							</span>
@@ -242,7 +244,7 @@ import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import {
 	type District,
-	PermissionAccess,
+	PermissionType,
 	PublicReportCompliance,
 } from "@/type/api";
 

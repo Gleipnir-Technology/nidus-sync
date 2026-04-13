@@ -54,8 +54,9 @@ import {
 	type District,
 	PublicReport,
 	PublicReportCompliance,
+	PublicReportComplianceOptions,
 } from "@/type/api";
-import { Address, Location, PermissionAccess } from "@/type/api";
+import { Address, Location, PermissionType } from "@/type/api";
 import { type Contact } from "@/rmo/content/compliance/Contact.vue";
 
 interface Props {
@@ -137,9 +138,10 @@ function doPermission() {
 	console.log("report.value.has_dog", report.value.has_dog);
 	updateReport({
 		access_instructions: report.value.access_instructions,
+		availability_notes: report.value.availability_notes,
 		gate_code: report.value.gate_code,
 		has_dog: report.value.has_dog,
-		permission_type: report.value.access,
+		permission_type: report.value.permission_type,
 		wants_scheduled: report.value.wants_scheduled,
 	});
 }
@@ -157,8 +159,8 @@ async function fetchExistingReport(report_uri: string) {
 		);
 		return;
 	}
-	const body = await resp.json();
-	Object.assign(report.value, body);
+	const body = (await resp.json()) as PublicReportComplianceOptions;
+	Object.assign(report.value, new PublicReportCompliance(body));
 	console.log("fetched existing report", report.value);
 	isLoading.value = false;
 }
