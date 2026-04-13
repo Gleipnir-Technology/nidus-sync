@@ -148,7 +148,7 @@ func populateReportURI(report *types.PublicReport, r *router) error {
 	var route_name string
 	switch report.Type {
 	case "compliance":
-		route_name = "publicreport.ByIDGet"
+		route_name = "publicreport.compliance.ByIDGet"
 	case "nuisance":
 		route_name = "publicreport.nuisance.ByIDGet"
 	case "water":
