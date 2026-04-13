@@ -2147,14 +2147,16 @@ func (e *PublicreportReportstatustype) Scan(value any) error {
 
 // Enum values for PublicreportReporttype
 const (
-	PublicreportReporttypeNuisance PublicreportReporttype = "nuisance"
-	PublicreportReporttypeWater    PublicreportReporttype = "water"
+	PublicreportReporttypeNuisance   PublicreportReporttype = "nuisance"
+	PublicreportReporttypeWater      PublicreportReporttype = "water"
+	PublicreportReporttypeCompliance PublicreportReporttype = "compliance"
 )
 
 func AllPublicreportReporttype() []PublicreportReporttype {
 	return []PublicreportReporttype{
 		PublicreportReporttypeNuisance,
 		PublicreportReporttypeWater,
+		PublicreportReporttypeCompliance,
 	}
 }
 
@@ -2167,7 +2169,8 @@ func (e PublicreportReporttype) String() string {
 func (e PublicreportReporttype) Valid() bool {
 	switch e {
 	case PublicreportReporttypeNuisance,
-		PublicreportReporttypeWater:
+		PublicreportReporttypeWater,
+		PublicreportReporttypeCompliance:
 		return true
 	default:
 		return false
