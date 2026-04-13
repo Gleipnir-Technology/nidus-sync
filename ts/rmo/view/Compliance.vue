@@ -158,7 +158,8 @@ async function fetchExistingReport(report_uri: string) {
 		return;
 	}
 	const body = await resp.json();
-	report.value = body;
+	Object.assign(report.value, body);
+	console.log("fetched existing report", report.value);
 	isLoading.value = false;
 }
 async function updateReport(updates: ComplianceUpdate) {
