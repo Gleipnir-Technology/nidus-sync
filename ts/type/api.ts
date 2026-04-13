@@ -134,18 +134,19 @@ export interface Image {
 	uuid: string;
 }
 export interface ComplianceUpdate {
-	access?: string;
 	access_instructions?: string;
 	address?: Address;
+	availability_notes?: string;
 	comments?: string;
-	contact?: Contact;
 	gate_code?: string;
 	has_dog?: boolean;
 	//id: string;
 	//images?: Image[];
 	location?: Location;
-	permission?: Permissions;
+	permission_type?: string;
+	reporter?: Contact;
 	//uri: string;
+	report_phone_can_text?: boolean;
 	wants_scheduled?: boolean;
 }
 export interface PublicReportDTO {

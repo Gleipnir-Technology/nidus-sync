@@ -136,10 +136,10 @@ function doPermission() {
 	}
 	console.log("report.value.has_dog", report.value.has_dog);
 	updateReport({
-		access: report.value.access,
 		access_instructions: report.value.access_instructions,
 		gate_code: report.value.gate_code,
 		has_dog: report.value.has_dog,
+		permission_type: report.value.access,
 		wants_scheduled: report.value.wants_scheduled,
 	});
 }
@@ -181,6 +181,7 @@ async function updateReport(updates: ComplianceUpdate) {
 	}
 }
 async function uploadImages(images: Image[]) {
+	if (images.length == 0) return;
 	isUploading.value = true;
 	const formData = new FormData();
 	images.map(async (image, index) => {

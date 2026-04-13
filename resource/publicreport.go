@@ -87,16 +87,6 @@ func (res *publicreportR) ImageCreate(ctx context.Context, r *http.Request, n nu
 	return &image{Status: "ok"}, nil
 }
 
-type publicreportComplianceForm struct {
-	Address    *types.Address  `schema:"address"`
-	ClientID   string          `schema:"client_id"`
-	Comments   *string         `schema:"comments"`
-	DistrictID string          `schema:"district"`
-	Location   *types.Location `schema:"location"`
-	Locator    *Locator        `schema:"locator"`
-	Reporter   *types.Contact  `schema:"reporter"`
-}
-
 func populateDistrictURI(report *types.PublicReport, r *router) error {
 	var district_uri string
 	var err error

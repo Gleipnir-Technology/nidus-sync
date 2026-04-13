@@ -14,7 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/gorilla/mux"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 func Compliance(r *router) *complianceR {
@@ -96,6 +96,21 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	}, nil
 }
 
+type publicreportComplianceForm struct {
+	AccessInstructions omit.Val[string]                     `schema:"access_instructions" json:"access_instructions"`
+	Address            omit.Val[types.Address]              `schema:"address" json:"address"`
+	AvailabilityNotes  omit.Val[string]                     `schema:"availability_notes"  json:"availability_notes"`
+	ClientID           string                               `schema:"client_id" json:"client_id"`
+	Comments           omit.Val[string]                     `schema:"comments" json:"comments"`
+	GateCode           omit.Val[string]                     `schema:"gate_code" json:"gate_code"`
+	HasDog             omitnull.Val[bool]                   `schema:"has_dog" json:"has_dog"`
+	Location           omit.Val[types.Location]             `schema:"location" json:"location"`
+	PermissionType     omit.Val[enums.Permissionaccesstype] `schema:"permission_type" json:"permission_type"`
+	Reporter           omit.Val[types.Contact]              `schema:"reporter" json:"reporter"`
+	ReportPhoneCanText omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
+	WantsScheduled     omitnull.Val[bool]                   `schema:"wants_scheduled" json:"wants_scheduled"`
+}
+
 func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
@@ -103,25 +118,63 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 		return nil, nhttp.NewBadRequest("You must provide an ID")
 	}
 	report_setter := models.PublicreportReportSetter{}
-	if prf.Location != nil {
-		//report_setter.Latitude = omit.From(prf.Location.Latitude)
-		//report_setter.Longitude = omit.From(prf.Location.Longitude)
-		if prf.Location.Accuracy != nil {
-			report_setter.LatlngAccuracyValue = omit.From(*prf.Location.Accuracy)
+	var location *types.Location
+	if prf.Location.IsValue() {
+		l := prf.Location.MustGet()
+		location = &l
+		if location.Accuracy != nil {
+			report_setter.LatlngAccuracyValue = omit.From(*location.Accuracy)
 		}
 	}
-	if prf.Reporter != nil {
-		if prf.Reporter.Email != nil {
-			report_setter.ReporterEmail = omit.From(*prf.Reporter.Email)
+	if prf.Reporter.IsValue() {
+		reporter := prf.Reporter.MustGet()
+		if reporter.Email != nil {
+			report_setter.ReporterEmail = omit.From(*reporter.Email)
 		}
-		if prf.Reporter.Name != nil {
-			report_setter.ReporterName = omit.From(*prf.Reporter.Name)
+		if reporter.Name != nil {
+			report_setter.ReporterName = omit.From(*reporter.Name)
 		}
-		if prf.Reporter.Phone != nil {
-			report_setter.ReporterPhone = omit.From(*prf.Reporter.Phone)
+		if reporter.Phone != nil {
+			report_setter.ReporterPhone = omit.From(*reporter.Phone)
 		}
 	}
-	report, err := platform.PublicReportUpdateCompliance(ctx, public_id, report_setter, prf.Address, prf.Location)
+	var address *types.Address
+	if prf.Address.IsValue() {
+		a := prf.Address.MustGet()
+		address = &a
+	}
+	compliance_setter := models.PublicreportComplianceSetter{}
+	if prf.AccessInstructions.IsValue() {
+		compliance_setter.AccessInstructions = prf.AccessInstructions
+	}
+	if prf.AvailabilityNotes.IsValue() {
+		compliance_setter.AvailabilityNotes = prf.AvailabilityNotes
+	}
+	if prf.Comments.IsValue() {
+		compliance_setter.Comments = prf.Comments
+	}
+	if prf.GateCode.IsValue() {
+		compliance_setter.GateCode = prf.GateCode
+	}
+	if prf.HasDog.IsValue() {
+		compliance_setter.HasDog = prf.HasDog
+	}
+	if prf.PermissionType.IsValue() {
+		compliance_setter.PermissionType = prf.PermissionType
+	}
+	if prf.ReportPhoneCanText.IsValue() {
+		compliance_setter.ReportPhoneCanText = prf.ReportPhoneCanText
+	}
+	if prf.WantsScheduled.IsValue() {
+		compliance_setter.WantsScheduled = prf.WantsScheduled
+	}
+	log.Debug().
+		Bool("access_instructions", prf.AccessInstructions.IsValue()).
+		Bool("access_instructions", prf.AccessInstructions.IsValue()).
+		Bool("access_instructions", prf.AccessInstructions.IsValue()).
+		Bool("access_instructions", prf.AccessInstructions.IsValue()).
+		Msg("updating compliance")
+	report, err := platform.PublicReportUpdateCompliance(ctx, public_id, &report_setter, &compliance_setter, address, location)
 	if err != nil {
 		return nil, nhttp.NewError("platform update report compliance: %w", err)
 	}

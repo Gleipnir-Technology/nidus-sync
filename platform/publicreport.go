@@ -97,7 +97,7 @@ func PublicReportMessageCreate(ctx context.Context, user User, public_id, messag
 		return nil, errors.New("no contact methods available")
 	}
 }
-func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_setter models.PublicreportReportSetter, address *types.Address, location *types.Location) (*types.PublicReportCompliance, error) {
+func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_setter *models.PublicreportReportSetter, compliance_setter *models.PublicreportComplianceSetter, address *types.Address, location *types.Location) (*types.PublicReportCompliance, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
@@ -107,14 +107,32 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
+	compliance, err := models.FindPublicreportCompliance(ctx, txn, report.ID)
+	if err != nil {
+		return nil, fmt.Errorf("find compliance %d: %w", report.ID, err)
+	}
 	// Avoid attempting to perform an empty update
 	if report_setter.LatlngAccuracyValue.IsValue() ||
 		report_setter.ReporterEmail.IsValue() ||
 		report_setter.ReporterName.IsValue() ||
 		report_setter.ReporterPhone.IsValue() {
-		err = report.Update(ctx, txn, &report_setter)
+		err = report.Update(ctx, txn, report_setter)
 		if err != nil {
 			return nil, fmt.Errorf("update report: %w", err)
+		}
+	}
+	// Avoid attempting to perform an empty update
+	if compliance_setter.AccessInstructions.IsValue() ||
+		compliance_setter.AvailabilityNotes.IsValue() ||
+		compliance_setter.Comments.IsValue() ||
+		compliance_setter.GateCode.IsValue() ||
+		compliance_setter.HasDog.IsValue() ||
+		compliance_setter.PermissionType.IsValue() ||
+		compliance_setter.ReportPhoneCanText.IsValue() ||
+		compliance_setter.WantsScheduled.IsValue() {
+		err = compliance.Update(ctx, txn, compliance_setter)
+		if err != nil {
+			return nil, fmt.Errorf("update compliance: %w", err)
 		}
 	}
 	if address != nil {
