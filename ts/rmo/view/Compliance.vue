@@ -26,9 +26,10 @@ body > .container-fluid {
 					:is="Component"
 					:district="district"
 					@doAddress="doAddress"
-					@doEvidence="doEvidence"
 					@doContact="doContact"
+					@doEvidence="doEvidence"
 					@doPermission="doPermission"
+					@doSubmit="doSubmit"
 					v-model="report"
 				/>
 			</LoadingOverlay>
@@ -127,7 +128,11 @@ function doContact() {
 		console.log("can't do contact, null report");
 		return;
 	}
-	console.log("contact", report.value.reporter);
+	console.log(
+		"contact",
+		JSON.stringify(report.value.reporter),
+		report.value.reporter,
+	);
 	updateReport({
 		reporter: report.value.reporter,
 	});
@@ -146,6 +151,10 @@ function doPermission() {
 		permission_type: report.value.permission_type,
 		wants_scheduled: report.value.wants_scheduled,
 	});
+}
+function doSubmit() {
+	console.log("submit", report.value);
+	storeLocal.delExistingComplianceReportURI();
 }
 async function fetchExistingReport(report_uri: string) {
 	isLoading.value = true;

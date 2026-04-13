@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
 
 export const useStoreLocal = defineStore("local", () => {
+	function delExistingComplianceReportURI() {
+		localStorage.removeItem("working_compilance_report_uri");
+	}
 	function getClientID(): string {
 		let id = localStorage.getItem("session_id");
 		if (id) {
@@ -17,6 +20,7 @@ export const useStoreLocal = defineStore("local", () => {
 		localStorage.setItem("working_compilance_report_uri", uri);
 	}
 	return {
+		delExistingComplianceReportURI,
 		getClientID,
 		getExistingComplianceReportURI,
 		setExistingComplianceReportURI,
