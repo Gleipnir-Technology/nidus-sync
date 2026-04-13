@@ -65,17 +65,9 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 	if err != nil {
 		return nil, fmt.Errorf("get reports: %w", err)
 	}
-	address_ids := make([]int32, 0)
 	report_ids := make([]int32, len(rows))
 	for i, row := range rows {
 		report_ids[i] = row.ID
-		if row.Address.ID != nil {
-			address_ids = append(address_ids, *row.Address.ID)
-		}
-	}
-	addresses_by_id, err := loadAddresses(ctx, db.PGInstance.BobDB, address_ids)
-	if err != nil {
-		return nil, fmt.Errorf("addresses by ID: %w", err)
 	}
 	images_by_id, err := loadImagesForReport(ctx, report_ids)
 	if err != nil {
@@ -88,14 +80,6 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 
 	results := make([]*types.PublicReport, len(rows))
 	for i, row := range rows {
-		if row.Address.ID != nil {
-			address, ok := addresses_by_id[*row.Address.ID]
-			if !ok {
-				log.Warn().Int32("address.id", *row.Address.ID).Msg("failed to find in addresses_by_id, which means our DB query is wrong")
-			} else {
-				row.Address = address
-			}
-		}
 		images, ok := images_by_id[row.ID]
 		if ok {
 			row.Images = images
