@@ -387,7 +387,7 @@ const frameMarkers = () => {
 				lat: props.markers[0].location.latitude,
 				lng: props.markers[0].location.longitude,
 			},
-			{ duration: 1000, zoom: props.modelValue?.zoom },
+			{ duration: 1000, zoom: props.modelValue.zoom },
 			{ isInternalUpdate: true },
 		);
 	} else {
