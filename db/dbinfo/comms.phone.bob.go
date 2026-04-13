@@ -42,6 +42,15 @@ var CommsPhones = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		CanSMS: column{
+			Name:      "can_sms",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: commsPhoneIndexes{
 		PhonePkey: index{
@@ -75,11 +84,12 @@ type commsPhoneColumns struct {
 	E164         column
 	IsSubscribed column
 	Status       column
+	CanSMS       column
 }
 
 func (c commsPhoneColumns) AsSlice() []column {
 	return []column{
-		c.E164, c.IsSubscribed, c.Status,
+		c.E164, c.IsSubscribed, c.Status, c.CanSMS,
 	}
 }
 

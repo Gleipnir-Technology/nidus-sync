@@ -222,6 +222,15 @@ var PublicreportReports = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ReporterPhoneCanSMS: column{
+			Name:      "reporter_phone_can_sms",
+			DBType:    "boolean",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportReportIndexes{
 		ReportPkey: index{
@@ -337,11 +346,12 @@ type publicreportReportColumns struct {
 	LocationLongitude      column
 	AddressGid             column
 	ClientUUID             column
+	ReporterPhoneCanSMS    column
 }
 
 func (c publicreportReportColumns) AsSlice() []column {
 	return []column{
-		c.AddressRaw, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid, c.ClientUUID,
+		c.AddressRaw, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid, c.ClientUUID, c.ReporterPhoneCanSMS,
 	}
 }
 

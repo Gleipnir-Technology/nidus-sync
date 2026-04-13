@@ -60,11 +60,12 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		MapZoom:  omit.From(float32(0.0)),
 		//OrganizationID:    omitnull.FromPtr(organization_id),
 		//PublicID:          omit.From(public_id),
-		ReporterEmail: omit.From(""),
-		ReporterName:  omit.From(""),
-		ReporterPhone: omit.From(""),
-		ReportType:    omit.From(enums.PublicreportReporttypeCompliance),
-		Status:        omit.From(enums.PublicreportReportstatustypeReported),
+		ReporterEmail:       omit.From(""),
+		ReporterName:        omit.From(""),
+		ReporterPhone:       omit.From(""),
+		ReporterPhoneCanSMS: omit.FromPtr[bool](nil),
+		ReportType:          omit.From(enums.PublicreportReporttypeCompliance),
+		Status:              omit.From(enums.PublicreportReportstatustypeReported),
 	}
 	setter_compliance := models.PublicreportComplianceSetter{
 		AccessInstructions: omit.From(""),
@@ -74,8 +75,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		HasDog:             omitnull.FromPtr[bool](nil),
 		PermissionType:     omit.From(enums.PermissionaccesstypeUnselected),
 		//ReportID            omit.Val[int32]
-		ReportPhoneCanText: omitnull.FromPtr[bool](nil),
-		WantsScheduled:     omitnull.FromPtr[bool](nil),
+		WantsScheduled: omitnull.FromPtr[bool](nil),
 	}
 	report, err := platform.PublicReportComplianceCreate(ctx, setter_report, setter_compliance)
 	if err != nil {
@@ -107,7 +107,7 @@ type publicreportComplianceForm struct {
 	Location           omit.Val[types.Location]             `schema:"location" json:"location"`
 	PermissionType     omit.Val[enums.Permissionaccesstype] `schema:"permission_type" json:"permission_type"`
 	Reporter           omit.Val[types.Contact]              `schema:"reporter" json:"reporter"`
-	ReportPhoneCanText omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
+	ReportPhoneCanSMS  omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
 	WantsScheduled     omitnull.Val[bool]                   `schema:"wants_scheduled" json:"wants_scheduled"`
 }
 
@@ -118,6 +118,7 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 		return nil, nhttp.NewBadRequest("You must provide an ID")
 	}
 	report_setter := models.PublicreportReportSetter{}
+	compliance_setter := models.PublicreportComplianceSetter{}
 	var location *types.Location
 	if prf.Location.IsValue() {
 		l := prf.Location.MustGet()
@@ -137,13 +138,15 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 		if reporter.Phone != nil {
 			report_setter.ReporterPhone = omit.From(*reporter.Phone)
 		}
+		if reporter.CanSMS != nil {
+			report_setter.ReporterPhoneCanSMS = omit.FromPtr(reporter.CanSMS)
+		}
 	}
 	var address *types.Address
 	if prf.Address.IsValue() {
 		a := prf.Address.MustGet()
 		address = &a
 	}
-	compliance_setter := models.PublicreportComplianceSetter{}
 	if prf.AccessInstructions.IsValue() {
 		compliance_setter.AccessInstructions = prf.AccessInstructions
 	}
@@ -161,9 +164,6 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 	}
 	if prf.PermissionType.IsValue() {
 		compliance_setter.PermissionType = prf.PermissionType
-	}
-	if prf.ReportPhoneCanText.IsValue() {
-		compliance_setter.ReportPhoneCanText = prf.ReportPhoneCanText
 	}
 	if prf.WantsScheduled.IsValue() {
 		compliance_setter.WantsScheduled = prf.WantsScheduled

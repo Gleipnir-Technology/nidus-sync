@@ -36,7 +36,7 @@ export interface Bounds {
 	max: Location;
 }
 export interface ContactOptions {
-	can_text?: boolean;
+	can_sms: boolean;
 	email?: string;
 	has_email: boolean;
 	has_phone: boolean;
@@ -44,14 +44,14 @@ export interface ContactOptions {
 	phone?: string;
 }
 export class Contact {
-	can_text?: boolean;
-	email?: string;
+	can_sms: boolean;
+	email: string;
 	has_email: boolean;
 	has_phone: boolean;
-	name?: string;
-	phone?: string;
+	name: string;
+	phone: string;
 	constructor(options?: ContactOptions) {
-		this.can_text = options?.can_text ?? false;
+		this.can_sms = options?.can_sms ?? false;
 		this.email = options?.email ?? "";
 		this.has_email = options?.has_email ?? false;
 		this.has_phone = options?.has_phone ?? false;
@@ -159,7 +159,6 @@ export interface ComplianceUpdate {
 	permission_type?: string;
 	reporter?: Contact;
 	//uri: string;
-	report_phone_can_text?: boolean;
 	wants_scheduled?: boolean;
 }
 export interface PublicReportDTO {
@@ -370,7 +369,7 @@ export class PublicReportWater extends PublicReport {
 	contact: {
 		name: "",
 		phone: "",
-		can_text: true,
+		can_sms: true,
 		email: "",
 	},
 	id: "",

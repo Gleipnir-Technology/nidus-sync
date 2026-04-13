@@ -20,8 +20,9 @@ func EnsureInDB(ctx context.Context, txn bob.Executor, dst types.E164) (err erro
 }
 func ensureInDB(ctx context.Context, txn bob.Executor, destination string) (err error) {
 	_, err = psql.Insert(
-		im.Into("comms.phone", "e164", "is_subscribed", "status"),
+		im.Into("comms.phone", "can_sms", "e164", "is_subscribed", "status"),
 		im.Values(
+			psql.Arg(true),
 			psql.Arg(destination),
 			psql.Arg(false),
 			psql.Arg("unconfirmed"),

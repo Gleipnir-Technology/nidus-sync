@@ -172,6 +172,7 @@ func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
 			"r.reporter_email AS \"reporter.email\"",
 			"r.reporter_name AS \"reporter.name\"",
 			"r.reporter_phone AS \"reporter.phone\"",
+			"r.reporter_phone_can_sms AS \"reporter.can_sms\"",
 			"r.status",
 		),
 		sm.From("publicreport.report").As("r"),

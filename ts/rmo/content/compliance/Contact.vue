@@ -72,7 +72,7 @@
 						class="form-check-input"
 						type="checkbox"
 						id="can-text"
-						v-model="modelValue.reporter.can_text"
+						v-model="modelValue.reporter.can_sms"
 					/>
 					<label class="form-check-label" for="can-text">
 						You may send text messages to this number
@@ -89,6 +89,14 @@
 					Email Address
 					<span class="optional-badge">(Optional)</span>
 				</label>
+				<div
+					class="alert alert-primary"
+					role="alert"
+					v-if="modelValue.reporter.has_email"
+				>
+					You've already added an email address to this report. If you alter the
+					email below, it will replace the current email address.
+				</div>
 				<input
 					type="email"
 					class="form-control"
@@ -125,16 +133,10 @@
 import { ref } from "vue";
 
 import { router } from "@/rmo/router";
-import type { District, PublicReport } from "@/type/api";
+import type { Contact, District, PublicReport } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 
-export interface Contact {
-	name: string;
-	phone: string;
-	can_text: boolean;
-	email: string;
-}
 interface Emits {
 	(e: "doContact"): void;
 	(e: "update:modelValue", value: PublicReport): void;

@@ -56,8 +56,7 @@ import {
 	PublicReportCompliance,
 	PublicReportComplianceOptions,
 } from "@/type/api";
-import { Address, Location, PermissionType } from "@/type/api";
-import { type Contact } from "@/rmo/content/compliance/Contact.vue";
+import { Contact, Address, Location, PermissionType } from "@/type/api";
 
 interface Props {
 	slug: string;
@@ -129,6 +128,9 @@ function doContact() {
 		return;
 	}
 	console.log("contact", report.value.reporter);
+	updateReport({
+		reporter: report.value.reporter,
+	});
 }
 function doPermission() {
 	if (!report.value) {

@@ -167,16 +167,8 @@ const poolLocation = ref<Location>({
 	latitude: 0,
 	longitude: 0,
 });
-const siteOwner = ref<Contact>({
-	has_email: false,
-	has_phone: false,
-	name: "",
-});
-const siteResident = ref<Contact>({
-	has_email: false,
-	has_phone: false,
-	name: "",
-});
+const siteOwner = ref<Contact>(new Contact());
+const siteResident = ref<Contact>(new Contact());
 const session = useSessionStore();
 function doPoolLocation(event: MapClickEvent) {
 	console.log("pool location", event);

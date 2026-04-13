@@ -28,6 +28,7 @@ type CommsPhone struct {
 	E164         string                     `db:"e164,pk" `
 	IsSubscribed bool                       `db:"is_subscribed" `
 	Status       enums.CommsPhonestatustype `db:"status" `
+	CanSMS       bool                       `db:"can_sms" `
 
 	R commsPhoneR `db:"-" `
 }
@@ -60,12 +61,13 @@ type commsPhoneR struct {
 func buildCommsPhoneColumns(alias string) commsPhoneColumns {
 	return commsPhoneColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"e164", "is_subscribed", "status",
+			"e164", "is_subscribed", "status", "can_sms",
 		).WithParent("comms.phone"),
 		tableAlias:   alias,
 		E164:         psql.Quote(alias, "e164"),
 		IsSubscribed: psql.Quote(alias, "is_subscribed"),
 		Status:       psql.Quote(alias, "status"),
+		CanSMS:       psql.Quote(alias, "can_sms"),
 	}
 }
 
@@ -75,6 +77,7 @@ type commsPhoneColumns struct {
 	E164         psql.Expression
 	IsSubscribed psql.Expression
 	Status       psql.Expression
+	CanSMS       psql.Expression
 }
 
 func (c commsPhoneColumns) Alias() string {
@@ -92,10 +95,11 @@ type CommsPhoneSetter struct {
 	E164         omit.Val[string]                     `db:"e164,pk" `
 	IsSubscribed omit.Val[bool]                       `db:"is_subscribed" `
 	Status       omit.Val[enums.CommsPhonestatustype] `db:"status" `
+	CanSMS       omit.Val[bool]                       `db:"can_sms" `
 }
 
 func (s CommsPhoneSetter) SetColumns() []string {
-	vals := make([]string, 0, 3)
+	vals := make([]string, 0, 4)
 	if s.E164.IsValue() {
 		vals = append(vals, "e164")
 	}
@@ -104,6 +108,9 @@ func (s CommsPhoneSetter) SetColumns() []string {
 	}
 	if s.Status.IsValue() {
 		vals = append(vals, "status")
+	}
+	if s.CanSMS.IsValue() {
+		vals = append(vals, "can_sms")
 	}
 	return vals
 }
@@ -118,6 +125,9 @@ func (s CommsPhoneSetter) Overwrite(t *CommsPhone) {
 	if s.Status.IsValue() {
 		t.Status = s.Status.MustGet()
 	}
+	if s.CanSMS.IsValue() {
+		t.CanSMS = s.CanSMS.MustGet()
+	}
 }
 
 func (s *CommsPhoneSetter) Apply(q *dialect.InsertQuery) {
@@ -126,7 +136,7 @@ func (s *CommsPhoneSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 3)
+		vals := make([]bob.Expression, 4)
 		if s.E164.IsValue() {
 			vals[0] = psql.Arg(s.E164.MustGet())
 		} else {
@@ -145,6 +155,12 @@ func (s *CommsPhoneSetter) Apply(q *dialect.InsertQuery) {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
+		if s.CanSMS.IsValue() {
+			vals[3] = psql.Arg(s.CanSMS.MustGet())
+		} else {
+			vals[3] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -154,7 +170,7 @@ func (s CommsPhoneSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsPhoneSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 3)
+	exprs := make([]bob.Expression, 0, 4)
 
 	if s.E164.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -174,6 +190,13 @@ func (s CommsPhoneSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "status")...),
 			psql.Arg(s.Status),
+		}})
+	}
+
+	if s.CanSMS.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "can_sms")...),
+			psql.Arg(s.CanSMS),
 		}})
 	}
 
@@ -1421,6 +1444,7 @@ type commsPhoneWhere[Q psql.Filterable] struct {
 	E164         psql.WhereMod[Q, string]
 	IsSubscribed psql.WhereMod[Q, bool]
 	Status       psql.WhereMod[Q, enums.CommsPhonestatustype]
+	CanSMS       psql.WhereMod[Q, bool]
 }
 
 func (commsPhoneWhere[Q]) AliasedAs(alias string) commsPhoneWhere[Q] {
@@ -1432,6 +1456,7 @@ func buildCommsPhoneWhere[Q psql.Filterable](cols commsPhoneColumns) commsPhoneW
 		E164:         psql.Where[Q, string](cols.E164),
 		IsSubscribed: psql.Where[Q, bool](cols.IsSubscribed),
 		Status:       psql.Where[Q, enums.CommsPhonestatustype](cols.Status),
+		CanSMS:       psql.Where[Q, bool](cols.CanSMS),
 	}
 }
 

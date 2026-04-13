@@ -198,7 +198,7 @@
 						<div class="summary-label">Phone</div>
 						<div class="summary-value" v-if="modelValue.reporter?.phone">
 							{{ modelValue.reporter.phone }}
-							<small class="text-muted" v-if="modelValue.reporter?.can_text"
+							<small class="text-muted" v-if="modelValue.reporter?.can_sms"
 								>(texting OK)</small
 							>
 						</div>
