@@ -143,7 +143,7 @@ func respondText(ctx context.Context, txn bob.Executor, log_id int32) error {
 			Type:      omit.From(enums.PublicreportReportlogtypeMessageText),
 			UserID:    omitnull.FromPtr[int32](nil),
 		}).One(ctx, txn)
-		event.Updated(event.TypeRMOReport, report.OrganizationID, report.PublicID)
+		event.Updated(event.TypeRMOPublicReport, report.OrganizationID, report.PublicID)
 	}
 	// If humans are involved, wait for them.
 	if len(reports) > 0 {

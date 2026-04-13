@@ -167,7 +167,7 @@ func sendTextComplete(ctx context.Context, txn bob.Executor, job *models.CommsTe
 		if err != nil {
 			return fmt.Errorf("find public report: %w", err)
 		}
-		event.Updated(event.TypeRMOReport, report.OrganizationID, report.PublicID)
+		event.Updated(event.TypeRMOPublicReport, report.OrganizationID, report.PublicID)
 	} else {
 		log.Debug().Msg("no report info on text")
 	}

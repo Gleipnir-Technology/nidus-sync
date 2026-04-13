@@ -88,8 +88,9 @@ const (
 	TypeNoteAudio
 	TypeNoteImage
 	TypeReviewTask
+	TypeRMOCompliance
 	TypeRMONuisance
-	TypeRMOReport
+	TypeRMOPublicReport
 	TypeRMOWater
 	TypeSession
 	TypeSignal
@@ -141,12 +142,14 @@ func resourceString(t ResourceType) string {
 		return "sync:note:image"
 	case TypeReviewTask:
 		return "sync:review-task"
+	case TypeRMOCompliance:
+		return "rmo:publicreport.compliance"
 	case TypeRMONuisance:
-		return "rmo:nuisance"
-	case TypeRMOReport:
-		return "rmo:report"
+		return "rmo:publicreport.nuisance"
+	case TypeRMOPublicReport:
+		return "rmo:publicreport"
 	case TypeRMOWater:
-		return "rmo:water"
+		return "rmo:publicreport.water"
 	case TypeSession:
 		return "sync:session"
 	case TypeSignal:
@@ -165,10 +168,14 @@ func makeURI(t ResourceType, id string) string {
 		return config.MakeURLNidus("/api/note/%s", id)
 	case TypeReviewTask:
 		return config.MakeURLNidus("/api/review/%s", id)
+	case TypeRMOCompliance:
+		return config.MakeURLReport("/api/publicreport/compliance/%s", id)
 	case TypeRMONuisance:
-		return config.MakeURLReport("/api/report/%s", id)
+		return config.MakeURLReport("/api/publicreport/nuisance/%s", id)
+	case TypeRMOPublicReport:
+		return config.MakeURLReport("/api/publicreport/%s", id)
 	case TypeRMOWater:
-		return config.MakeURLReport("/api/report/%s", id)
+		return config.MakeURLReport("/api/publicrreport/water/%s", id)
 	case TypeSession:
 		return config.MakeURLReport("/api/session")
 	case TypeSignal:

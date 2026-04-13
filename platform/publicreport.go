@@ -53,7 +53,7 @@ func PublicreportInvalid(ctx context.Context, user User, report_id string) error
 	})
 
 	log.Info().Int32("id", report.ID).Msg("Report marked as invalid")
-	event.Updated(event.TypeRMOReport, user.Organization.ID, report_id)
+	event.Updated(event.TypeRMOPublicReport, user.Organization.ID, report_id)
 	return nil
 }
 
@@ -132,7 +132,7 @@ func PublicReportUpdateCompliance(ctx context.Context, report_id string, report_
 	return publicreport.ByID(ctx, report_id)
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
-	event.Updated(event.TypeRMOReport, org_id, report_id)
+	event.Updated(event.TypeRMOPublicReport, org_id, report_id)
 }
 func PublicReportsForOrganization(ctx context.Context, org_id int32) ([]*types.PublicReport, error) {
 	return publicreport.ReportsForOrganization(ctx, org_id)
@@ -287,7 +287,7 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 
 	if organization_id != nil {
 		event.Created(
-			event.TypeRMONuisance,
+			event.TypeRMOPublicReport,
 			*organization_id,
 			result.PublicID,
 		)
