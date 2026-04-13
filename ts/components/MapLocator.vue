@@ -190,6 +190,7 @@ const emit = defineEmits<Emits>();
 
 // Refs
 const clickTimeout = ref<number | null>(null);
+const isLoaded = ref<boolean>(false);
 const map: Ref<maplibregl.Map | null> = shallowRef(null);
 const mapContainer = ref<HTMLDivElement | null>(null);
 const mapInteractive = ref(false);
@@ -236,8 +237,10 @@ function initializeMap() {
 		touchZoomRotate: false,
 	});
 	if (props.markers.length > 0) {
+		console.log("initial map fitting initial markers", props.markers);
 		_map.fitBounds(boundsMarkers(props.markers));
 	} else if (props.initialCamera) {
+		console.log("initial map jump to initial camera", props.initialCamera);
 		_map.jumpTo({
 			center: [
 				props.initialCamera.location.longitude,
@@ -249,6 +252,7 @@ function initializeMap() {
 		props.modelValue.location.latitude != 0 ||
 		props.modelValue.location.longitude != 0
 	) {
+		console.log("initial map jump to initial model", props.modelValue);
 		_map.jumpTo({
 			center: [
 				props.modelValue.location.longitude,
@@ -257,7 +261,9 @@ function initializeMap() {
 			zoom: props.modelValue.zoom,
 		});
 	} else {
-		_map.fitBounds(boundsDefault());
+		const bounds = boundsDefault();
+		console.log("initial map fitting default bounds", bounds);
+		_map.fitBounds(bounds);
 	}
 	_map.addControl(new maplibregl.NavigationControl(), "top-left");
 	map.value = _map;
@@ -283,6 +289,7 @@ function initializeMap() {
 	});
 
 	_map.on("load", () => {
+		isLoaded.value = true;
 		updateModel(_map);
 	});
 
@@ -387,18 +394,28 @@ const frameMarkers = () => {
 		const zoom = props.modelValue.zoom > 1 ? props.modelValue.zoom : 15;
 		console.log(
 			"framing single marker",
+			isLoaded.value,
 			props.markers[0].location,
 			props.modelValue.zoom,
 			zoom,
 		);
-		map.value.panTo(
-			{
-				lat: props.markers[0].location.latitude,
-				lng: props.markers[0].location.longitude,
-			},
-			{ duration: 1000, zoom: zoom },
-			{ isInternalUpdate: true },
-		);
+
+		// Defer this until the map is loaded or we'll drop updates
+		if (map.value) {
+			map.value.on("load", () => {
+				if (!map.value) return;
+				map.value.panTo(
+					{
+						lat: props.markers[0].location.latitude,
+						lng: props.markers[0].location.longitude,
+					},
+					{ duration: 1000, zoom: zoom },
+					{ isInternalUpdate: true },
+				);
+			});
+		} else {
+			console.error("Can't frame markers before the map is created");
+		}
 	} else {
 		// Multiple markers: fit bounds
 		console.log("framing multiple markers", props.markers);
