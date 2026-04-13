@@ -8,6 +8,7 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -310,6 +311,21 @@ func publicReportUpdateAddress(ctx context.Context, txn bob.Executor, report *mo
 	})
 	if err != nil {
 		return fmt.Errorf("update report: %w", err)
+	}
+	_, err = psql.Update(
+		um.Table("publicreport.report"),
+		um.SetCol("address_id").To(
+			psql.Select(
+				sm.Columns("id"),
+				sm.From("address"),
+				sm.Where(psql.Quote("gid").EQ(psql.Arg(address.GID))),
+				sm.Limit(1),
+			),
+		),
+		um.Where(psql.Quote("publicreport", "report", "id").EQ(psql.Arg(report.ID))),
+	).Exec(ctx, txn)
+	if err != nil {
+		return fmt.Errorf("update report address_id: %w", err)
 	}
 	return nil
 }
