@@ -237,52 +237,45 @@
 		<!-- Reference Number -->
 		<div class="reference-number">
 			<small>
-				Reference number: <strong>{{ referenceNumber }}</strong>
+				Reference number: <strong>{{ modelValue.public_id }}</strong>
 			</small>
-		</div>
-
-		<!-- Action Buttons -->
-		<div class="action-buttons mt-4">
-			<div class="d-grid gap-2">
-				<template v-if="hasCompleteResponse">
-					<button class="btn btn-outline-primary" @click="changeResponse()">
-						<i class="bi bi-dash"></i>Remove useful and complete
-					</button>
-				</template>
-				<template v-else-if="hasUsefulInfo">
-					<button class="btn btn-outline-primary" @click="changeResponse()">
-						<i class="bi bi-plus"></i>Add complete response
-					</button>
-				</template>
-				<template v-else>
-					<button class="btn btn-outline-primary" @click="changeResponse()">
-						<i class="bi bi-plus"></i>Add useful response
-					</button>
-				</template>
-			</div>
 		</div>
 	</div>
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
-import type { District } from "@/type/api";
+import { computed, ref } from "vue";
+import {
+	type District,
+	PermissionType,
+	PublicReportCompliance,
+} from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 interface Props {
+	modelValue: PublicReportCompliance;
 	district: District;
 }
 const props = defineProps<Props>();
-const referenceNumber = "abc-123";
-const hasCompleteResponse = ref<boolean>(false);
-const hasUsefulInfo = ref<boolean>(false);
-function changeResponse() {
-	if (hasCompleteResponse.value && hasUsefulInfo.value) {
-		hasCompleteResponse.value = false;
-		hasUsefulInfo.value = false;
-	} else if (hasUsefulInfo.value) {
-		hasCompleteResponse.value = true;
-	} else {
-		hasUsefulInfo.value = true;
+const hasCompleteResponse = computed(() => {
+	const r = props.modelValue;
+	if (
+		r.images.length > 0 ||
+		r.permission_type == PermissionType.GRANTED ||
+		r.reporter.name ||
+		r.reporter.phone ||
+		r.reporter.has_phone ||
+		r.reporter.email ||
+		r.reporter.has_email
+	) {
+		return true;
 	}
-}
+	return false;
+});
+const hasUsefulInfo = computed(() => {
+	const r = props.modelValue;
+	if (r.images.length > 0 || r.permission_type == PermissionType.GRANTED) {
+		return true;
+	}
+	return false;
+});
 </script>

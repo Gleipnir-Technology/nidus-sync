@@ -171,6 +171,7 @@ export interface PublicReportDTO {
 	location: Location;
 	log: LogEntryDTO[];
 	//nuisance?: Nuisance;
+	public_id: string;
 	reporter: Contact;
 	status: string;
 	type: string;
@@ -185,6 +186,7 @@ export interface PublicReportOptions {
 	images: Image[];
 	location: Location;
 	log: LogEntry[];
+	public_id: string;
 	reporter: Contact;
 	status: string;
 	type: string;
@@ -197,6 +199,7 @@ export class PublicReport {
 	id: string;
 	images: Image[];
 	log: LogEntry[];
+	public_id: string;
 	reporter: Contact;
 	status: string;
 	type: string;
@@ -209,6 +212,7 @@ export class PublicReport {
 		this.id = options?.id ?? "";
 		this.images = options?.images ?? [];
 		this.log = options?.log ?? [];
+		this.public_id = options?.public_id ?? "";
 		this.reporter = options?.reporter ?? new Contact();
 		this.status = options?.status ?? "";
 		this.type = options?.type ?? "";
@@ -224,6 +228,7 @@ export class PublicReport {
 			images: json.images,
 			location: json.location,
 			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
+			public_id: json.public_id,
 			reporter: json.reporter,
 			status: json.status,
 			type: json.type,
