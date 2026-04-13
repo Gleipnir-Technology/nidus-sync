@@ -70,210 +70,208 @@
 				mosquito sources more quickly, helping protect you and your neighbors.
 			</p>
 
-			<form id="access-form" method="POST" action="/compliance/access">
-				<!-- Access Options -->
-				<div class="mb-4">
-					<label class="form-label fw-semibold mb-3"
-						>Please select an option:</label
-					>
+			<!-- Access Options -->
+			<div class="mb-4">
+				<label class="form-label fw-semibold mb-3"
+					>Please select an option:</label
+				>
 
-					<!-- Option 1: Enter without owner present -->
-					<div class="access-option">
-						<div class="d-flex align-items-start">
-							<input
-								type="radio"
-								id="access-allowed"
-								:value="PermissionAccess.GRANTED"
-								v-model="modelValue.access"
-								class="mt-1"
-							/>
-							<label for="access-allowed">
-								<div class="fw-semibold">
-									A technician may enter even if I am not home
-								</div>
-								<small class="text-muted">Fastest resolution</small>
-							</label>
-						</div>
-					</div>
-
-					<!-- Conditional fields for Option 1 -->
-					<div
-						v-if="
-							modelValue.access && modelValue.access == PermissionAccess.GRANTED
-						"
-						class="conditional-section"
-					>
-						<div class="mb-3">
-							<label for="access-instructions" class="form-label">
-								Access Instructions
-								<span class="text-muted">(Optional)</span>
-							</label>
-							<textarea
-								class="form-control"
-								id="access-instructions"
-								name="access_instructions"
-								placeholder="Example: Side gate on left, backyard near shed..."
-								rows="3"
-								v-model="modelValue.access_instructions"
-							></textarea>
-						</div>
-
-						<div class="mb-3">
-							<label for="gate-code" class="form-label">
-								Gate Code
-								<span class="text-muted">(Optional)</span>
-							</label>
-							<input
-								class="form-control"
-								id="gate-code"
-								name="gate_code"
-								placeholder="Enter code if applicable"
-								type="text"
-								v-model="modelValue.gate_code"
-							/>
-						</div>
-
-						<div class="mb-3">
-							<div class="form-check">
-								<input
-									class="form-check-input"
-									type="checkbox"
-									name="has_dog"
-									id="has_dog"
-									v-model="modelValue.has_dog"
-								/>
-								<label class="form-check-label" for="has_dog"
-									>Dog on Property?</label
-								>
+				<!-- Option 1: Enter without owner present -->
+				<div class="access-option">
+					<div class="d-flex align-items-start">
+						<input
+							type="radio"
+							id="access-allowed"
+							:value="PermissionAccess.GRANTED"
+							v-model="modelValue.access"
+							class="mt-1"
+						/>
+						<label for="access-allowed">
+							<div class="fw-semibold">
+								A technician may enter even if I am not home
 							</div>
-						</div>
+							<small class="text-muted">Fastest resolution</small>
+						</label>
+					</div>
+				</div>
 
-						<div class="dog-warning" v-if="modelValue.has_dog">
-							<small>
-								<i class="bi bi-exclamation-triangle"></i>
-								<strong>Important:</strong> Our staff will only enter if the dog
-								is secured indoors. Please ensure your pet is safely inside
-								before a technician arrives.
-							</small>
-						</div>
+				<!-- Conditional fields for Option 1 -->
+				<div
+					v-if="
+						modelValue.access && modelValue.access == PermissionAccess.GRANTED
+					"
+					class="conditional-section"
+				>
+					<div class="mb-3">
+						<label for="access-instructions" class="form-label">
+							Access Instructions
+							<span class="text-muted">(Optional)</span>
+						</label>
+						<textarea
+							class="form-control"
+							id="access-instructions"
+							name="access_instructions"
+							placeholder="Example: Side gate on left, backyard near shed..."
+							rows="3"
+							v-model="modelValue.access_instructions"
+						></textarea>
 					</div>
 
-					<!-- Option 2: Enter with owner present -->
-					<div class="access-option">
-						<div class="d-flex align-items-start">
-							<input
-								type="radio"
-								id="access-with-owner"
-								:value="PermissionAccess.WITH_OWNER"
-								v-model="modelValue.access"
-								class="mt-1"
-							/>
-							<label for="access-with-owner">
-								<div class="fw-semibold">
-									A technician may enter, but I want to be present
-								</div>
-								<small class="text-muted">Requires scheduling</small>
-							</label>
-						</div>
+					<div class="mb-3">
+						<label for="gate-code" class="form-label">
+							Gate Code
+							<span class="text-muted">(Optional)</span>
+						</label>
+						<input
+							class="form-control"
+							id="gate-code"
+							name="gate_code"
+							placeholder="Enter code if applicable"
+							type="text"
+							v-model="modelValue.gate_code"
+						/>
 					</div>
 
-					<!-- Conditional fields for Option 2 -->
-					<div
-						class="conditional-section"
-						v-if="
-							modelValue.access &&
-							modelValue.access == PermissionAccess.WITH_OWNER
-						"
-					>
-						<div class="form-check mb-3">
+					<div class="mb-3">
+						<div class="form-check">
 							<input
 								class="form-check-input"
 								type="checkbox"
-								id="request_scheduled"
-								name="request_scheduled"
-								v-model="modelValue.wants_scheduled"
+								name="has_dog"
+								id="has_dog"
+								v-model="modelValue.has_dog"
 							/>
-							<label class="form-check-label" for="request_scheduled">
-								I would like to request a scheduled visit
-							</label>
-						</div>
-
-						<div class="mb-3">
-							<label for="availability_notes" class="form-label">
-								Availability / Access Notes
-								<span class="text-muted">(Optional)</span>
-							</label>
-							<textarea
-								class="form-control"
-								id="availability_notes"
-								name="availability_notes"
-								rows="3"
-								placeholder="Example: Available weekday mornings, please call before visiting..."
-							></textarea>
+							<label class="form-check-label" for="has_dog"
+								>Dog on Property?</label
+							>
 						</div>
 					</div>
 
-					<!-- Option 3: Not granting entry -->
-					<div class="access-option">
-						<div class="d-flex align-items-start">
-							<input
-								type="radio"
-								id="access-denied"
-								:value="PermissionAccess.DENIED"
-								v-model="modelValue.access"
-								class="mt-1"
-							/>
-							<label for="access-denied">
-								<div class="fw-semibold">
-									I am not granting entry at this time
-								</div>
-								<small class="text-muted">May require follow-up</small>
-							</label>
-						</div>
-					</div>
-
-					<!-- Conditional message for Option 3 -->
-					<div
-						class="conditional-section"
-						v-if="
-							modelValue.access && modelValue.access == PermissionAccess.DENIED
-						"
-					>
-						<div class="encouragement-box">
-							<p class="mb-2">
-								<strong>We understand.</strong> Your cooperation is voluntary,
-								but mosquito breeding sources can affect the health and comfort
-								of the entire community.
-							</p>
-							<p class="mb-2">
-								To help us review this situation and avoid unnecessary
-								escalation, we strongly encourage you to:
-							</p>
-							<ul class="mb-2">
-								<li>Provide detailed photos of the area</li>
-								<li>Share your contact information</li>
-								<li>Include any context that may be helpful</li>
-							</ul>
-							<p class="mb-0">
-								<small class="text-muted">
-									This allows our team to assess whether the concern has been
-									addressed or if additional steps may be necessary.
-								</small>
-							</p>
-						</div>
+					<div class="dog-warning" v-if="modelValue.has_dog">
+						<small>
+							<i class="bi bi-exclamation-triangle"></i>
+							<strong>Important:</strong> Our staff will only enter if the dog
+							is secured indoors. Please ensure your pet is safely inside before
+							a technician arrives.
+						</small>
 					</div>
 				</div>
 
-				<!-- Navigation Buttons -->
-				<div class="d-flex gap-2 mt-4">
-					<RouterLink class="btn btn-outline-secondary" to="./evidence">
-						Back
-					</RouterLink>
-					<button class="btn btn-primary flex-grow-1" @click="doContinue">
-						Continue
-					</button>
+				<!-- Option 2: Enter with owner present -->
+				<div class="access-option">
+					<div class="d-flex align-items-start">
+						<input
+							type="radio"
+							id="access-with-owner"
+							:value="PermissionAccess.WITH_OWNER"
+							v-model="modelValue.access"
+							class="mt-1"
+						/>
+						<label for="access-with-owner">
+							<div class="fw-semibold">
+								A technician may enter, but I want to be present
+							</div>
+							<small class="text-muted">Requires scheduling</small>
+						</label>
+					</div>
 				</div>
-			</form>
+
+				<!-- Conditional fields for Option 2 -->
+				<div
+					class="conditional-section"
+					v-if="
+						modelValue.access &&
+						modelValue.access == PermissionAccess.WITH_OWNER
+					"
+				>
+					<div class="form-check mb-3">
+						<input
+							class="form-check-input"
+							type="checkbox"
+							id="request_scheduled"
+							name="request_scheduled"
+							v-model="modelValue.wants_scheduled"
+						/>
+						<label class="form-check-label" for="request_scheduled">
+							I would like to request a scheduled visit
+						</label>
+					</div>
+
+					<div class="mb-3">
+						<label for="availability_notes" class="form-label">
+							Availability / Access Notes
+							<span class="text-muted">(Optional)</span>
+						</label>
+						<textarea
+							class="form-control"
+							id="availability_notes"
+							name="availability_notes"
+							rows="3"
+							placeholder="Example: Available weekday mornings, please call before visiting..."
+						></textarea>
+					</div>
+				</div>
+
+				<!-- Option 3: Not granting entry -->
+				<div class="access-option">
+					<div class="d-flex align-items-start">
+						<input
+							type="radio"
+							id="access-denied"
+							:value="PermissionAccess.DENIED"
+							v-model="modelValue.access"
+							class="mt-1"
+						/>
+						<label for="access-denied">
+							<div class="fw-semibold">
+								I am not granting entry at this time
+							</div>
+							<small class="text-muted">May require follow-up</small>
+						</label>
+					</div>
+				</div>
+
+				<!-- Conditional message for Option 3 -->
+				<div
+					class="conditional-section"
+					v-if="
+						modelValue.access && modelValue.access == PermissionAccess.DENIED
+					"
+				>
+					<div class="encouragement-box">
+						<p class="mb-2">
+							<strong>We understand.</strong> Your cooperation is voluntary, but
+							mosquito breeding sources can affect the health and comfort of the
+							entire community.
+						</p>
+						<p class="mb-2">
+							To help us review this situation and avoid unnecessary escalation,
+							we strongly encourage you to:
+						</p>
+						<ul class="mb-2">
+							<li>Provide detailed photos of the area</li>
+							<li>Share your contact information</li>
+							<li>Include any context that may be helpful</li>
+						</ul>
+						<p class="mb-0">
+							<small class="text-muted">
+								This allows our team to assess whether the concern has been
+								addressed or if additional steps may be necessary.
+							</small>
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Navigation Buttons -->
+			<div class="d-flex gap-2 mt-4">
+				<RouterLink class="btn btn-outline-secondary" to="./evidence">
+					Back
+				</RouterLink>
+				<button class="btn btn-primary flex-grow-1" @click="doContinue">
+					Continue
+				</button>
+			</div>
 		</main>
 	</div>
 </template>

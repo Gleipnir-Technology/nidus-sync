@@ -134,7 +134,14 @@ function doPermission() {
 		console.log("can't do permission, null report");
 		return;
 	}
-	console.log("permission", report.value);
+	console.log("report.value.has_dog", report.value.has_dog);
+	updateReport({
+		access: report.value.access,
+		access_instructions: report.value.access_instructions,
+		gate_code: report.value.gate_code,
+		has_dog: report.value.has_dog,
+		wants_scheduled: report.value.wants_scheduled,
+	});
 }
 async function fetchExistingReport(report_uri: string) {
 	isLoading.value = true;
