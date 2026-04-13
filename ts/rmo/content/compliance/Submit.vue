@@ -196,7 +196,12 @@
 					</div>
 					<div class="summary-item">
 						<div class="summary-label">Phone</div>
-						<div class="summary-value" v-if="modelValue.reporter?.phone">
+						<div
+							class="summary-value"
+							v-if="
+								modelValue.reporter?.phone || modelValue.reporter?.has_phone
+							"
+						>
 							{{ modelValue.reporter.phone }}
 							<small class="text-muted" v-if="modelValue.reporter?.can_sms"
 								>(texting OK)</small
@@ -208,7 +213,12 @@
 					</div>
 					<div class="summary-item">
 						<div class="summary-label">Email</div>
-						<div class="summary-value" v-if="modelValue.reporter?.email">
+						<div
+							class="summary-value"
+							v-if="
+								modelValue.reporter?.email || modelValue.reporter?.has_email
+							"
+						>
 							{{ modelValue.reporter?.email }}
 						</div>
 						<div class="summary-value status-badge status-not-provided" v-else>
