@@ -382,16 +382,26 @@ const frameMarkers = () => {
 
 	if (props.markers.length === 1) {
 		// Single marker: pan to it
+		// If we are zoomed way out we are likely in the default state antd therefore should zoom in a bunch
+		// for the framing.
+		const zoom = props.modelValue.zoom > 1 ? props.modelValue.zoom : 15;
+		console.log(
+			"framing single marker",
+			props.markers[0].location,
+			props.modelValue.zoom,
+			zoom,
+		);
 		map.value.panTo(
 			{
 				lat: props.markers[0].location.latitude,
 				lng: props.markers[0].location.longitude,
 			},
-			{ duration: 1000, zoom: props.modelValue.zoom },
+			{ duration: 1000, zoom: zoom },
 			{ isInternalUpdate: true },
 		);
 	} else {
 		// Multiple markers: fit bounds
+		console.log("framing multiple markers", props.markers);
 		const bounds = new maplibregl.LngLatBounds();
 		props.markers.forEach((marker) => {
 			bounds.extend([marker.location.longitude, marker.location.latitude]);
@@ -409,6 +419,7 @@ watch(
 	() => props.modelValue,
 	(newCamera) => {
 		if (map.value && newCamera) {
+			console.log("panning based on model change", newCamera);
 			map.value.panTo(
 				{
 					lat: newCamera.location.latitude,
