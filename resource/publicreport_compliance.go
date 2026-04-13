@@ -81,7 +81,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	if err != nil {
 		return nil, nhttp.NewError("create compliance report: %w", err)
 	}
-	uri, err := res.router.IDStrToURI("publicreport.ByIDGet", report.PublicID)
+	uri, err := res.router.IDStrToURI("publicreport.compliance.ByIDGet", report.PublicID)
 	if err != nil {
 		return nil, nhttp.NewError("generate uri: %w", err)
 	}
