@@ -46,7 +46,6 @@ export const useStoreDistrict = defineStore("district", () => {
 			const data: District[] = await response.json();
 			data.forEach((d: District) => {
 				_byURI.value.set(d.uri, d);
-				console.log("district", d.uri);
 			});
 			return data;
 		} catch (e) {
