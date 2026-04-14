@@ -29,7 +29,7 @@ type nuisanceR struct {
 }
 type nuisance struct {
 	District string `json:"district"`
-	ID       string `json:"id"`
+	PublicID string `json:"public_id"`
 	URI      string `json:"uri"`
 }
 type nuisanceForm struct {
@@ -130,7 +130,7 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	}
 	return &nuisance{
 		District: district_uri,
-		ID:       report.PublicID,
+		PublicID: report.PublicID,
 		URI:      uri,
 	}, nil
 }
