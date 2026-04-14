@@ -235,6 +235,9 @@ async function uploadImages(images: Image[]) {
 		return;
 	}
 	isUploading.value = false;
+	// after everything is done update the report so that we see the correct number of images
+	// on the report summary
+	await fetchExistingReport(report.value.uri);
 }
 onMounted(() => {
 	const client_id = storeLocal.getClientID();
