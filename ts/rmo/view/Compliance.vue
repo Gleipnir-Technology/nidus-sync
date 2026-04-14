@@ -115,6 +115,7 @@ async function createReport(client_id: string, loc?: GeolocationPosition) {
 	}
 	const body = await resp.json();
 	storeLocal.setExistingComplianceReportURI(body.uri);
+	report.value!.public_id = body.public_id;
 	report.value!.uri = body.uri;
 }
 function doAddress() {
