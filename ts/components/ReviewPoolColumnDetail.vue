@@ -38,7 +38,7 @@
 							:class="{
 								'border-warning':
 									poolLocation.longitude !==
-									selectedTask.pool?.location.longitude,
+									selectedTask.pool?.location?.longitude,
 							}"
 						/>
 					</div>

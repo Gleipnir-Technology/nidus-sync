@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	//"github.com/rs/zerolog/log"
 	"github.com/uber/h3-go/v4"
@@ -31,4 +32,7 @@ func (l Location) H3Cell() (*h3.Cell, error) {
 }
 func (l Location) GeometryQuery() (string, error) {
 	return fmt.Sprintf("ST_Point(%f, %f, 4326)", l.Longitude, l.Latitude), nil
+}
+func LocationFromFS(pl *models.FieldseekerPointlocation) Location {
+	return Location{}
 }
