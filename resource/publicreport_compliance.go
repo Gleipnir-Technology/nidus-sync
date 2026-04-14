@@ -178,5 +178,10 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 	if err != nil {
 		return nil, nhttp.NewError("platform update report compliance: %w", err)
 	}
+	// Return a fully-fleshed-out report object, even though it's a bit more expensive
+	report, err = platform.PublicreportByIDCompliance(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("get report after update: %w", err)
+	}
 	return report, nil
 }
