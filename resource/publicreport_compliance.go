@@ -63,7 +63,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		ReporterEmail:       omit.From(""),
 		ReporterName:        omit.From(""),
 		ReporterPhone:       omit.From(""),
-		ReporterPhoneCanSMS: omit.FromPtr[bool](nil),
+		ReporterPhoneCanSMS: omit.From(true),
 		ReportType:          omit.From(enums.PublicreportReporttypeCompliance),
 		Status:              omit.From(enums.PublicreportReportstatustypeReported),
 	}
