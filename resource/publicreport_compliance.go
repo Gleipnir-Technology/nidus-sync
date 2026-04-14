@@ -49,7 +49,10 @@ func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryPa
 }
 func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*compliance, *nhttp.ErrorWithStatus) {
 	user_agent := r.Header.Get("User-Agent")
-	platform.EnsureClient(ctx, n.ClientID, user_agent)
+	err := platform.EnsureClient(ctx, n.ClientID, user_agent)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to ensure client: %w", err)
+	}
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
 		AddressGid: omit.From(""),

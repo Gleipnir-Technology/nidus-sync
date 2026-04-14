@@ -15,6 +15,7 @@ type publicreportNotificationR struct {
 }
 
 type publicreportNotification struct {
+	CanSMS       bool   `json:"can_sms"`
 	Consent      bool   `json:"consent"`
 	Email        string `json:"email"`
 	Name         string `json:"name"`

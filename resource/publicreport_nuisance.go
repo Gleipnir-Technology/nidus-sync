@@ -32,16 +32,12 @@ type nuisance struct {
 	ID       string `json:"id"`
 	URI      string `json:"uri"`
 }
-type Locator struct {
-	Address  types.Address  `schema:"address"`
-	Location types.Location `schema:"location"`
-}
 type nuisanceForm struct {
+	Address           types.Address  `schema:"address"`
 	AdditionalInfo    string         `schema:"additional-info"`
 	ClientID          uuid.UUID      `schema:"client_id" json:"client_id"`
 	Duration          string         `schema:"duration"`
 	Location          types.Location `schema:"location"`
-	Locator           Locator        `schema:"locator"`
 	MapZoom           string         `schema:"map-zoom"`
 	SourceStagnant    bool           `schema:"source-stagnant"`
 	SourceContainer   bool           `schema:"source-container"`
@@ -56,7 +52,10 @@ type nuisanceForm struct {
 
 func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceForm) (*nuisance, *nhttp.ErrorWithStatus) {
 	user_agent := r.Header.Get("User-Agent")
-	platform.EnsureClient(ctx, n.ClientID, user_agent)
+	err := platform.EnsureClient(ctx, n.ClientID, user_agent)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to ensure client: %w", err)
+	}
 	duration := enums.PublicreportNuisancedurationtypeNone
 	is_location_frontyard := slices.Contains(n.SourceLocations, "frontyard")
 	is_location_backyard := slices.Contains(n.SourceLocations, "backyard")
@@ -64,7 +63,7 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	is_location_pool := slices.Contains(n.SourceLocations, "pool-area")
 	is_location_other := slices.Contains(n.SourceLocations, "other")
 
-	err := duration.Scan(n.Duration)
+	err = duration.Scan(n.Duration)
 	if err != nil {
 		log.Warn().Err(err).Str("duration_str", n.Duration).Msg("Failed to interpret 'duration'")
 	}
@@ -74,19 +73,14 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	if err != nil {
 		return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
 	}
-	address := platform.Address{
-		GID: n.Locator.Address.GID,
-		Raw: n.Locator.Address.Raw,
-	}
 	accuracy := float32(0.0)
 	if n.Location.Accuracy != nil {
 		accuracy = *n.Location.Accuracy
 	}
-	log.Info().Str("address.raw", address.Raw).Str("address.gid", address.GID).Msg("making nuisance")
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
-		AddressGid: omit.From(address.GID),
-		AddressRaw: omit.From(address.Raw),
+		AddressGid: omit.From(n.Address.GID),
+		AddressRaw: omit.From(n.Address.Raw),
 		ClientUUID: omitnull.From(n.ClientID),
 		Created:    omit.From(time.Now()),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
@@ -97,11 +91,12 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 		MapZoom:  omit.From(float32(0.0)),
 		//OrganizationID:    omitnull.FromPtr(organization_id),
 		//PublicID:          omit.From(public_id),
-		ReporterEmail: omit.From(""),
-		ReporterName:  omit.From(""),
-		ReporterPhone: omit.From(""),
-		ReportType:    omit.From(enums.PublicreportReporttypeNuisance),
-		Status:        omit.From(enums.PublicreportReportstatustypeReported),
+		ReporterEmail:       omit.From(""),
+		ReporterName:        omit.From(""),
+		ReporterPhone:       omit.From(""),
+		ReporterPhoneCanSMS: omit.From(true),
+		ReportType:          omit.From(enums.PublicreportReporttypeNuisance),
+		Status:              omit.From(enums.PublicreportReportstatustypeReported),
 	}
 	setter_nuisance := models.PublicreportNuisanceSetter{
 		AdditionalInfo:      omit.From(n.AdditionalInfo),
@@ -121,7 +116,7 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 		TodEvening:        omit.From(n.TODEvening),
 		TodNight:          omit.From(n.TODNight),
 	}
-	report, err := platform.PublicReportNuisanceCreate(ctx, setter_report, setter_nuisance, n.Location, address, uploads)
+	report, err := platform.PublicReportNuisanceCreate(ctx, setter_report, setter_nuisance, n.Location, n.Address, uploads)
 	if err != nil {
 		return nil, nhttp.NewError("create nuisance report: %w", err)
 	}

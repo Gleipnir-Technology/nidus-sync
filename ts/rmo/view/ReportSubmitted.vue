@@ -127,6 +127,24 @@
 
 								<div class="form-check mb-3 form-check">
 									<input
+										v-model="formData.can_sms"
+										class="form-check-input"
+										id="can_sms"
+										type="checkbox"
+									/>
+									<label class="form-check-label" for="can_sms">
+										This phone number can receive text messages
+										<i
+											class="bi bi-info-circle-fill text-primary ms-1"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											title="By 'text messages' we specifically mean SMS/MMS messages. If it's a mobile or cellular phone, it should work. If it's a home or office phone, it may not."
+										></i>
+									</label>
+								</div>
+
+								<div class="form-check mb-3 form-check">
+									<input
 										v-model="formData.consent"
 										class="form-check-input"
 										id="consent"
@@ -262,10 +280,11 @@ import { useStorePublicReport } from "@/store/publicreport";
 import type { District, PublicReport } from "@/type/api";
 
 interface FormData {
-	name: string;
+	can_sms: boolean;
+	consent: boolean;
 	email: string;
 	phone: string;
-	consent: boolean;
+	name: string;
 	notification: boolean;
 	subscribe: boolean;
 }
@@ -277,10 +296,11 @@ interface Props {
 const props = defineProps<Props>();
 
 const formData = ref<FormData>({
-	name: "",
+	can_sms: true,
+	consent: true,
 	email: "",
 	phone: "",
-	consent: true,
+	name: "",
 	notification: false,
 	subscribe: false,
 });

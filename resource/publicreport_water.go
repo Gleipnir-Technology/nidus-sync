@@ -38,7 +38,7 @@ type waterForm struct {
 	AccessGate             bool           `schema:"access-gate"`
 	AccessLocked           bool           `schema:"access-locked"`
 	AccessOther            bool           `schema:"access-other"`
-	Address                string         `schema:"address"`
+	Address                types.Address  `schema:"address"`
 	AddressGID             string         `schema:"address-gid"`
 	ClientID               uuid.UUID      `schema:"client_id" json:"client_id"`
 	Comments               string         `schema:"comments"`
@@ -49,7 +49,6 @@ type waterForm struct {
 	IsReporterConfidential bool           `schema:"reporter-confidential"`
 	IsReporter_owner       bool           `schema:"property-ownership"`
 	Location               types.Location `schema:"location"`
-	Locator                Locator        `schema:"locator"`
 	OwnerEmail             string         `schema:"owner-email"`
 	OwnerName              string         `schema:"owner-name"`
 	OwnerPhone             string         `schema:"owner-phone"`
@@ -57,7 +56,10 @@ type waterForm struct {
 
 func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*water, *nhttp.ErrorWithStatus) {
 	user_agent := r.Header.Get("User-Agent")
-	platform.EnsureClient(ctx, w.ClientID, user_agent)
+	err := platform.EnsureClient(ctx, w.ClientID, user_agent)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to ensure client: %w", err)
+	}
 
 	uploads, err := html.ExtractImageUploads(r)
 	log.Info().Int("len", len(uploads)).Msg("extracted water uploads")
@@ -65,17 +67,13 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 		return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
 	}
 
-	address := platform.Address{
-		GID: w.AddressGID,
-		Raw: w.Address,
-	}
 	accuracy := float32(0.0)
 	if w.Location.Accuracy != nil {
 		accuracy = *w.Location.Accuracy
 	}
 	setter_report := models.PublicreportReportSetter{
-		AddressGid: omit.From(address.GID),
-		AddressRaw: omit.From(address.Raw),
+		AddressGid: omit.From(w.Address.GID),
+		AddressRaw: omit.From(w.Address.Raw),
 		ClientUUID: omitnull.From(w.ClientID),
 		Created:    omit.From(time.Now()),
 		//H3cell:       omitnull.From(geospatial.Cell.String()),
@@ -86,11 +84,12 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 		MapZoom:  omit.From(float32(0.0)),
 		//OrganizationID: omitnull.FromPtr(organization_id),
 		//PublicID:       omit.From(public_id),
-		ReporterEmail: omit.From(""),
-		ReporterName:  omit.From(""),
-		ReporterPhone: omit.From(""),
-		ReportType:    omit.From(enums.PublicreportReporttypeWater),
-		Status:        omit.From(enums.PublicreportReportstatustypeReported),
+		ReporterEmail:       omit.From(""),
+		ReporterName:        omit.From(""),
+		ReporterPhone:       omit.From(""),
+		ReporterPhoneCanSMS: omit.From(true),
+		ReportType:          omit.From(enums.PublicreportReporttypeWater),
+		Status:              omit.From(enums.PublicreportReportstatustypeReported),
 	}
 	setter_water := models.PublicreportWaterSetter{
 		AccessComments:         omit.From(w.AccessComments),
@@ -111,7 +110,7 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 		OwnerPhone:             omit.From(w.OwnerPhone),
 		//ReportID               omit.Val[int32]
 	}
-	report, err := platform.PublicReportWaterCreate(ctx, setter_report, setter_water, w.Location, address, uploads)
+	report, err := platform.PublicReportWaterCreate(ctx, setter_report, setter_water, w.Location, w.Address, uploads)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to save new report: %w", err)
 	}
