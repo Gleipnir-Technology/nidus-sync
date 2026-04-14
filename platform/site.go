@@ -14,7 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
-	//"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/stephenafamo/scan"
@@ -89,7 +89,7 @@ func siteFromAddressRaw(ctx context.Context, txn bob.Tx, user User, address stri
 	}
 	return siteFromAddress(ctx, txn, user, a.ID)
 }
-func siteFromLocation(ctx context.Context, txn bob.Tx, user User, location Location) (*models.Site, error) {
+func siteFromLocation(ctx context.Context, txn bob.Tx, user User, location types.Location) (*models.Site, error) {
 	// Reverse geocode at the location
 	resp, err := geocode.ReverseGeocode(ctx, location)
 	if err != nil {

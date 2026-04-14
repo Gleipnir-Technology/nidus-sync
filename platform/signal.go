@@ -76,7 +76,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	} else if report.LocationLatitude.IsValue() && report.LocationLongitude.IsValue() {
 		lat := report.LocationLatitude.MustGet()
 		lng := report.LocationLongitude.MustGet()
-		site, err := siteFromLocation(ctx, txn, user, Location{
+		site, err := siteFromLocation(ctx, txn, user, types.Location{
 			Latitude:  lat,
 			Longitude: lng,
 		})

@@ -10,6 +10,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -168,7 +169,7 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) 
 
 	data := []Renderable{}
 	for _, sr := range requests {
-		data = append(data, NewResponseServiceRequest(sr))
+		data = append(data, types.ServiceRequestFromModel(sr))
 	}
 	if err := renderList(w, r, data); err != nil {
 		renderShim(w, r, errRender(err))

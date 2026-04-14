@@ -11,13 +11,14 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 )
 
 // Create a lead from the given signal and site
-func LeadCreate(ctx context.Context, user User, signal_id int32, site_id int32, pool_location *Location) (*int32, error) {
+func LeadCreate(ctx context.Context, user User, signal_id int32, site_id int32, pool_location *types.Location) (*int32, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	defer txn.Rollback(ctx)
 	if err != nil {

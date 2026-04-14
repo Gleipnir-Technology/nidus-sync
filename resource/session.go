@@ -51,6 +51,7 @@ type sessionURLAPI struct {
 	Impersonation       string `json:"impersonation"`
 	PublicreportMessage string `json:"publicreport_message"`
 	ReviewTask          string `json:"review_task"`
+	ServiceRequest      string `json:"service_request"`
 	Signal              string `json:"signal"`
 	Sync                string `json:"sync"`
 	Upload              string `json:"upload"`
@@ -96,6 +97,7 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 				Impersonation:       config.MakeURLNidus("/api/impersonation"),
 				PublicreportMessage: urls.API.Publicreport.Message,
 				ReviewTask:          config.MakeURLNidus("/api/review-task"),
+				ServiceRequest:      config.MakeURLNidus("/api/service-request"),
 				Signal:              config.MakeURLNidus("/api/signal"),
 				Sync:                config.MakeURLNidus("/api/sync"),
 				Upload:              config.MakeURLNidus("/api/upload"),

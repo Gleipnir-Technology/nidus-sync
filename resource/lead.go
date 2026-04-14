@@ -5,6 +5,7 @@ import (
 	"fmt"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/gorilla/mux"
 	"net/http"
 	//"github.com/rs/zerolog/log"
@@ -21,8 +22,8 @@ func Lead(r *mux.Router) *leadR {
 }
 
 type createLead struct {
-	PoolLocations map[int]platform.Location `json:"pool_locations"`
-	SignalIDs     []int                     `json:"signal_ids"`
+	PoolLocations map[int]types.Location `json:"pool_locations"`
+	SignalIDs     []int                  `json:"signal_ids"`
 }
 type contentListLead struct {
 	Leads []lead `json:"leads"`
@@ -44,7 +45,7 @@ func (res *leadR) Create(ctx context.Context, r *http.Request, user platform.Use
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "can't make a lead with multiple signals yet")
 	}
 	signal_id := req.SignalIDs[0]
-	var pool_location *platform.Location
+	var pool_location *types.Location
 	l, ok := req.PoolLocations[signal_id]
 	if ok {
 		pool_location = &l

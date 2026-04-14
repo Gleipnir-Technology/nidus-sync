@@ -10,6 +10,23 @@ import (
 	"github.com/google/uuid"
 )
 
+type ClientSync struct {
+	Fieldseeker FieldseekerRecordsSync
+	Since       time.Time
+}
+
+type FieldseekerRecordsSync struct {
+	MosquitoSources []MosquitoSource
+	ServiceRequests models.FieldseekerServicerequestSlice
+	TrapData        models.FieldseekerTraplocationSlice
+}
+
+type MosquitoSource struct {
+	PointLocation models.FieldseekerPointlocation
+	Inspections   models.FieldseekerMosquitoinspectionSlice
+	Treatments    models.FieldseekerTreatmentSlice
+}
+
 func getFieldseekerRecordsSync(ctx context.Context, u User, since *time.Time) (fsync FieldseekerRecordsSync, err error) {
 	db_connection := db.PGInstance.BobDB
 	pl, err := u.Organization.model.Pointlocations().All(ctx, db_connection)

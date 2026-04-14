@@ -637,6 +637,77 @@ export interface Session {
 	self: User;
 	urls: URLs;
 }
+export interface ServiceRequestDTO {
+	address: string;
+	assigned_technician: string;
+	city: string;
+	created: string;
+	h3cell: number;
+	has_dog: boolean;
+	has_spanish_speaker: boolean;
+	id: string;
+	priority: string;
+	recorded_date: string;
+	source: string;
+	status: string;
+	target: string;
+	zip: string;
+}
+export interface ServiceRequestOptions {
+	address: string;
+	assigned_technician: string;
+	city: string;
+	created: Date;
+	h3cell: number;
+	has_dog: boolean;
+	has_spanish_speaker: boolean;
+	id: string;
+	priority: string;
+	recorded_date: Date;
+	source: string;
+	status: string;
+	target: string;
+	zip: string;
+}
+export class ServiceRequest {
+	address: string;
+	assigned_technician: string;
+	city: string;
+	created: Date;
+	h3cell: number;
+	has_dog: boolean;
+	has_spanish_speaker: boolean;
+	id: string;
+	priority: string;
+	recorded_date: Date;
+	source: string;
+	status: string;
+	target: string;
+	zip: string;
+	constructor(options: ServiceRequestOptions) {
+		this.address = options.address;
+		this.assigned_technician = options.assigned_technician;
+		this.city = options.city;
+		this.created = options.created;
+		this.h3cell = options.h3cell;
+		this.has_dog = options.has_dog;
+		this.has_spanish_speaker = options.has_spanish_speaker;
+		this.id = options.id;
+		this.priority = options.priority;
+		this.recorded_date = options.recorded_date;
+		this.source = options.source;
+		this.status = options.status;
+		this.target = options.target;
+		this.zip = options.zip;
+	}
+	static fromJSON(json: ServiceRequestDTO): ServiceRequest {
+		return new ServiceRequest({
+			...json,
+			created: new Date(json.created),
+			recorded_date: new Date(json.recorded_date),
+		});
+	}
+}
 export interface SyncDTO {
 	created: Date;
 	id: string;
@@ -677,6 +748,7 @@ interface URLsAPI {
 	impersonation: string;
 	publicreport_message: string;
 	review_task: string;
+	service_request: string;
 	signal: string;
 	sync: string;
 	upload: string;

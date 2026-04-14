@@ -159,6 +159,7 @@ import { onMounted, reactive } from "vue";
 import MapAggregate from "@/components/MapAggregate.vue";
 import { formatBigNumber, formatTimeRelative } from "@/format";
 import { useSessionStore } from "@/store/session";
+import { useStoreServiceRequest } from "@/store/service_request";
 import { useStoreSync } from "@/store/sync";
 import type { Bounds } from "@/type/api";
 
@@ -181,9 +182,11 @@ const dashboard = reactive({
 	},
 	recentRequests: [],
 });
+const storeServiceRequest = useStoreServiceRequest();
 const storeSync = useStoreSync();
 const session = useSessionStore();
 onMounted(async () => {
+	const service_requests = await storeServiceRequest.fetchAll();
 	const syncs = await storeSync.fetchAll();
 	console.log("syncs", syncs);
 });

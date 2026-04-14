@@ -7,6 +7,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/null"
 	//"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -91,7 +92,7 @@ type NoteAudioBreadcrumbPayload struct {
 
 type ResponseFieldseeker struct {
 	MosquitoSources []ResponseMosquitoSource `json:"sources"`
-	ServiceRequests []ResponseServiceRequest `json:"requests"`
+	ServiceRequests []types.ServiceRequest   `json:"requests"`
 	TrapData        []ResponseTrapData       `json:"traps"`
 }
 
@@ -234,48 +235,10 @@ func (rtd ResponseNote) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type ResponseServiceRequest struct {
-	Address            string `json:"address"`
-	AssignedTechnician string `json:"assigned_technician"`
-	City               string `json:"city"`
-	Created            string `json:"created"`
-	H3Cell             int64  `json:"h3cell"`
-	HasDog             *bool  `json:"has_dog"`
-	HasSpanishSpeaker  *bool  `json:"has_spanish_speaker"`
-	ID                 string `json:"id"`
-	Priority           string `json:"priority"`
-	RecordedDate       string `json:"recorded_date"`
-	Source             string `json:"source"`
-	Status             string `json:"status"`
-	Target             string `json:"target"`
-	Zip                string `json:"zip"`
-}
-
-func (srr ResponseServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-func NewResponseServiceRequest(sr *models.FieldseekerServicerequest) ResponseServiceRequest {
-	return ResponseServiceRequest{
-		Address:            sr.Reqaddr1.GetOr(""),
-		AssignedTechnician: sr.Assignedtech.GetOr(""),
-		City:               sr.Reqcity.GetOr(""),
-		Created:            formatTime(sr.Creationdate),
-		//H3Cell:             sr.H3Cell,
-		HasDog:            toBool(sr.Dog),
-		HasSpanishSpeaker: toBool(sr.Spanish),
-		ID:                sr.Globalid.String(),
-		Priority:          sr.Priority.GetOr(""),
-		Status:            sr.Status.GetOr(""),
-		Source:            sr.Source.GetOr(""),
-		Target:            sr.Reqtarget.GetOr(""),
-		Zip:               sr.Reqzip.GetOr(""),
-	}
-}
-func NewResponseServiceRequests(requests models.FieldseekerServicerequestSlice) []ResponseServiceRequest {
-	results := make([]ResponseServiceRequest, 0)
+func NewResponseServiceRequests(requests models.FieldseekerServicerequestSlice) []types.ServiceRequest {
+	results := make([]types.ServiceRequest, 0)
 	for _, i := range requests {
-		results = append(results, NewResponseServiceRequest(i))
+		results = append(results, types.ServiceRequestFromModel(i))
 	}
 	return results
 }
