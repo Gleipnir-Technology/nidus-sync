@@ -52,6 +52,7 @@ type sessionURLAPI struct {
 	PublicreportMessage string `json:"publicreport_message"`
 	ReviewTask          string `json:"review_task"`
 	Signal              string `json:"signal"`
+	Sync                string `json:"sync"`
 	Upload              string `json:"upload"`
 	User                string `json:"user"`
 }
@@ -96,6 +97,7 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 				PublicreportMessage: urls.API.Publicreport.Message,
 				ReviewTask:          config.MakeURLNidus("/api/review-task"),
 				Signal:              config.MakeURLNidus("/api/signal"),
+				Sync:                config.MakeURLNidus("/api/sync"),
 				Upload:              config.MakeURLNidus("/api/upload"),
 				User:                config.MakeURLNidus("/api/user"),
 			},

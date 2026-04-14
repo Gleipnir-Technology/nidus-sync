@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 type Address struct {
@@ -25,7 +25,7 @@ func (a Address) String() string {
 	return fmt.Sprintf("%s %s, %s, %s, %s, %s", a.Number, a.Street, a.Locality, a.Region, a.PostalCode, a.Country)
 }
 func AddressFromModel(m *models.Address) Address {
-	log.Debug().Int32("id", m.ID).Float64("lat", m.LocationLatitude.GetOr(0.0)).Float64("lng", m.LocationLongitude.GetOr(0.0)).Msg("converting address")
+	//log.Debug().Int32("id", m.ID).Float64("lat", m.LocationLatitude.GetOr(0.0)).Float64("lng", m.LocationLongitude.GetOr(0.0)).Msg("converting address")
 	return Address{
 		Country:  m.Country,
 		GID:      m.Gid,

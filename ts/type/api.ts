@@ -637,6 +637,34 @@ export interface Session {
 	self: User;
 	urls: URLs;
 }
+export interface SyncDTO {
+	created: Date;
+	id: string;
+	organization: string;
+	records_created: number;
+	records_unchanged: number;
+	records_updated: number;
+}
+export class Sync {
+	constructor(
+		public created: Date,
+		public id: string,
+		public organization: string,
+		public records_created: number,
+		public records_unchanged: number,
+		public records_updated: number,
+	) {}
+	static fromJSON(json: SyncDTO): Sync {
+		return new Sync(
+			new Date(json.created),
+			json.id,
+			json.organization,
+			json.records_created,
+			json.records_unchanged,
+			json.records_updated,
+		);
+	}
+}
 export interface URLs {
 	api: URLsAPI;
 	tegola: string;
@@ -650,6 +678,7 @@ interface URLsAPI {
 	publicreport_message: string;
 	review_task: string;
 	signal: string;
+	sync: string;
 	upload: string;
 	user: string;
 }
