@@ -468,7 +468,7 @@ import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
-import { useGeocodeStore } from "@/store/geocode";
+import { useStoreGeocode } from "@/store/geocode";
 import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
@@ -494,7 +494,7 @@ const showMore = ref<boolean>(false);
 const storeLocal = useStoreLocal();
 const storeLocation = useStoreLocation();
 const storePublicReport = useStorePublicReport();
-const geocode = useGeocodeStore();
+const geocode = useStoreGeocode();
 const router = useRouter();
 async function doSubmit() {
 	if (!formElement.value) return;

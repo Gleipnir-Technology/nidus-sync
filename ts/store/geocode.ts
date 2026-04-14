@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Geocode, Location } from "@/type/api";
 
-export const useGeocodeStore = defineStore("geocode", () => {
+export const useStoreGeocode = defineStore("geocode", () => {
 	// State
 	const loading = ref(false);
 	const error = ref(null);

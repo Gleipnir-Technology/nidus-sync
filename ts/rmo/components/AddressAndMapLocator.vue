@@ -65,7 +65,7 @@ import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import { Address } from "@/type/api";
 import type { Geocode, GeocodeSuggestion, Location } from "@/type/api";
-import { useGeocodeStore } from "@/store/geocode";
+import { useStoreGeocode } from "@/store/geocode";
 import { Camera } from "@/type/map";
 import type { Marker } from "@/types";
 
@@ -79,7 +79,7 @@ interface Props {
 const address = ref<string>("");
 const currentCamera = ref<Camera>(new Camera());
 const emit = defineEmits<Emits>();
-const geocode = useGeocodeStore();
+const geocode = useStoreGeocode();
 const markers = computed((): Marker[] => {
 	if (!props.modelValue.location) {
 		return [];
