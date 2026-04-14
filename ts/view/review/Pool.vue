@@ -180,12 +180,18 @@ const changes = computed<Changes>(() => {
 	} else {
 		unchanged.push("condition");
 	}
-	if (newPoolLocation.value.latitude != pool.site.location.latitude) {
+	if (
+		newPoolLocation.value &&
+		newPoolLocation.value.latitude != pool.site.address.location?.latitude
+	) {
 		updated.push("latitude");
 	} else {
 		unchanged.push("latitude");
 	}
-	if (newPoolLocation.value.longitude != pool.site.location.longitude) {
+	if (
+		newPoolLocation.value &&
+		newPoolLocation.value.longitude != pool.site.address.location?.longitude
+	) {
 		updated.push("longitude");
 	} else {
 		unchanged.push("longitude");
@@ -216,7 +222,6 @@ async function fetchTasks() {
 // Helper Functions
 // Task Selection
 function selectTask(id: number): void {
-	console.log("Selected task", id);
 	selectedTaskID.value = id;
 
 	const task = reviewTask.byID(id);
@@ -229,6 +234,7 @@ function selectTask(id: number): void {
 		console.log("no pool for selected task");
 		return;
 	}
+	console.log("selecting task", id, task);
 	newPoolCondition.value = pool.condition;
 	newPoolLocation.value = pool.location;
 	newOwnerName.value = pool.site.owner?.name ?? "";

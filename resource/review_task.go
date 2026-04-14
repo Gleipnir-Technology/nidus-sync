@@ -32,14 +32,15 @@ type reviewTask struct {
 	Created  time.Time      `json:"created"`
 	Creator  platform.User  `json:"creator"`
 	ID       int32          `json:"id"`
-	Location types.Location `json:"location"`
 	Pool     reviewTaskPool `json:"pool"`
 	Reviewed *time.Time     `json:"addressed"`
 	Reviewer *platform.User `json:"addressor"`
 }
 type reviewTaskPool struct {
-	Condition string     `json:"condition"`
-	Site      types.Site `json:"site"`
+	Condition string         `json:"condition"`
+	Location  types.Location `json:"location"`
+	Owner     types.Contact  `json:"owner"`
+	Site      types.Site     `json:"site"`
 }
 type contentListReviewTask struct {
 	Tasks []reviewTask `json:"tasks"`
@@ -136,12 +137,12 @@ func (res *reviewTaskR) List(ctx context.Context, r *http.Request, user platform
 			Created: row.Created,
 			Creator: *users_by_id[row.CreatorID],
 			ID:      row.ID,
-			Location: types.Location{
-				Latitude:  row.Latitude,
-				Longitude: row.Longitude,
-			},
 			Pool: reviewTaskPool{
 				Condition: row.Condition,
+				Location: types.Location{
+					Latitude:  row.Latitude,
+					Longitude: row.Longitude,
+				},
 			},
 			Reviewed: row.Reviewed,
 			Reviewer: userOrNil(users_by_id, row.ReviewerID),

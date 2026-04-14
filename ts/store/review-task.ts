@@ -20,7 +20,7 @@ export const useReviewTaskStore = defineStore("review-task", () => {
 	function all(): ReviewTask[] {
 		return Array.from(_byID.value.values());
 	}
-	function byID(id: number) {
+	function byID(id: number): ReviewTask | undefined {
 		return _byID.value.get(id);
 	}
 	async function fetchAll(): Promise<void> {

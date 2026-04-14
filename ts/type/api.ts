@@ -529,7 +529,6 @@ export interface Site {
 	creator_id: number;
 	file_id: number;
 	id: number;
-	location: Location;
 	notes: string;
 	organization_id: number;
 	owner?: Contact;

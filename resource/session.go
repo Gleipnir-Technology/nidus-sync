@@ -23,7 +23,7 @@ func Session(r *router) *sessionR {
 }
 
 type organization struct {
-	ID          int32              `json:"organization_id"`
+	ID          int32              `json:"id"`
 	ServiceArea *types.ServiceArea `json:"service_area"`
 }
 
