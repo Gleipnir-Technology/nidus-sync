@@ -8,7 +8,7 @@ import (
 func Router(r *mux.Router) {
 	// Unauthenticated endpoints
 	r.HandleFunc("/oauth/arcgis/begin", getArcgisOauthBegin)
-	r.HandleFunc("/arcgis/oauth/callback", getArcgisOauthCallback)
+	r.HandleFunc("/oauth/arcgis/callback", getArcgisOauthCallback)
 	r.HandleFunc("/mailer/pool/random", getMailerPoolRandom)
 	r.HandleFunc("/mailer/mode-1", getMailer1)
 	r.HandleFunc("/mailer/mode-2", getMailer2)

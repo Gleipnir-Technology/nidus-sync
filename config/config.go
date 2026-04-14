@@ -209,5 +209,5 @@ func Parse() (err error) {
 }
 
 func ArcGISOauthRedirectURL() string {
-	return MakeURLNidus("/arcgis/oauth/callback")
+	return MakeURLNidus("/oauth/arcgis/callback")
 }
