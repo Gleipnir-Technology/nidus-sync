@@ -13,6 +13,7 @@ import (
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -47,10 +48,13 @@ func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryPa
 	return report, nil
 }
 func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*compliance, *nhttp.ErrorWithStatus) {
+	user_agent := r.Header.Get("User-Agent")
+	platform.EnsureClient(ctx, n.ClientID, user_agent)
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(latlng.Cell.String()),
 		AddressGid: omit.From(""),
 		AddressRaw: omit.From(""),
+		ClientUUID: omitnull.From(n.ClientID),
 		Created:    omit.From(time.Now()),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
 		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),
@@ -100,7 +104,7 @@ type publicreportComplianceForm struct {
 	AccessInstructions omit.Val[string]                     `schema:"access_instructions" json:"access_instructions"`
 	Address            omit.Val[types.Address]              `schema:"address" json:"address"`
 	AvailabilityNotes  omit.Val[string]                     `schema:"availability_notes"  json:"availability_notes"`
-	ClientID           string                               `schema:"client_id" json:"client_id"`
+	ClientID           uuid.UUID                            `schema:"client_id" json:"client_id"`
 	Comments           omit.Val[string]                     `schema:"comments" json:"comments"`
 	GateCode           omit.Val[string]                     `schema:"gate_code" json:"gate_code"`
 	HasDog             omitnull.Val[bool]                   `schema:"has_dog" json:"has_dog"`
