@@ -388,7 +388,7 @@ const updateMarkers = () => {
 };
 
 // Frame all markers in view
-const frameMarkers = () => {
+function frameMarkers() {
 	if (!map.value || props.markers.length === 0) return;
 
 	if (props.markers.length === 1) {
@@ -406,17 +406,13 @@ const frameMarkers = () => {
 
 		// Defer this until the map is loaded or we'll drop updates
 		if (map.value) {
-			map.value.on("load", () => {
-				if (!map.value) return;
-				map.value.panTo(
-					{
-						lat: props.markers[0].location.latitude,
-						lng: props.markers[0].location.longitude,
-					},
-					{ duration: 1000, zoom: zoom },
-					{ isInternalUpdate: true },
-				);
-			});
+			if (isLoaded.value) {
+				panToLocation(props.markers[0].location, zoom);
+			} else {
+				map.value.on("load", () => {
+					panToLocation(props.markers[0].location, zoom);
+				});
+			}
 		} else {
 			console.error("Can't frame markers before the map is created");
 		}
@@ -433,7 +429,19 @@ const frameMarkers = () => {
 			{ isInternalUpdate: true },
 		);
 	}
-};
+}
+
+function panToLocation(location: Location, zoom: number) {
+	if (!map.value) return;
+	map.value.panTo(
+		{
+			lat: props.markers[0].location.latitude,
+			lng: props.markers[0].location.longitude,
+		},
+		{ duration: 1000, zoom: zoom },
+		{ isInternalUpdate: true },
+	);
+}
 
 // Watch for modelValue changes to pan to location
 watch(
