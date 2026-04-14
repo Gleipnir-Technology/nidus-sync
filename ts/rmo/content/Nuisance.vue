@@ -537,7 +537,7 @@ async function doSubmit() {
 		});
 		const data: PublicReport = (await resp.json()) as PublicReport;
 		storePublicReport.add(data);
-		router.push("/submitted/" + data.id);
+		router.push("/submitted/" + data.public_id);
 	} catch (error) {
 		errorMessage.value =
 			error instanceof Error ? error.message : "Upload failed";

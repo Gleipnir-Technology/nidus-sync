@@ -5,14 +5,18 @@ body {
 	display: flex;
 	flex-direction: column;
 }
-
 body > .container-fluid {
 	flex: 1;
 }
-
 .progress-bar {
 	background-color: #0d6efd;
 	transition: width 0.3s ease;
+}
+.reference-number {
+	text-align: center;
+	color: #6c757d;
+	font-size: 0.9rem;
+	margin-top: 24px;
 }
 </style>
 <template>
@@ -38,6 +42,12 @@ body > .container-fluid {
 	<template v-else>
 		<p>loading {{ slug }}...</p>
 	</template>
+	<!-- Reference Number -->
+	<div class="reference-number" v-if="report && report.public_id">
+		<small>
+			Reference number: <strong>{{ report.public_id }}</strong>
+		</small>
+	</div>
 </template>
 
 <script setup lang="ts">

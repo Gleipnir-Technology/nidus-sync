@@ -121,13 +121,6 @@
 	margin-top: 16px;
 }
 
-.reference-number {
-	text-align: center;
-	color: #6c757d;
-	font-size: 0.9rem;
-	margin-top: 24px;
-}
-
 .action-buttons {
 	width: 100%;
 }
@@ -233,13 +226,6 @@
 				</div>
 			</div>
 		</template>
-
-		<!-- Reference Number -->
-		<div class="reference-number">
-			<small>
-				Reference number: <strong>{{ modelValue.public_id }}</strong>
-			</small>
-		</div>
 	</div>
 </template>
 <script setup lang="ts">

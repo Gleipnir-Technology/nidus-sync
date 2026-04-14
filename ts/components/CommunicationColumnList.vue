@@ -212,7 +212,7 @@ function filterMatchesLogEntry(filter: string, logs: LogEntry[]) {
 function filterMatchesPublicReport(filter: string, pr: PublicReport) {
 	if (
 		pr.address.raw.includes(filter) ||
-		pr.id.includes(filter) ||
+		pr.public_id.includes(filter) ||
 		filterMatchesLogEntry(filter, pr.log)
 	) {
 		return true;

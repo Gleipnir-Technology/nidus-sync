@@ -28,7 +28,7 @@ type complianceR struct {
 }
 type compliance struct {
 	District string `json:"district"`
-	ID       string `json:"id"`
+	PublicID string `json:"public_id"`
 	URI      string `json:"uri"`
 }
 
@@ -91,7 +91,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	}
 	return &compliance{
 		District: district_uri,
-		ID:       report.PublicID,
+		PublicID: report.PublicID,
 		URI:      uri,
 	}, nil
 }

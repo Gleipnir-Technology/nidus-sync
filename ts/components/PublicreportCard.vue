@@ -25,7 +25,7 @@
 						Standing Water Report
 					</span>
 				</h5>
-				<small class="text-muted">Report ID: #{{ report.id }}</small>
+				<small class="text-muted">Report ID: #{{ report.public_id }}</small>
 			</div>
 			<span class="badge bg-secondary">
 				<TimeRelative :time="report.created" />

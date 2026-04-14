@@ -153,7 +153,6 @@ export interface ComplianceUpdate {
 	comments?: string;
 	gate_code?: string;
 	has_dog?: boolean;
-	//id: string;
 	//images?: Image[];
 	location?: Location;
 	permission_type?: string;
@@ -166,7 +165,6 @@ export interface PublicReportDTO {
 	//compliance?: PublicReportCompliance;
 	created: string;
 	district: string;
-	id: string;
 	images: Image[];
 	location: Location;
 	log: LogEntryDTO[];
@@ -182,7 +180,6 @@ export interface PublicReportOptions {
 	address: Address;
 	created: Date;
 	district: string;
-	id: string;
 	images: Image[];
 	location: Location;
 	log: LogEntry[];
@@ -196,7 +193,6 @@ export class PublicReport {
 	address: Address;
 	created: Date;
 	district: string;
-	id: string;
 	images: Image[];
 	log: LogEntry[];
 	public_id: string;
@@ -209,7 +205,6 @@ export class PublicReport {
 		this.address = options?.address ?? new Address();
 		this.created = options?.created ?? new Date();
 		this.district = options?.district ?? "";
-		this.id = options?.id ?? "";
 		this.images = options?.images ?? [];
 		this.log = options?.log ?? [];
 		this.public_id = options?.public_id ?? "";
@@ -224,7 +219,6 @@ export class PublicReport {
 			address: json.address,
 			created: new Date(json.created),
 			district: json.district,
-			id: json.id,
 			images: json.images,
 			location: json.location,
 			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),

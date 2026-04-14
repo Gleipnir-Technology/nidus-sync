@@ -10,7 +10,7 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 	//const ongoingFetch = ref<Promise<PublicReport[]> | null>(null);
 
 	function add(pr: PublicReport) {
-		_byID.value.set(pr.id, pr);
+		_byID.value.set(pr.public_id, pr);
 	}
 	// Actions
 	async function byID(id: string): Promise<PublicReport | undefined> {
