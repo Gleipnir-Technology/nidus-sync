@@ -93,9 +93,13 @@
 						</span>
 					</div>
 				</div>
-				<NuisanceReportDetail
+				<ReportDetailNuisance
 					:nuisance="report as PublicReportNuisance"
 					v-if="report instanceof PublicReportNuisance"
+				/>
+				<ReportDetailWater
+					:water="report as PublicReportWater"
+					v-if="report instanceof PublicReportWater"
 				/>
 			</div>
 		</div>
@@ -147,11 +151,17 @@ import { computedAsync } from "@vueuse/core";
 import Header from "@/rmo/components/Header.vue";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";
 import MapLocatorDisplay from "@/components/MapLocatorDisplay.vue";
-import NuisanceReportDetail from "@/rmo/components/NuisanceReportDetail.vue";
+import ReportDetailNuisance from "@/rmo/components/ReportDetailNuisance.vue";
+import ReportDetailWater from "@/rmo/components/ReportDetailWater.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
-import { type District, PublicReport, PublicReportNuisance } from "@/type/api";
+import {
+	type District,
+	PublicReport,
+	PublicReportNuisance,
+	PublicReportWater,
+} from "@/type/api";
 import { formatReportID, formatTimeRelative } from "@/format";
 
 // Props
