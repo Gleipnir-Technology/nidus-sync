@@ -173,13 +173,20 @@ const district = computedAsync(async (): Promise<District | undefined> => {
 	return await storeDistrict.byURI(report.value.district);
 });
 const markers = computed((): Marker[] => {
-	if (!(report.value && report.value.location)) {
+	if (
+		!(
+			report.value &&
+			report.value.address.location &&
+			(report.value.address.location.latitude ||
+				report.value.address.location.longitude)
+		)
+	) {
 		return [];
 	}
 	return [
 		{
 			id: props.id,
-			location: report.value.location,
+			location: report.value.address.location,
 		},
 	];
 });
