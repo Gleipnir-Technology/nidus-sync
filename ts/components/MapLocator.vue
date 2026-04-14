@@ -239,7 +239,11 @@ function initializeMap() {
 	if (props.markers.length > 0) {
 		console.log("initial map fitting initial markers", props.markers);
 		_map.fitBounds(boundsMarkers(props.markers));
-	} else if (props.initialCamera) {
+	} else if (
+		props.initialCamera &&
+		(props.initialCamera.location.latitude ||
+			props.initialCamera.location.longitude)
+	) {
 		console.log("initial map jump to initial camera", props.initialCamera);
 		_map.jumpTo({
 			center: [
