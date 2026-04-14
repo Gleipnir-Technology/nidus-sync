@@ -214,20 +214,28 @@ export class PublicReport {
 		this.location = options?.location ?? new Location();
 	}
 	static fromJSON(json: PublicReportDTO): PublicReport {
-		return new PublicReport({
-			address: json.address,
-			created: new Date(json.created),
-			district: json.district,
-			images: json.images,
-			location: json.location,
-			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
-			public_id: json.public_id,
-			reporter: json.reporter,
-			status: json.status,
-			type: json.type,
-			uri: json.uri,
-		});
+		switch (json.type) {
+			case "compliance":
+				return PublicReportCompliance.fromJSON(
+					json as PublicReportComplianceDTO,
+				);
+			case "nuisance":
+				return PublicReportNuisance.fromJSON(json as PublicReportNuisanceDTO);
+			case "water":
+				return PublicReportWater.fromJSON(json as PublicReportWaterDTO);
+			default:
+				throw new Error(`Unrecognized public report type '${json.type}'`);
+		}
 	}
+}
+export interface PublicReportComplianceDTO extends PublicReportDTO {
+	access_instructions: string;
+	availability_notes: string;
+	comments: string;
+	gate_code: string;
+	has_dog: boolean;
+	permission_type: PermissionType;
+	wants_scheduled: boolean;
 }
 export interface PublicReportComplianceOptions extends PublicReportOptions {
 	access_instructions: string;
@@ -258,6 +266,30 @@ export class PublicReportCompliance extends PublicReport {
 		);
 		this.wants_scheduled = options?.wants_scheduled ?? false;
 	}
+	static fromJSON(json: PublicReportComplianceDTO): PublicReportCompliance {
+		return new PublicReportCompliance({
+			...json,
+			created: new Date(json.created),
+			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
+		});
+	}
+}
+export interface PublicReportNuisanceDTO extends PublicReportDTO {
+	additional_info: string;
+	duration: string;
+	is_location_backyard: boolean;
+	is_location_frontyard: boolean;
+	is_location_garden: boolean;
+	is_location_other: boolean;
+	is_location_pool: boolean;
+	source_container: boolean;
+	source_description: string;
+	source_gutter: boolean;
+	source_stagnant: boolean;
+	time_of_day_day: boolean;
+	time_of_day_early: boolean;
+	time_of_day_evening: boolean;
+	time_of_day_night: boolean;
 }
 export interface PublicReportNuisanceOptions extends PublicReportOptions {
 	additional_info: string;
@@ -310,8 +342,31 @@ export class PublicReportNuisance extends PublicReport {
 		this.time_of_day_evening = options.time_of_day_evening;
 		this.time_of_day_night = options.time_of_day_night;
 	}
+	static fromJSON(json: PublicReportNuisanceDTO): PublicReportNuisance {
+		return new PublicReportNuisance({
+			...json,
+			created: new Date(json.created),
+			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
+		});
+	}
 }
 
+export interface PublicReportWaterDTO extends PublicReportDTO {
+	access_comments: string;
+	access_gate: boolean;
+	access_fence: boolean;
+	access_locked: boolean;
+	access_dog: boolean;
+	access_other: boolean;
+	comments: string;
+	has_adult: boolean;
+	has_backyard_permission: boolean;
+	has_larvae: boolean;
+	has_pupae: boolean;
+	is_reporter_confidential: boolean;
+	is_reporter_owner: boolean;
+	owner: Contact;
+}
 export interface PublicReportWaterOptions extends PublicReportOptions {
 	access_comments: string;
 	access_gate: boolean;
@@ -359,6 +414,13 @@ export class PublicReportWater extends PublicReport {
 		this.is_reporter_confidential = options.is_reporter_confidential;
 		this.is_reporter_owner = options.is_reporter_owner;
 		this.owner = options.owner;
+	}
+	static fromJSON(json: PublicReportWaterDTO): PublicReportWater {
+		return new PublicReportWater({
+			...json,
+			created: new Date(json.created),
+			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
+		});
 	}
 }
 /*
