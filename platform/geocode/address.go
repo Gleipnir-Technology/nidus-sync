@@ -60,6 +60,15 @@ func ensureAddressFromFeature(ctx context.Context, txn bob.Executor, feature sta
 	if err != nil {
 		return 0, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", lat, lng)
 	}
+	a, err := models.Addresses.Query(
+		models.SelectWhere.Addresses.Gid.EQ(feature.Properties.GID),
+	).One(ctx, txn)
+	if err != nil && err.Error() != "sql: no rows in result set" {
+		return 0, fmt.Errorf("query address: %w", err)
+	}
+	if err == nil {
+		return a.ID, nil
+	}
 	query := addressQuery()
 	query.Apply(
 		im.Values(
@@ -76,6 +85,7 @@ func ensureAddressFromFeature(ctx context.Context, txn bob.Executor, feature sta
 			psql.Arg(feature.Street()),
 			psql.Raw("''"),
 		),
+		im.OnConflict("gid").DoNothing(),
 	)
 	row, err := bob.One(ctx, txn, query, scan.StructMapper[_rowWithID]())
 	log.Info().Int32("id", row.ID).Msg("inserted address")
