@@ -76,11 +76,11 @@
 					</table>
 				</div>
 				<div class="d-flex gap-2">
-					<RouterLink to="/oauth/refresh/arcgis">
+					<a href="/oauth/arcgis/begin">
 						<button class="btn btn-primary">
 							<i class="bi bi-arrow-repeat me-2"></i>Refresh OAuth Token
 						</button>
-					</RouterLink>
+					</a>
 					<RouterLink to="/configuration/integration/arcgis">
 						<button class="btn btn-outline-danger">
 							<i class="bi bi-gear me-2"></i>Configure
