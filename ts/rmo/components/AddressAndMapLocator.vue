@@ -123,7 +123,7 @@ async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 		console.log("suggestion located, zooming", data);
 		currentCamera.value.zoom = 15;
 	}
-	updateModel(data.address.gid, data.address.raw, data.location);
+	updateModel(data.address.gid, data.address.raw, data.address.location);
 }
 function doMapClick(location: Location) {
 	updateModel(props.modelValue.gid, props.modelValue.raw, location);

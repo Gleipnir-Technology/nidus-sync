@@ -23,9 +23,8 @@ import (
 )
 
 type GeocodeResult struct {
-	Address  types.Address
-	Cell     h3.Cell
-	Location types.Location
+	Address types.Address
+	Cell    h3.Cell
 }
 
 var client *stadia.StadiaMaps
@@ -115,9 +114,13 @@ func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeR
 	// Depending on what kind of request we made we'll get wildly different result structures
 	// This first structure generally works for forword geocoding
 	address := types.Address{
-		Country:    country_s,
-		GID:        feature.Properties.GID,
-		Locality:   feature.Properties.Locality,
+		Country:  country_s,
+		GID:      feature.Properties.GID,
+		Locality: feature.Properties.Locality,
+		Location: &types.Location{
+			Longitude: feature.Geometry.Coordinates[0],
+			Latitude:  feature.Geometry.Coordinates[1],
+		},
 		Number:     feature.Properties.HouseNumber,
 		PostalCode: feature.Properties.PostalCode,
 		Region:     feature.Properties.Region,
@@ -136,10 +139,6 @@ func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeR
 	return &GeocodeResult{
 		Address: address,
 		Cell:    cell,
-		Location: types.Location{
-			Longitude: feature.Geometry.Coordinates[0],
-			Latitude:  feature.Geometry.Coordinates[1],
-		},
 	}, nil
 }
 

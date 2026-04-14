@@ -16,16 +16,14 @@ type geocodeR struct {
 	router *router
 }
 type geocode struct {
-	Address  types.Address  `json:"address"`
-	Cell     h3.Cell        `json:"cell"`
-	Location types.Location `json:"location"`
+	Address types.Address `json:"address"`
+	Cell    h3.Cell       `json:"cell"`
 }
 
 func newGeocode(g *ngeocode.GeocodeResult) *geocode {
 	return &geocode{
-		Address:  g.Address,
-		Cell:     g.Cell,
-		Location: g.Location,
+		Address: g.Address,
+		Cell:    g.Cell,
 	}
 }
 

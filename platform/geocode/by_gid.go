@@ -40,6 +40,7 @@ func ByGID(ctx context.Context, gid string) (*GeocodeResult, error) {
 			GID:        feature.Properties.GID,
 			ID:         &id,
 			Locality:   feature.Properties.Context.WhosOnFirst.Locality.Name,
+			Location:   &location,
 			Number:     feature.Properties.AddressComponents.Number,
 			PostalCode: feature.Properties.AddressComponents.PostalCode,
 			Raw:        feature.Properties.FormattedAddressLine,
@@ -47,7 +48,6 @@ func ByGID(ctx context.Context, gid string) (*GeocodeResult, error) {
 			Street:     feature.Properties.AddressComponents.Street,
 			Unit:       "",
 		},
-		Cell:     cell,
-		Location: location,
+		Cell: cell,
 	}, nil
 }

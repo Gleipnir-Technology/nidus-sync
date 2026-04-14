@@ -86,7 +86,6 @@ export interface GeocodeSuggestion {
 export interface Geocode {
 	address: Address;
 	cell: number;
-	location: Location;
 }
 export interface LogEntryDTO {
 	created: string;

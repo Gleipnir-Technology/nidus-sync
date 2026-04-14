@@ -139,14 +139,17 @@ func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job
 		PostalCode: pool.AddressPostalCode,
 		Street:     pool.AddressStreet,
 	}
-	address, err := geocode.GeocodeStructured(ctx, job.org, a)
+	geo, err := geocode.GeocodeStructured(ctx, job.org, a)
 	if err != nil {
 		addError(ctx, txn, job.csv, job.rownumber, 0, err.Error())
 	}
-	geom_query := geom.PostgisPointQuery(address.Location)
+	if geo.Address.Location == nil {
+		return fmt.Errorf("nil location")
+	}
+	geom_query := geom.PostgisPointQuery(*geo.Address.Location)
 	_, err = psql.Update(
 		um.Table("fileupload.pool"),
-		um.SetCol("h3cell").ToArg(address.Cell),
+		um.SetCol("h3cell").ToArg(geo.Cell),
 		um.SetCol("geom").To(geom_query),
 		um.Where(psql.Quote("id").EQ(psql.Arg(pool.ID))),
 	).Exec(ctx, txn)
