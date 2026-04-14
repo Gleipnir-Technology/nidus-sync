@@ -81,7 +81,7 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/geocode/reverse", handlerJSONPost(geocode.Reverse)).Methods("POST")
 	r.Handle("/geocode/suggestion", handlerJSONSlice(geocode.SuggestionList)).Methods("GET")
 	publicreport := resource.Publicreport(router)
-	r.Handle("/publicreport/{id}", handlerJSON(publicreport.ByID)).Methods("GET").Name("publicreport.ByIDGet")
+	r.Handle("/publicreport/{id}", handlerBasic(publicreport.ByID)).Methods("GET").Name("publicreport.ByIDGet")
 	r.Handle("/publicreport/compliance/{id}/image", handlerFormPost(publicreport.ImageCreate)).Methods("POST")
 	r.Handle("/publicreport/compliance/{id}", handlerJSON(compliance.ByID)).Methods("GET").Name("publicreport.compliance.ByIDGet")
 	r.Handle("/publicreport/compliance/{id}", handlerJSONPut(compliance.Update)).Methods("PUT")

@@ -23,19 +23,22 @@ func Publicreport(r *router) *publicreportR {
 	}
 }
 
-func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReport, *nhttp.ErrorWithStatus) {
+func (res *publicreportR) ByID(ctx context.Context, w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provid an ID")
+		return nhttp.NewBadRequest("You must provide an ID")
 	}
-	report, err := platform.PublicreportByID(ctx, public_id)
+	report_type, err := platform.PublicReportTypeByID(ctx, public_id)
 	if err != nil {
-		return nil, nhttp.NewError("get report: %w", err)
+		return nhttp.NewError("get report '%s': %w", public_id, err)
 	}
-	populateDistrictURI(report, res.router)
-	populateReportURI(report, res.router)
-	return report, nil
+	path, err := reportURI(res.router, report_type, public_id)
+	if err != nil {
+		return nhttp.NewError("get uri '%s': %w", public_id, err)
+	}
+	http.Redirect(w, r, path, http.StatusFound)
+	return nil
 }
 
 type image struct {
@@ -72,8 +75,16 @@ func populateDistrictURI(report *types.PublicReport, r *router) error {
 	return nil
 }
 func populateReportURI(report *types.PublicReport, r *router) error {
+	uri, err := reportURI(r, report.Type, report.PublicID)
+	if err != nil {
+		return fmt.Errorf("report uri: %w", err)
+	}
+	report.URI = uri
+	return nil
+}
+func reportURI(r *router, report_type string, public_id string) (string, error) {
 	var route_name string
-	switch report.Type {
+	switch report_type {
 	case "compliance":
 		route_name = "publicreport.compliance.ByIDGet"
 	case "nuisance":
@@ -81,12 +92,11 @@ func populateReportURI(report *types.PublicReport, r *router) error {
 	case "water":
 		route_name = "publicreport.water.ByIDGet"
 	default:
-		return fmt.Errorf("Unrecognized report type '%s'", report.Type)
+		return "", fmt.Errorf("Unrecognized report type '%s'", report_type)
 	}
-	uri, err := r.IDStrToURI(route_name, report.PublicID)
+	uri, err := r.IDStrToURI(route_name, public_id)
 	if err != nil {
-		return nhttp.NewError("uri: %w", err)
+		return "", fmt.Errorf("id str to uri '%s' '%s': %w", route_name, public_id, err)
 	}
-	report.URI = uri
-	return nil
+	return uri, nil
 }

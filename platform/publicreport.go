@@ -219,6 +219,15 @@ func PublicReportWaterCreate(ctx context.Context, setter_report models.Publicrep
 		return nil
 	})
 }
+func PublicReportTypeByID(ctx context.Context, public_id string) (string, error) {
+	report, err := models.PublicreportReports.Query(
+		models.SelectWhere.PublicreportReports.PublicID.EQ(public_id),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return "", fmt.Errorf("query report '%s': %w", public_id, err)
+	}
+	return report.ReportType.String(), nil
+}
 
 type funcSetReportDetail = func(context.Context, bob.Executor, int32) error
 

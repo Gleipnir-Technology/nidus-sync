@@ -23,6 +23,7 @@ type ErrorAPI struct {
 
 var decoder = schema.NewDecoder()
 
+type handlerBase func(context.Context, http.ResponseWriter, *http.Request) *nhttp.ErrorWithStatus
 type handlerFunctionDelete func(context.Context, *http.Request, platform.User) *nhttp.ErrorWithStatus
 type handlerFunctionGet[T any] func(context.Context, *http.Request, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
 type handlerFunctionGetAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
@@ -189,6 +190,16 @@ func authenticatedHandlerPostMultipart[ResponseType any](f handlerFunctionPostAu
 		}
 		w.Write(body)
 	})
+}
+func handlerBasic(f handlerBase) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		e := f(ctx, w, r)
+		if e != nil {
+			respondErrorStatus(w, e)
+			return
+		}
+	}
 }
 func handlerJSON[T any](f handlerFunctionGet[T]) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
