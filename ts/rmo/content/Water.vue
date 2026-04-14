@@ -622,6 +622,7 @@ import { useRouter } from "vue-router";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import Tooltip from "@/components/Tooltip.vue";
 import { useGeocodeStore } from "@/store/geocode";
+import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
@@ -650,6 +651,7 @@ const markers = computed((): Marker[] => {
 		return [];
 	}
 });
+const storeLocal = useStoreLocal();
 const storeLocation = useStoreLocation();
 const router = useRouter();
 const showMore = ref<boolean>(false);
@@ -660,7 +662,9 @@ async function doSubmit() {
 	isSubmitting.value = true;
 	errorMessage.value = "";
 	try {
+		const client_id = storeLocal.getClientID();
 		const formData = new FormData(formElement.value);
+		formData.append("client_id", client_id);
 		if (address.value) {
 			formData.append("address.gid", address.value.gid);
 			formData.append("address.raw", address.value.raw);

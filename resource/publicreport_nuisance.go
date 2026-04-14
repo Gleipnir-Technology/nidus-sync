@@ -14,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -37,6 +38,7 @@ type Locator struct {
 }
 type nuisanceForm struct {
 	AdditionalInfo    string         `schema:"additional-info"`
+	ClientID          uuid.UUID      `schema:"client_id" json:"client_id"`
 	Duration          string         `schema:"duration"`
 	Location          types.Location `schema:"location"`
 	Locator           Locator        `schema:"locator"`
@@ -53,6 +55,8 @@ type nuisanceForm struct {
 }
 
 func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceForm) (*nuisance, *nhttp.ErrorWithStatus) {
+	user_agent := r.Header.Get("User-Agent")
+	platform.EnsureClient(ctx, n.ClientID, user_agent)
 	duration := enums.PublicreportNuisancedurationtypeNone
 	is_location_frontyard := slices.Contains(n.SourceLocations, "frontyard")
 	is_location_backyard := slices.Contains(n.SourceLocations, "backyard")
@@ -83,6 +87,7 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 		//AddressID:              omitnull.From(latlng.Cell.String()),
 		AddressGid: omit.From(address.GID),
 		AddressRaw: omit.From(address.Raw),
+		ClientUUID: omitnull.From(n.ClientID),
 		Created:    omit.From(time.Now()),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
 		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),

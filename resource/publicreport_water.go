@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
@@ -39,6 +40,7 @@ type waterForm struct {
 	AccessOther            bool           `schema:"access-other"`
 	Address                string         `schema:"address"`
 	AddressGID             string         `schema:"address-gid"`
+	ClientID               uuid.UUID      `schema:"client_id" json:"client_id"`
 	Comments               string         `schema:"comments"`
 	HasAdult               bool           `schema:"has-adult"`
 	HasBackyardPermission  bool           `schema:"backyard-permission"`
@@ -54,6 +56,8 @@ type waterForm struct {
 }
 
 func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*water, *nhttp.ErrorWithStatus) {
+	user_agent := r.Header.Get("User-Agent")
+	platform.EnsureClient(ctx, w.ClientID, user_agent)
 
 	uploads, err := html.ExtractImageUploads(r)
 	log.Info().Int("len", len(uploads)).Msg("extracted water uploads")
@@ -72,6 +76,7 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 	setter_report := models.PublicreportReportSetter{
 		AddressGid: omit.From(address.GID),
 		AddressRaw: omit.From(address.Raw),
+		ClientUUID: omitnull.From(w.ClientID),
 		Created:    omit.From(time.Now()),
 		//H3cell:       omitnull.From(geospatial.Cell.String()),
 		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),

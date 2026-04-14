@@ -469,6 +469,7 @@ import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { useGeocodeStore } from "@/store/geocode";
+import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
@@ -488,9 +489,10 @@ const errorMessage = ref("");
 const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
 const isSubmitting = ref(false);
-const storeLocation = useStoreLocation();
 
 const showMore = ref<boolean>(false);
+const storeLocal = useStoreLocal();
+const storeLocation = useStoreLocation();
 const storePublicReport = useStorePublicReport();
 const geocode = useGeocodeStore();
 const router = useRouter();
@@ -500,7 +502,9 @@ async function doSubmit() {
 	isSubmitting.value = true;
 	errorMessage.value = "";
 	try {
+		const client_id = storeLocal.getClientID();
 		const formData = new FormData(formElement.value);
+		formData.append("client_id", client_id);
 		if (address.value) {
 			formData.append("address.gid", address.value.gid);
 			formData.append("address.raw", address.value.raw);
