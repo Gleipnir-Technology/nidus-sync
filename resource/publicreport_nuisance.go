@@ -15,6 +15,7 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -50,6 +51,20 @@ type nuisanceForm struct {
 	TODNight          bool           `schema:"tod-night"`
 }
 
+func (res *nuisanceR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicreportByIDNuisance(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
+	return report, nil
+}
 func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceForm) (*nuisance, *nhttp.ErrorWithStatus) {
 	user_agent := r.Header.Get("User-Agent")
 	err := platform.EnsureClient(ctx, n.ClientID, user_agent)

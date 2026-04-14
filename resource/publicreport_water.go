@@ -14,6 +14,7 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
@@ -52,6 +53,21 @@ type waterForm struct {
 	OwnerEmail             string         `schema:"owner-email"`
 	OwnerName              string         `schema:"owner-name"`
 	OwnerPhone             string         `schema:"owner-phone"`
+}
+
+func (res *waterR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicreportByIDWater(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
+	return report, nil
 }
 
 func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*water, *nhttp.ErrorWithStatus) {

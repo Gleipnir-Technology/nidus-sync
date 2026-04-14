@@ -37,34 +37,6 @@ func (res *publicreportR) ByID(ctx context.Context, r *http.Request, query Query
 	populateReportURI(report, res.router)
 	return report, nil
 }
-func (res *publicreportR) ByIDNuisance(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	public_id := vars["id"]
-	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provid an ID")
-	}
-	report, err := platform.PublicreportByIDNuisance(ctx, public_id)
-	if err != nil {
-		return nil, nhttp.NewError("get report: %w", err)
-	}
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
-	return report, nil
-}
-func (res *publicreportR) ByIDWater(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	public_id := vars["id"]
-	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provid an ID")
-	}
-	report, err := platform.PublicreportByIDWater(ctx, public_id)
-	if err != nil {
-		return nil, nhttp.NewError("get report: %w", err)
-	}
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
-	return report, nil
-}
 
 type image struct {
 	Status string `json:"status"`

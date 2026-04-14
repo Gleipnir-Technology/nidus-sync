@@ -85,8 +85,8 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/publicreport/compliance/{id}/image", handlerFormPost(publicreport.ImageCreate)).Methods("POST")
 	r.Handle("/publicreport/compliance/{id}", handlerJSON(compliance.ByID)).Methods("GET").Name("publicreport.compliance.ByIDGet")
 	r.Handle("/publicreport/compliance/{id}", handlerJSONPut(compliance.Update)).Methods("PUT")
-	r.Handle("/publicreport/nuisance/{id}", handlerJSON(publicreport.ByIDNuisance)).Methods("GET").Name("publicreport.nuisance.ByIDGet")
-	r.Handle("/publicreport/water/{id}", handlerJSON(publicreport.ByIDWater)).Methods("GET").Name("publicreport.water.ByIDGet")
+	r.Handle("/publicreport/nuisance/{id}", handlerJSON(nuisance.ByID)).Methods("GET").Name("publicreport.nuisance.ByIDGet")
+	r.Handle("/publicreport/water/{id}", handlerJSON(water.ByID)).Methods("GET").Name("publicreport.water.ByIDGet")
 
 	publicreport_notification := resource.PublicreportNotification(router)
 	r.Handle("/publicreport-notification", handlerJSONPost(publicreport_notification.Create)).Methods("POST")
