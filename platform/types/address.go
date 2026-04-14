@@ -25,15 +25,15 @@ func (a Address) String() string {
 	return fmt.Sprintf("%s %s, %s, %s, %s, %s", a.Number, a.Street, a.Locality, a.Region, a.PostalCode, a.Country)
 }
 func AddressFromModel(m *models.Address) Address {
-	log.Debug().Int32("id", m.ID).Float64("lat", m.LocationY.GetOr(0.0)).Float64("lng", m.LocationX.GetOr(0.0)).Msg("converting address")
+	log.Debug().Int32("id", m.ID).Float64("lat", m.LocationLatitude.GetOr(0.0)).Float64("lng", m.LocationLongitude.GetOr(0.0)).Msg("converting address")
 	return Address{
 		Country:  m.Country,
 		GID:      m.Gid,
 		ID:       &m.ID,
 		Locality: m.Locality,
 		Location: &Location{
-			Latitude:  m.LocationY.GetOr(0.0),
-			Longitude: m.LocationX.GetOr(0.0),
+			Latitude:  m.LocationLatitude.GetOr(0.0),
+			Longitude: m.LocationLongitude.GetOr(0.0),
 		},
 		Number:     m.Number,
 		PostalCode: m.PostalCode,

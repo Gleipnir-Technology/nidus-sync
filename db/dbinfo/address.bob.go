@@ -114,24 +114,6 @@ var Addresses = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		LocationX: column{
-			Name:      "location_x",
-			DBType:    "double precision",
-			Default:   "GENERATED",
-			Comment:   "",
-			Nullable:  true,
-			Generated: true,
-			AutoIncr:  false,
-		},
-		LocationY: column{
-			Name:      "location_y",
-			DBType:    "double precision",
-			Default:   "GENERATED",
-			Comment:   "",
-			Nullable:  true,
-			Generated: true,
-			AutoIncr:  false,
-		},
 		Gid: column{
 			Name:      "gid",
 			DBType:    "text",
@@ -139,6 +121,24 @@ var Addresses = Table[
 			Comment:   "",
 			Nullable:  false,
 			Generated: false,
+			AutoIncr:  false,
+		},
+		LocationLatitude: column{
+			Name:      "location_latitude",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
+			AutoIncr:  false,
+		},
+		LocationLongitude: column{
+			Name:      "location_longitude",
+			DBType:    "double precision",
+			Default:   "GENERATED",
+			Comment:   "",
+			Nullable:  true,
+			Generated: true,
 			AutoIncr:  false,
 		},
 	},
@@ -213,25 +213,25 @@ var Addresses = Table[
 }
 
 type addressColumns struct {
-	Country    column
-	Created    column
-	Location   column
-	H3cell     column
-	ID         column
-	Locality   column
-	PostalCode column
-	Street     column
-	Unit       column
-	Region     column
-	Number     column
-	LocationX  column
-	LocationY  column
-	Gid        column
+	Country           column
+	Created           column
+	Location          column
+	H3cell            column
+	ID                column
+	Locality          column
+	PostalCode        column
+	Street            column
+	Unit              column
+	Region            column
+	Number            column
+	Gid               column
+	LocationLatitude  column
+	LocationLongitude column
 }
 
 func (c addressColumns) AsSlice() []column {
 	return []column{
-		c.Country, c.Created, c.Location, c.H3cell, c.ID, c.Locality, c.PostalCode, c.Street, c.Unit, c.Region, c.Number, c.LocationX, c.LocationY, c.Gid,
+		c.Country, c.Created, c.Location, c.H3cell, c.ID, c.Locality, c.PostalCode, c.Street, c.Unit, c.Region, c.Number, c.Gid, c.LocationLatitude, c.LocationLongitude,
 	}
 }
 
