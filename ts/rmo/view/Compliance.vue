@@ -86,21 +86,27 @@ const district = computedAsync(async (): Promise<District | undefined> => {
 const storeLocal = useStoreLocal();
 const storeLocation = useStoreLocation();
 async function createReport(client_id: string, loc?: GeolocationPosition) {
-	const formData = new FormData();
-	formData.append("client_id", client_id);
+	let content = {
+		client_id: client_id,
+		location: {
+			accuracy: 0,
+			latitude: 0,
+			longitude: 0,
+		},
+	};
 	if (loc) {
-		formData.append("location.accuracy", loc.coords.accuracy.toString());
-		formData.append("location.latitude", loc.coords.latitude.toString());
-		formData.append("location.longitude", loc.coords.longitude.toString());
-	} else {
-		formData.append("location.accuracy", "0");
-		formData.append("location.latitude", "0");
-		formData.append("location.longitude", "0");
+		content.location = {
+			accuracy: loc.coords.accuracy,
+			latitude: loc.coords.latitude,
+			longitude: loc.coords.longitude,
+		};
 	}
 	const resp = await fetch("/api/rmo/compliance", {
+		body: JSON.stringify(content),
+		headers: {
+			"Content-Type": "application/json",
+		},
 		method: "POST",
-		body: formData,
-		// Don't set Content-Type, the borwser should do it
 	});
 	if (!resp.ok) {
 		const content = await resp.text();
