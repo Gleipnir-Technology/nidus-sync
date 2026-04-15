@@ -84,7 +84,11 @@ body {
 			/>
 		</template>
 		<template #right>
-			<ReviewPoolColumnAction :changes="changes" :submitting="submitting" />
+			<ReviewPoolColumnAction
+				:changes="changes"
+				:selectedTask="selectedTask"
+				:submitting="submitting"
+			/>
 		</template>
 	</ThreeColumn>
 </template>
