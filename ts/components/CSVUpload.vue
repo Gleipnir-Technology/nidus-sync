@@ -275,7 +275,9 @@ const uploadFile = async () => {
 
 		const data = await response.json();
 		uploadSuccess.value = true;
-		emit("doSuccess", data);
+		// This is a hack, I should really fix it later
+		const path = "/_" + data;
+		emit("doSuccess", path);
 
 		resetUpload();
 	} catch (error) {

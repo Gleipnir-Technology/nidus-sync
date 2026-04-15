@@ -121,8 +121,8 @@ function onError(err: Error) {
 function onFileSelected(file: File) {
 	console.log("file selected", file);
 }
-function onUploadSuccess(data: any) {
-	console.log("upload success", data);
-	router.push("/_" + data.uri);
+function onUploadSuccess(path: string) {
+	console.log("custom CSV upload success", path);
+	router.push(path);
 }
 </script>
