@@ -112,17 +112,8 @@ import { Bounds, Contact, Location, ReviewTask } from "@/type/api";
 import { Camera } from "@/type/map";
 import { MapClickEvent, Marker } from "@/types";
 
-interface FormData {
-	latitude: number;
-	longitude: number;
-	condition: string;
-	ownerContact: string;
-	residentContact: string;
-	poolShape: string;
-}
-
 interface FieldConfig {
-	key: keyof FormData;
+	key: keyof ReviewTaskPoolForm;
 	label: string;
 }
 
@@ -154,10 +145,6 @@ const error = ref<string | null>(null);
 const loading = ref<boolean>(true);
 const mapBounds = ref<Bounds | null>(null);
 const mapFlyoverCamera = ref<Camera>(new Camera());
-const newPoolCondition = ref<string>("");
-const newPoolLocation = ref<Location>({ latitude: 0, longitude: 0 });
-const newOwnerName = ref<string>("");
-const newResidentName = ref<string>("");
 const poolLocation = ref<Location>({
 	latitude: 0,
 	longitude: 0,
@@ -181,50 +168,42 @@ const mapTile = ref<any>(null);
 
 // Computed: track which fields have changed
 const changes = computed<Changes>(() => {
-	const pool = selectedTask.value?.pool;
+	const task = selectedTask.value;
+	const pool = task?.pool;
 	if (!pool) return { updated: [], unchanged: [] };
 
 	const updated: string[] = [];
 	const unchanged: string[] = [];
 
 	const fields: FieldConfig[] = [
-		{ key: "latitude", label: "Latitude" },
-		{ key: "longitude", label: "Longitude" },
+		{ key: "location", label: "Location" },
 		{ key: "condition", label: "Pool condition" },
-		{ key: "ownerContact", label: "Owner contact" },
-		{ key: "residentContact", label: "Resident contact" },
+		{ key: "owner", label: "Owner contact" },
+		{ key: "resident", label: "Resident contact" },
 	];
 
-	if (newPoolCondition.value != pool.condition) {
+	if (reviewForm.value.condition != pool.condition) {
 		updated.push("condition");
 	} else {
 		unchanged.push("condition");
 	}
 	if (
-		newPoolLocation.value &&
-		newPoolLocation.value.latitude != pool.site.address.location?.latitude
+		reviewForm.value.location.latitude != pool.location?.latitude ||
+		reviewForm.value.location.longitude != pool.location?.longitude
 	) {
-		updated.push("latitude");
+		updated.push("location");
 	} else {
-		unchanged.push("latitude");
+		unchanged.push("location");
 	}
-	if (
-		newPoolLocation.value &&
-		newPoolLocation.value.longitude != pool.site.address.location?.longitude
-	) {
-		updated.push("longitude");
+	if (reviewForm.value.owner != (pool.site.owner?.name ?? "")) {
+		updated.push("owner");
 	} else {
-		unchanged.push("longitude");
+		unchanged.push("owner");
 	}
-	if (newOwnerName.value != pool.site.owner?.name) {
-		updated.push("ownerContact");
+	if (reviewForm.value.resident != (pool.site.resident?.name ?? "")) {
+		updated.push("resident");
 	} else {
-		unchanged.push("ownerContact");
-	}
-	if (newResidentName.value != pool.site.resident?.name) {
-		updated.push("residentContact");
-	} else {
-		unchanged.push("residentContact");
+		unchanged.push("resident");
 	}
 
 	return { updated, unchanged };
@@ -270,10 +249,6 @@ function selectTask(id: number): void {
 	}
 	console.log("selecting task", id, task);
 	mapFlyoverCamera.value = new Camera(pool.location, 20);
-	newPoolCondition.value = pool.condition;
-	newPoolLocation.value = pool.location;
-	newOwnerName.value = pool.site.owner?.name ?? "";
-	newResidentName.value = pool.site.resident?.name ?? "";
 	reviewForm.value = {
 		address: formatAddress(task.address),
 		condition: pool.condition,
