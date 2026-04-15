@@ -35,7 +35,7 @@
 						<input
 							type="text"
 							class="form-control"
-							:value="formatAddress(selectedTask.address)"
+							:value="modelValue.address"
 							readonly
 						/>
 					</div>
@@ -47,10 +47,10 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="poolLocation.longitude"
+							v-model="modelValue.location.longitude"
 							:class="{
 								'border-warning':
-									poolLocation.longitude !==
+									modelValue.location.longitude !==
 									selectedTask.pool?.location?.longitude,
 							}"
 						/>
@@ -63,10 +63,10 @@
 						<input
 							type="text"
 							class="form-control"
-							v-model="poolLocation.latitude"
+							v-model="modelValue.location.latitude"
 							:class="{
 								'border-warning':
-									poolLocation.latitude !==
+									modelValue.location.latitude !==
 									selectedTask.pool?.location?.latitude,
 							}"
 						/>
@@ -78,10 +78,10 @@
 					<div class="col-sm-9">
 						<select
 							class="form-select"
-							v-model="poolCondition"
+							v-model="modelValue.condition"
 							:class="{
 								'border-warning':
-									poolCondition !== selectedTask.pool?.condition,
+									modelValue.condition !== selectedTask.pool?.condition,
 							}"
 						>
 							<option value="">-- Select --</option>
@@ -104,7 +104,8 @@
 							v-model="siteOwner.name"
 							:class="{
 								'border-warning':
-									siteOwner.name !== selectedTask.pool?.site.owner?.name,
+									siteOwner.name !==
+									(selectedTask.pool?.site.owner?.name ?? ''),
 							}"
 						/>
 					</div>
@@ -121,7 +122,8 @@
 							v-model="siteResident.name"
 							:class="{
 								'border-warning':
-									siteResident.name !== selectedTask.pool?.site.resident?.name,
+									siteResident.name !==
+									(selectedTask.pool?.site.resident?.name ?? ''),
 							}"
 						/>
 					</div>
@@ -156,30 +158,30 @@
 import { computed, ref, watch } from "vue";
 import MapLocator from "@/components/MapLocator.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
-import { formatAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
 import type { MapClickEvent, Marker } from "@/types";
 import { Bounds, Contact, Pool, ReviewTask, User } from "@/type/api";
 import type { Location } from "@/type/api";
 import { Camera } from "@/type/map";
 
+export interface ReviewTaskPoolForm {
+	address: string;
+	condition: string;
+	location: Location;
+	owner: string;
+	resident: string;
+}
 interface Props {
 	loading: boolean;
 	mapBounds?: Bounds;
 	mapFlyoverCamera: Camera;
 	mapMarkers: Marker[];
-	newPoolCondition: string;
-	newPoolLocation: Location;
+	modelValue: ReviewTaskPoolForm;
 	selectedTask?: ReviewTask;
 }
 const mapCamera = ref<Camera>(new Camera());
 const _mapFlyoverCamera = ref<Camera>(new Camera());
 const props = defineProps<Props>();
-const poolCondition = ref<string>("unknown");
-const poolLocation = ref<Location>({
-	latitude: 0,
-	longitude: 0,
-});
 const siteOwner = ref<Contact>(new Contact());
 const siteResident = ref<Contact>(new Contact());
 const session = useSessionStore();

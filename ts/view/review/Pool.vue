@@ -79,9 +79,8 @@ body {
 				:mapBounds="mapBounds || undefined"
 				:mapFlyoverCamera="mapFlyoverCamera"
 				:mapMarkers="mapMarkers"
-				:newPoolCondition="newPoolCondition"
-				:newPoolLocation="newPoolLocation"
 				:selectedTask="selectedTask"
+				v-model="reviewForm"
 			/>
 		</template>
 		<template #right>
@@ -103,8 +102,11 @@ import { useSessionStore } from "@/store/session";
 import maplibregl from "maplibre-gl";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import ReviewPoolColumnAction from "@/components/ReviewPoolColumnAction.vue";
-import ReviewPoolColumnDetail from "@/components/ReviewPoolColumnDetail.vue";
+import ReviewPoolColumnDetail, {
+	ReviewTaskPoolForm,
+} from "@/components/ReviewPoolColumnDetail.vue";
 import ReviewPoolColumnList from "@/components/ReviewPoolColumnList.vue";
+import { formatAddress } from "@/format";
 import type { Changes } from "@/types";
 import { Bounds, Contact, Location, ReviewTask } from "@/type/api";
 import { Camera } from "@/type/map";
@@ -148,20 +150,30 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 // State
+const error = ref<string | null>(null);
+const loading = ref<boolean>(true);
+const mapBounds = ref<Bounds | null>(null);
 const mapFlyoverCamera = ref<Camera>(new Camera());
 const newPoolCondition = ref<string>("");
 const newPoolLocation = ref<Location>({ latitude: 0, longitude: 0 });
 const newOwnerName = ref<string>("");
 const newResidentName = ref<string>("");
-const error = ref<string | null>(null);
-const loading = ref<boolean>(true);
-const mapBounds = ref<Bounds | null>(null);
+const poolLocation = ref<Location>({
+	latitude: 0,
+	longitude: 0,
+});
+const reviewForm = ref<ReviewTaskPoolForm>({
+	address: "",
+	condition: "",
+	location: new Location(),
+	owner: "",
+	resident: "",
+});
 const selectedTaskID = ref<number | null>(null);
+const session = useSessionStore();
+const storeReviewTask = useStoreReviewTask();
 const submitting = ref<boolean>(false);
 const totalPending = ref<number>(0);
-
-const storeReviewTask = useStoreReviewTask();
-const session = useSessionStore();
 
 // Refs for map components
 const mapMultipoint = ref<any>(null);
@@ -253,11 +265,18 @@ function selectTask(id: number): void {
 		return;
 	}
 	console.log("selecting task", id, task);
-	mapFlyoverCamera.value = new Camera(pool.location, 15);
+	mapFlyoverCamera.value = new Camera(pool.location, 20);
 	newPoolCondition.value = pool.condition;
 	newPoolLocation.value = pool.location;
 	newOwnerName.value = pool.site.owner?.name ?? "";
 	newResidentName.value = pool.site.resident?.name ?? "";
+	reviewForm.value = {
+		address: formatAddress(task.address),
+		condition: pool.condition,
+		location: pool.location,
+		owner: pool.site.owner?.name ?? "",
+		resident: pool.site.resident?.name ?? "",
+	};
 
 	// Update map
 	updateMap(task);
