@@ -150,9 +150,11 @@ func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job
 	geo, err := geocode.GeocodeStructured(ctx, job.org, a)
 	if err != nil {
 		addError(ctx, txn, job.csv, job.rownumber, 0, err.Error())
+		return nil
 	}
 	if geo.Address.Location == nil {
-		return fmt.Errorf("nil location")
+		addError(ctx, txn, job.csv, job.rownumber, 0, fmt.Sprintf("nil location from geocoding"))
+		return nil
 	}
 	geom_query := geom.PostgisPointQuery(*geo.Address.Location)
 	_, err = psql.Update(
