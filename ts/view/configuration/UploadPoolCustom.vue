@@ -53,6 +53,13 @@ const requirements = ref<UploadRequirement[]>([
 		is_required: true,
 	},
 	{
+		field: "State",
+		description: "The state portion of the pool's address",
+		format: "Text",
+		example: "'California' or 'CA'",
+		is_required: true,
+	},
+	{
 		field: "Notes",
 		description:
 			" Any notes from the district to include with the pool record ",

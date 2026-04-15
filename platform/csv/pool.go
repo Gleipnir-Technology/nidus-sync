@@ -30,7 +30,8 @@ import (
 type headerPoolEnum int
 
 const (
-	headerPoolAddressPostalCode headerPoolEnum = iota
+	headerPoolAddressLocality headerPoolEnum = iota
+	headerPoolAddressPostalCode
 	headerPoolAddressRegion
 	headerPoolAddressStreet
 	headerPoolCondition
@@ -46,7 +47,7 @@ func (e headerPoolEnum) String() string {
 	switch e {
 	case headerPoolAddressPostalCode:
 		return "Postal Code"
-	case headerPoolAddressRegion:
+	case headerPoolAddressLocality:
 		return "City"
 	case headerPoolAddressStreet:
 		return "Street Address"
@@ -62,6 +63,8 @@ func (e headerPoolEnum) String() string {
 		return "Resident Owned"
 	case headerPoolResidentPhone:
 		return "Resident Phone"
+	case headerPoolAddressRegion:
+		return "State"
 	default:
 		return "bad programmer"
 	}
@@ -137,6 +140,7 @@ func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job
 		Number:     pool.AddressNumber,
 		Locality:   pool.AddressLocality,
 		PostalCode: pool.AddressPostalCode,
+		Region:     pool.AddressRegion,
 		Street:     pool.AddressStreet,
 	}
 	geo, err := geocode.GeocodeStructured(ctx, job.org, a)
@@ -221,10 +225,12 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 				continue
 			}
 			switch hdr_t {
-			case headerPoolAddressRegion:
-				setter.AddressRegion = omit.From(col)
+			case headerPoolAddressLocality:
+				setter.AddressLocality = omit.From(col)
 			case headerPoolAddressPostalCode:
 				setter.AddressPostalCode = omit.From(col)
+			case headerPoolAddressRegion:
+				setter.AddressRegion = omit.From(col)
 			case headerPoolAddressStreet:
 				// This type of spreadsheet normally has '123 Main Str'
 				parts := strings.SplitN(col, " ", 2)
@@ -312,10 +318,12 @@ func parseHeaders(row []string) ([]headerPoolEnum, []string) {
 		var type_ headerPoolEnum
 		switch hl {
 		case "city":
-			type_ = headerPoolAddressRegion
+			type_ = headerPoolAddressLocality
 		case "zip":
 		case "postal code":
 			type_ = headerPoolAddressPostalCode
+		case "state":
+			type_ = headerPoolAddressRegion
 		case "street address":
 			type_ = headerPoolAddressStreet
 		case "condition":
@@ -344,7 +352,7 @@ func parseHeaders(row []string) ([]headerPoolEnum, []string) {
 }
 func missingRequiredHeaders(headers []headerPoolEnum) []headerPoolEnum {
 	results := make([]headerPoolEnum, 0)
-	for _, rh := range []headerPoolEnum{headerPoolAddressRegion, headerPoolAddressPostalCode, headerPoolAddressStreet} {
+	for _, rh := range []headerPoolEnum{headerPoolAddressLocality, headerPoolAddressRegion, headerPoolAddressPostalCode, headerPoolAddressStreet} {
 		present := false
 		for _, h := range headers {
 			if h == rh {
