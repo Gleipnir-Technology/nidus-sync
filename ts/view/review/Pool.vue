@@ -96,7 +96,7 @@ body {
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useStoreReviewTask } from "@/store/review-task";
 import { useSessionStore } from "@/store/session";
 import maplibregl from "maplibre-gl";
@@ -230,8 +230,12 @@ const changes = computed<Changes>(() => {
 	return { updated, unchanged };
 });
 const mapMarkers = computed<Marker[]>(() => {
+	const form = reviewForm.value;
 	const task = selectedTask.value;
-	const loc = task?.pool?.location;
+	const loc =
+		reviewForm.value.location.latitude != 0
+			? reviewForm.value.location
+			: task?.pool?.location;
 	if (!loc) {
 		return [];
 	}
@@ -303,26 +307,6 @@ function updateMap(task: ReviewTask): void {
 	map.FitBounds(bounds, {
 		padding: 50,
 	});
-}
-
-// Map Click Handler
-function updatePoolLocation(event: MapClickEvent): void {
-	console.log("map click", selectedTask.value?.id, event);
-
-	/*
-	const map = event.map;
-	const loc = event.location;
-
-	map.SetMarkers([
-		new maplibregl.Marker({
-			color: "#FF0000",
-			draggable: false,
-		}).setLngLat([loc.lng, loc.lat]),
-	]);
-
-	selectedTaskChanges.latitude = event.detail.lat;
-	selectedTaskChanges.longitude = event.detail.lng;
-	*/
 }
 
 // Submit Review
@@ -478,6 +462,12 @@ function initializeMaps(): void {
 	}
 }
 
+watch(
+	() => reviewForm.value,
+	(newReviewForm: ReviewTaskPoolForm) => {
+		console.log("new review form", newReviewForm);
+	},
+);
 // Lifecycle
 onMounted(async () => {
 	initializeMaps();

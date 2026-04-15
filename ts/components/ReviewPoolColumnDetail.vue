@@ -164,6 +164,9 @@ import { Bounds, Contact, Pool, ReviewTask, User } from "@/type/api";
 import type { Location } from "@/type/api";
 import { Camera } from "@/type/map";
 
+interface Emits {
+	(e: "update:modelValue", value: ReviewTaskPoolForm): void;
+}
 export interface ReviewTaskPoolForm {
 	address: string;
 	condition: string;
@@ -179,6 +182,7 @@ interface Props {
 	modelValue: ReviewTaskPoolForm;
 	selectedTask?: ReviewTask;
 }
+const emit = defineEmits<Emits>();
 const mapCamera = ref<Camera>(new Camera());
 const _mapFlyoverCamera = ref<Camera>(new Camera());
 const props = defineProps<Props>();
@@ -186,7 +190,13 @@ const siteOwner = ref<Contact>(new Contact());
 const siteResident = ref<Contact>(new Contact());
 const session = useSessionStore();
 function doPoolLocation(event: MapClickEvent) {
-	console.log("pool location", event);
+	emit("update:modelValue", {
+		address: props.modelValue.address,
+		condition: props.modelValue.condition,
+		location: event.location,
+		owner: props.modelValue.owner,
+		resident: props.modelValue.resident,
+	});
 }
 watch(
 	() => props.mapFlyoverCamera,
