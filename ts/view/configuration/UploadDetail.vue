@@ -396,10 +396,11 @@ const handleDiscard = async () => {
 	isSubmitting.value = true;
 	try {
 		const response = await fetch(`/api/upload/${props.id}/discard`, {
-			method: "POST",
+			body: JSON.stringify({}),
 			headers: {
 				"Content-Type": "application/json",
 			},
+			method: "POST",
 		});
 
 		if (!response.ok) throw new Error("Failed to discard upload");
