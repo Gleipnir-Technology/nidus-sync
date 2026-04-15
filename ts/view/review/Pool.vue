@@ -62,11 +62,11 @@ body {
 	<ThreeColumn>
 		<template #left>
 			<ReviewPoolColumnList
-				v-if="reviewTask.all"
+				v-if="storeReviewTask.all"
 				@doSelectTask="selectTask"
 				:error="error"
 				:selectedTaskID="selectedTaskID"
-				:tasks="reviewTask.all()"
+				:tasks="storeReviewTask.all()"
 				:total="totalPending"
 			/>
 			<div v-else>
@@ -77,6 +77,7 @@ body {
 			<ReviewPoolColumnDetail
 				:loading="loading"
 				:mapBounds="mapBounds || undefined"
+				:mapFlyoverCamera="mapFlyoverCamera"
 				:mapMarkers="mapMarkers"
 				:newPoolCondition="newPoolCondition"
 				:newPoolLocation="newPoolLocation"
@@ -97,7 +98,7 @@ body {
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
-import { useReviewTaskStore } from "@/store/review-task";
+import { useStoreReviewTask } from "@/store/review-task";
 import { useSessionStore } from "@/store/session";
 import maplibregl from "maplibre-gl";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
@@ -106,6 +107,7 @@ import ReviewPoolColumnDetail from "@/components/ReviewPoolColumnDetail.vue";
 import ReviewPoolColumnList from "@/components/ReviewPoolColumnList.vue";
 import type { Changes } from "@/types";
 import { Bounds, Contact, Location, ReviewTask } from "@/type/api";
+import { Camera } from "@/type/map";
 import { MapClickEvent, Marker } from "@/types";
 
 interface FormData {
@@ -146,6 +148,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 // State
+const mapFlyoverCamera = ref<Camera>(new Camera());
 const newPoolCondition = ref<string>("");
 const newPoolLocation = ref<Location>({ latitude: 0, longitude: 0 });
 const newOwnerName = ref<string>("");
@@ -153,12 +156,11 @@ const newResidentName = ref<string>("");
 const error = ref<string | null>(null);
 const loading = ref<boolean>(true);
 const mapBounds = ref<Bounds | null>(null);
-const mapMarkers = ref<Marker[]>([]);
 const selectedTaskID = ref<number | null>(null);
 const submitting = ref<boolean>(false);
 const totalPending = ref<number>(0);
 
-const reviewTask = useReviewTaskStore();
+const storeReviewTask = useStoreReviewTask();
 const session = useSessionStore();
 
 // Refs for map components
@@ -215,22 +217,32 @@ const changes = computed<Changes>(() => {
 
 	return { updated, unchanged };
 });
-
+const mapMarkers = computed<Marker[]>(() => {
+	const task = selectedTask.value;
+	const loc = task?.pool?.location;
+	if (!loc) {
+		return [];
+	}
+	const markers = {
+		color: "#FF0000",
+		draggable: false,
+		id: "x",
+		location: loc,
+	};
+	return [markers];
+});
 const selectedTask = computed<ReviewTask | undefined>(() => {
 	if (selectedTaskID.value == null) {
 		return undefined;
 	}
-	return reviewTask.byID(selectedTaskID.value);
+	return storeReviewTask.byID(selectedTaskID.value);
 });
-async function fetchTasks() {
-	await reviewTask.fetchAll();
-}
 // Helper Functions
 // Task Selection
 function selectTask(id: number): void {
 	selectedTaskID.value = id;
 
-	const task = reviewTask.byID(id);
+	const task = storeReviewTask.byID(id);
 	if (!task) {
 		console.log("no task", id);
 		return;
@@ -241,6 +253,7 @@ function selectTask(id: number): void {
 		return;
 	}
 	console.log("selecting task", id, task);
+	mapFlyoverCamera.value = new Camera(pool.location, 15);
 	newPoolCondition.value = pool.condition;
 	newPoolLocation.value = pool.location;
 	newOwnerName.value = pool.site.owner?.name ?? "";
@@ -262,14 +275,6 @@ function updateMap(task: ReviewTask): void {
 		map.SetMarkers([]);
 		return;
 	}
-	const markers = [
-		new maplibregl.Marker({
-			color: "#FF0000",
-			draggable: false,
-		}).setLngLat([loc.longitude, loc.latitude]),
-	];
-
-	map.SetMarkers(markers);
 
 	const bounds = new maplibregl.LngLatBounds(
 		new maplibregl.LngLat(loc.longitude - 0.005, loc.latitude - 0.005),
@@ -326,12 +331,20 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 		if (!response.ok) {
 			throw new Error("Failed to submit review");
 		}
+		// Save the current item's index for setting the newly selected item
+		const index = storeReviewTask
+			.all()
+			.findIndex((t) => t.id == selectedTaskID.value);
 
 		// Remove task from list
-		reviewTask.remove(selectedTask.value!.id);
+		storeReviewTask.remove(selectedTask.value!.id);
 
 		// Update list of tasks
-		await fetchTasks();
+		const all_tasks: ReviewTask[] = await storeReviewTask.fetchAll();
+
+		// Select the next item in the list
+		let new_index = index < all_tasks.length ? index : all_tasks.length - 1;
+		selectedTaskID.value = all_tasks[new_index].id;
 	} catch (err) {
 		error.value = err instanceof Error ? err.message : "Unknown error";
 		console.error("Error submitting review:", err);
@@ -449,6 +462,7 @@ function initializeMaps(): void {
 // Lifecycle
 onMounted(async () => {
 	initializeMaps();
-	await fetchTasks();
+
+	await storeReviewTask.fetchAll();
 });
 </script>

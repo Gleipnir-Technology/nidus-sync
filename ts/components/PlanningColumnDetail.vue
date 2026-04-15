@@ -52,21 +52,24 @@
 				</div>
 			</div>
 
-			<div v-show="showMapTile" class="map-container">
-				<MapProxiedArcgisTile
-					:location="selectedSignalLocation()"
-					:markers="[]"
-					:organizationId="session.organization?.id ?? 0"
-					:tegola="session.urls?.tegola ?? ''"
-					:urlTiles="session.urls?.tile ?? ''"
-					@map-click="updateSignalLocation"
-				>
-				</MapProxiedArcgisTile>
-			</div>
+			<template v-if="session.organization && session.urls">
+				<div v-show="showMapTile" class="map-container">
+					<MapProxiedArcgisTile
+						@map-click="updateSignalLocation"
+						:markers="[]"
+						:organizationId="session.organization!.id"
+						:tegola="session.urls!.tegola"
+						:urlTiles="session.urls!.tile"
+						v-model="mapFlyoverCamera"
+					>
+					</MapProxiedArcgisTile>
+				</div>
+			</template>
 		</div>
 	</div>
 </template>
 <script setup lang="ts">
+import { ref } from "vue";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 import PlanningColumnDetailEntry from "@/components/PlanningColumnDetailEntry.vue";
@@ -75,11 +78,13 @@ import { shortAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
 import { MapClickEvent, Marker } from "@/types";
 import type { Location, Signal } from "@/type/api";
+import { Camera } from "@/type/map";
 
 interface Props {
 	markers: Marker[];
 	selectedSignals: Array<Signal>;
 }
+const mapFlyoverCamera = ref<Camera>(new Camera());
 const props = defineProps<Props>();
 const session = useSessionStore();
 const configureMapTile = () => {

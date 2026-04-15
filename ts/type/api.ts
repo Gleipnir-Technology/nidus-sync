@@ -553,6 +553,10 @@ export interface ReviewTask {
 	pool?: ReviewTaskPool;
 	id: number;
 }
+export interface ReviewTaskListResponse {
+	tasks: ReviewTask[];
+	total: number;
+}
 export interface UploadDTO {
 	created: string;
 	filename: string;

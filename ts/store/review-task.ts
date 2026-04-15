@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { SSEManager, SSEMessage } from "@/SSEManager";
-import { ReviewTask } from "@/type/api";
+import { ReviewTask, ReviewTaskListResponse } from "@/type/api";
 import { useSessionStore } from "@/store/session";
 
-export const useReviewTaskStore = defineStore("review-task", () => {
+export const useStoreReviewTask = defineStore("review-task", () => {
 	// State
 	const _byID = ref<Map<number, ReviewTask>>(new Map());
 	const loading = ref<boolean>(false);
@@ -23,7 +23,7 @@ export const useReviewTaskStore = defineStore("review-task", () => {
 	function byID(id: number): ReviewTask | undefined {
 		return _byID.value.get(id);
 	}
-	async function fetchAll(): Promise<void> {
+	async function fetchAll(): Promise<ReviewTask[]> {
 		const session = useSessionStore();
 		if (session.urls == null) {
 			throw new Error("can't fetch without user URL data");
@@ -41,11 +41,12 @@ export const useReviewTaskStore = defineStore("review-task", () => {
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
-			const data = await response.json();
+			const data: ReviewTaskListResponse = await response.json();
 			_byID.value = new Map();
 			for (const t of data.tasks) {
 				_byID.value.set(t.id, t);
 			}
+			return data.tasks;
 		} catch (err) {
 			error.value = err instanceof Error ? err.message : "Unknown error";
 			console.error("Error loading tasks:", err);

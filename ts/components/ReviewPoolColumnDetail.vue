@@ -10,10 +10,6 @@
 	/* Prevent touch scrolling issues */
 	touch-action: pan-y pinch-zoom;
 }
-#map {
-	width: 100%;
-	height: 100%;
-}
 </style>
 <template>
 	<!-- No Selection State -->
@@ -135,26 +131,29 @@
 
 		<!-- Map Components -->
 		<div class="map-container" v-if="session.organization">
-			<MapLocator :markers="markers" v-model="mapCamera"></MapLocator>
+			<MapLocator :markers="mapMarkers" v-model="mapCamera"></MapLocator>
 		</div>
 		<div v-else>
 			<p>loading...</p>
 		</div>
 
-		<div class="map-container" v-if="session.organization && selectedTask.pool">
+		<div
+			class="map-container"
+			v-if="session.organization && selectedTask.pool && session.urls"
+		>
 			<MapProxiedArcgisTile
-				:location="selectedTask.pool?.location"
-				:markers="[]"
-				:organizationId="session.organization.id"
-				:tegola="session.urls?.tegola ?? ''"
-				:urlTiles="session.urls?.tile ?? ''"
 				@map-click="doPoolLocation"
+				:markers="mapMarkers"
+				:organizationId="session.organization.id"
+				:tegola="session.urls!.tegola"
+				:urlTiles="session.urls!.tile"
+				v-model="_mapFlyoverCamera"
 			></MapProxiedArcgisTile>
 		</div>
 	</div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import MapLocator from "@/components/MapLocator.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 import { formatAddress } from "@/format";
@@ -167,12 +166,14 @@ import { Camera } from "@/type/map";
 interface Props {
 	loading: boolean;
 	mapBounds?: Bounds;
+	mapFlyoverCamera: Camera;
 	mapMarkers: Marker[];
 	newPoolCondition: string;
 	newPoolLocation: Location;
 	selectedTask?: ReviewTask;
 }
 const mapCamera = ref<Camera>(new Camera());
+const _mapFlyoverCamera = ref<Camera>(new Camera());
 const props = defineProps<Props>();
 const poolCondition = ref<string>("unknown");
 const poolLocation = ref<Location>({
@@ -182,25 +183,14 @@ const poolLocation = ref<Location>({
 const siteOwner = ref<Contact>(new Contact());
 const siteResident = ref<Contact>(new Contact());
 const session = useSessionStore();
-const markers = computed((): Marker[] => {
-	if (!poolLocation.value) {
-		return [];
-	}
-	if (
-		poolLocation.value.latitude == 0.0 &&
-		poolLocation.value.longitude == 0.0
-	) {
-		return [];
-	}
-	const marker = {
-		color: "#FF0000",
-		draggable: false,
-		id: "x",
-		location: poolLocation.value,
-	};
-	return [marker];
-});
 function doPoolLocation(event: MapClickEvent) {
 	console.log("pool location", event);
 }
+watch(
+	() => props.mapFlyoverCamera,
+	(newMapFlyoverCamera: Camera) => {
+		console.log("map flyover camera update", newMapFlyoverCamera);
+		_mapFlyoverCamera.value = newMapFlyoverCamera;
+	},
+);
 </script>
