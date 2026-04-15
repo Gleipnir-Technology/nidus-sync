@@ -109,9 +109,7 @@
 					<div class="col-lg-6">
 						<div class="card">
 							<div class="card-header fw-semibold">Routing Map</div>
-							<div class="map-placeholder" ref="planningMap">
-								Map: Selected Assignments, Selected Technicians, Proposed Routes
-							</div>
+							<MapOperations class="map-placeholder" />
 							<div
 								class="card-footer d-flex justify-content-between align-items-center"
 							>
@@ -406,6 +404,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import MapOperations from "@/components/MapOperations.vue";
 
 // Active tab state
 const activeTab = ref("planning");
@@ -567,7 +566,6 @@ const activeRoutes = ref([
 ]);
 
 // Map refs
-const planningMap = ref(null);
 const liveMap = ref(null);
 
 // Methods
