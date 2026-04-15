@@ -49,6 +49,7 @@ type FileuploadPool struct {
 	AddressLocality        string                  `db:"address_locality" `
 	AddressRegion          string                  `db:"address_region" `
 	Condition              enums.Poolconditiontype `db:"condition" `
+	AddressID              null.Val[int32]         `db:"address_id" `
 
 	R fileuploadPoolR `db:"-" `
 }
@@ -65,6 +66,7 @@ type FileuploadPoolsQuery = *psql.ViewQuery[*FileuploadPool, FileuploadPoolSlice
 
 // fileuploadPoolR is where relationships are stored.
 type fileuploadPoolR struct {
+	Address                     *Address       // fileupload.pool.pool_address_id_fkey
 	CreatorUser                 *User          // fileupload.pool.pool_creator_id_fkey
 	CSVFileCSV                  *FileuploadCSV // fileupload.pool.pool_csv_file_fkey
 	PropertyOwnerPhoneE164Phone *CommsPhone    // fileupload.pool.pool_property_owner_phone_e164_fkey
@@ -74,7 +76,7 @@ type fileuploadPoolR struct {
 func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 	return fileuploadPoolColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_postal_code", "address_street", "committed", "created", "creator_id", "csv_file", "deleted", "geom", "h3cell", "id", "is_in_district", "is_new", "notes", "property_owner_name", "property_owner_phone_e164", "resident_owned", "resident_phone_e164", "line_number", "tags", "address_number", "address_locality", "address_region", "condition",
+			"address_postal_code", "address_street", "committed", "created", "creator_id", "csv_file", "deleted", "geom", "h3cell", "id", "is_in_district", "is_new", "notes", "property_owner_name", "property_owner_phone_e164", "resident_owned", "resident_phone_e164", "line_number", "tags", "address_number", "address_locality", "address_region", "condition", "address_id",
 		).WithParent("fileupload.pool"),
 		tableAlias:             alias,
 		AddressPostalCode:      psql.Quote(alias, "address_postal_code"),
@@ -100,6 +102,7 @@ func buildFileuploadPoolColumns(alias string) fileuploadPoolColumns {
 		AddressLocality:        psql.Quote(alias, "address_locality"),
 		AddressRegion:          psql.Quote(alias, "address_region"),
 		Condition:              psql.Quote(alias, "condition"),
+		AddressID:              psql.Quote(alias, "address_id"),
 	}
 }
 
@@ -129,6 +132,7 @@ type fileuploadPoolColumns struct {
 	AddressLocality        psql.Expression
 	AddressRegion          psql.Expression
 	Condition              psql.Expression
+	AddressID              psql.Expression
 }
 
 func (c fileuploadPoolColumns) Alias() string {
@@ -166,10 +170,11 @@ type FileuploadPoolSetter struct {
 	AddressLocality        omit.Val[string]                  `db:"address_locality" `
 	AddressRegion          omit.Val[string]                  `db:"address_region" `
 	Condition              omit.Val[enums.Poolconditiontype] `db:"condition" `
+	AddressID              omitnull.Val[int32]               `db:"address_id" `
 }
 
 func (s FileuploadPoolSetter) SetColumns() []string {
-	vals := make([]string, 0, 23)
+	vals := make([]string, 0, 24)
 	if s.AddressPostalCode.IsValue() {
 		vals = append(vals, "address_postal_code")
 	}
@@ -238,6 +243,9 @@ func (s FileuploadPoolSetter) SetColumns() []string {
 	}
 	if s.Condition.IsValue() {
 		vals = append(vals, "condition")
+	}
+	if !s.AddressID.IsUnset() {
+		vals = append(vals, "address_id")
 	}
 	return vals
 }
@@ -312,6 +320,9 @@ func (s FileuploadPoolSetter) Overwrite(t *FileuploadPool) {
 	if s.Condition.IsValue() {
 		t.Condition = s.Condition.MustGet()
 	}
+	if !s.AddressID.IsUnset() {
+		t.AddressID = s.AddressID.MustGetNull()
+	}
 }
 
 func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
@@ -320,7 +331,7 @@ func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 23)
+		vals := make([]bob.Expression, 24)
 		if s.AddressPostalCode.IsValue() {
 			vals[0] = psql.Arg(s.AddressPostalCode.MustGet())
 		} else {
@@ -459,6 +470,12 @@ func (s *FileuploadPoolSetter) Apply(q *dialect.InsertQuery) {
 			vals[22] = psql.Raw("DEFAULT")
 		}
 
+		if !s.AddressID.IsUnset() {
+			vals[23] = psql.Arg(s.AddressID.MustGetNull())
+		} else {
+			vals[23] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -468,7 +485,7 @@ func (s FileuploadPoolSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 23)
+	exprs := make([]bob.Expression, 0, 24)
 
 	if s.AddressPostalCode.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -628,6 +645,13 @@ func (s FileuploadPoolSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "condition")...),
 			psql.Arg(s.Condition),
+		}})
+	}
+
+	if !s.AddressID.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "address_id")...),
+			psql.Arg(s.AddressID),
 		}})
 	}
 
@@ -857,6 +881,30 @@ func (o FileuploadPoolSlice) ReloadAll(ctx context.Context, exec bob.Executor) e
 	return nil
 }
 
+// Address starts a query for related objects on address
+func (o *FileuploadPool) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
+	return Addresses.Query(append(mods,
+		sm.Where(Addresses.Columns.ID.EQ(psql.Arg(o.AddressID))),
+	)...)
+}
+
+func (os FileuploadPoolSlice) Address(mods ...bob.Mod[*dialect.SelectQuery]) AddressesQuery {
+	pkAddressID := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkAddressID = append(pkAddressID, o.AddressID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkAddressID), "integer[]")),
+	))
+
+	return Addresses.Query(append(mods,
+		sm.Where(psql.Group(Addresses.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // CreatorUser starts a query for related objects on user_
 func (o *FileuploadPool) CreatorUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
 	return Users.Query(append(mods,
@@ -951,6 +999,54 @@ func (os FileuploadPoolSlice) ResidentPhoneE164Phone(mods ...bob.Mod[*dialect.Se
 	return CommsPhones.Query(append(mods,
 		sm.Where(psql.Group(CommsPhones.Columns.E164).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func attachFileuploadPoolAddress0(ctx context.Context, exec bob.Executor, count int, fileuploadPool0 *FileuploadPool, address1 *Address) (*FileuploadPool, error) {
+	setter := &FileuploadPoolSetter{
+		AddressID: omitnull.From(address1.ID),
+	}
+
+	err := fileuploadPool0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachFileuploadPoolAddress0: %w", err)
+	}
+
+	return fileuploadPool0, nil
+}
+
+func (fileuploadPool0 *FileuploadPool) InsertAddress(ctx context.Context, exec bob.Executor, related *AddressSetter) error {
+	var err error
+
+	address1, err := Addresses.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachFileuploadPoolAddress0(ctx, exec, 1, fileuploadPool0, address1)
+	if err != nil {
+		return err
+	}
+
+	fileuploadPool0.R.Address = address1
+
+	address1.R.Pools = append(address1.R.Pools, fileuploadPool0)
+
+	return nil
+}
+
+func (fileuploadPool0 *FileuploadPool) AttachAddress(ctx context.Context, exec bob.Executor, address1 *Address) error {
+	var err error
+
+	_, err = attachFileuploadPoolAddress0(ctx, exec, 1, fileuploadPool0, address1)
+	if err != nil {
+		return err
+	}
+
+	fileuploadPool0.R.Address = address1
+
+	address1.R.Pools = append(address1.R.Pools, fileuploadPool0)
+
+	return nil
 }
 
 func attachFileuploadPoolCreatorUser0(ctx context.Context, exec bob.Executor, count int, fileuploadPool0 *FileuploadPool, user1 *User) (*FileuploadPool, error) {
@@ -1169,6 +1265,7 @@ type fileuploadPoolWhere[Q psql.Filterable] struct {
 	AddressLocality        psql.WhereMod[Q, string]
 	AddressRegion          psql.WhereMod[Q, string]
 	Condition              psql.WhereMod[Q, enums.Poolconditiontype]
+	AddressID              psql.WhereNullMod[Q, int32]
 }
 
 func (fileuploadPoolWhere[Q]) AliasedAs(alias string) fileuploadPoolWhere[Q] {
@@ -1200,6 +1297,7 @@ func buildFileuploadPoolWhere[Q psql.Filterable](cols fileuploadPoolColumns) fil
 		AddressLocality:        psql.Where[Q, string](cols.AddressLocality),
 		AddressRegion:          psql.Where[Q, string](cols.AddressRegion),
 		Condition:              psql.Where[Q, enums.Poolconditiontype](cols.Condition),
+		AddressID:              psql.WhereNull[Q, int32](cols.AddressID),
 	}
 }
 
@@ -1209,6 +1307,18 @@ func (o *FileuploadPool) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "Address":
+		rel, ok := retrieved.(*Address)
+		if !ok {
+			return fmt.Errorf("fileuploadPool cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Address = rel
+
+		if rel != nil {
+			rel.R.Pools = FileuploadPoolSlice{o}
+		}
+		return nil
 	case "CreatorUser":
 		rel, ok := retrieved.(*User)
 		if !ok {
@@ -1263,6 +1373,7 @@ func (o *FileuploadPool) Preload(name string, retrieved any) error {
 }
 
 type fileuploadPoolPreloader struct {
+	Address                     func(...psql.PreloadOption) psql.Preloader
 	CreatorUser                 func(...psql.PreloadOption) psql.Preloader
 	CSVFileCSV                  func(...psql.PreloadOption) psql.Preloader
 	PropertyOwnerPhoneE164Phone func(...psql.PreloadOption) psql.Preloader
@@ -1271,6 +1382,19 @@ type fileuploadPoolPreloader struct {
 
 func buildFileuploadPoolPreloader() fileuploadPoolPreloader {
 	return fileuploadPoolPreloader{
+		Address: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Address, AddressSlice](psql.PreloadRel{
+				Name: "Address",
+				Sides: []psql.PreloadSide{
+					{
+						From:        FileuploadPools,
+						To:          Addresses,
+						FromColumns: []string{"address_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Addresses.Columns.Names(), opts...)
+		},
 		CreatorUser: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*User, UserSlice](psql.PreloadRel{
 				Name: "CreatorUser",
@@ -1327,6 +1451,7 @@ func buildFileuploadPoolPreloader() fileuploadPoolPreloader {
 }
 
 type fileuploadPoolThenLoader[Q orm.Loadable] struct {
+	Address                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorUser                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CSVFileCSV                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	PropertyOwnerPhoneE164Phone func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -1334,6 +1459,9 @@ type fileuploadPoolThenLoader[Q orm.Loadable] struct {
 }
 
 func buildFileuploadPoolThenLoader[Q orm.Loadable]() fileuploadPoolThenLoader[Q] {
+	type AddressLoadInterface interface {
+		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type CreatorUserLoadInterface interface {
 		LoadCreatorUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -1348,6 +1476,12 @@ func buildFileuploadPoolThenLoader[Q orm.Loadable]() fileuploadPoolThenLoader[Q]
 	}
 
 	return fileuploadPoolThenLoader[Q]{
+		Address: thenLoadBuilder[Q](
+			"Address",
+			func(ctx context.Context, exec bob.Executor, retrieved AddressLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadAddress(ctx, exec, mods...)
+			},
+		),
 		CreatorUser: thenLoadBuilder[Q](
 			"CreatorUser",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -1373,6 +1507,61 @@ func buildFileuploadPoolThenLoader[Q orm.Loadable]() fileuploadPoolThenLoader[Q]
 			},
 		),
 	}
+}
+
+// LoadAddress loads the fileuploadPool's Address into the .R struct
+func (o *FileuploadPool) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Address = nil
+
+	related, err := o.Address(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Pools = FileuploadPoolSlice{o}
+
+	o.R.Address = related
+	return nil
+}
+
+// LoadAddress loads the fileuploadPool's Address into the .R struct
+func (os FileuploadPoolSlice) LoadAddress(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	addresses, err := os.Address(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range addresses {
+			if !o.AddressID.IsValue() {
+				continue
+			}
+
+			if !(o.AddressID.IsValue() && o.AddressID.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.Pools = append(rel.R.Pools, o)
+
+			o.R.Address = rel
+			break
+		}
+	}
+
+	return nil
 }
 
 // LoadCreatorUser loads the fileuploadPool's CreatorUser into the .R struct

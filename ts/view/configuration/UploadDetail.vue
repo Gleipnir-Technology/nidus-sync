@@ -268,7 +268,11 @@ tr.has-error {
 												{{ titleCase(pool.condition) }}
 											</span>
 										</td>
-										<td>{{ pool.tags?.size || 0 }}</td>
+										<td>
+											<ul>
+												<li v-for="(v, k) in pool.tags">{{ k }}={{ v }}</li>
+											</ul>
+										</td>
 									</tr>
 								</tbody>
 							</table>

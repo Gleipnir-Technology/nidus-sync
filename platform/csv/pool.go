@@ -161,6 +161,7 @@ func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job
 		um.Table("fileupload.pool"),
 		um.SetCol("h3cell").ToArg(geo.Cell),
 		um.SetCol("geom").To(geom_query),
+		um.SetCol("address_id").To(*geo.Address.ID),
 		um.Where(psql.Quote("id").EQ(psql.Arg(pool.ID))),
 	).Exec(ctx, txn)
 	if err != nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	//bobtypes "github.com/Gleipnir-Technology/bob/types"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
@@ -124,9 +125,11 @@ func insertAddress(ctx context.Context, txn bob.Executor, address types.Address)
 	}
 	return &row.ID, nil
 }
-func insertAddresses(ctx context.Context, txn bob.Executor, features []stadia.GeocodeFeature) ([]int32, error) {
+func insertAddresses(ctx context.Context, txn bob.Executor, features []stadia.GeocodeFeature) ([]types.Address, error) {
 	query := addressQuery()
-	for _, feature := range features {
+	gids := make([]string, len(features))
+	for i, feature := range features {
+		gids[i] = feature.Properties.GID
 		lng := feature.Geometry.Coordinates[0]
 		lat := feature.Geometry.Coordinates[1]
 		cell, err := h3utils.GetCell(lng, lat, 15)
@@ -148,15 +151,24 @@ func insertAddresses(ctx context.Context, txn bob.Executor, features []stadia.Ge
 				psql.Arg(feature.Street()),
 				psql.Raw("''"),
 			),
+			im.OnConflict("gid").DoNothing(),
 		)
 	}
-	rows, err := bob.All(ctx, txn, query, scan.StructMapper[_rowWithID]())
+	_, err := bob.All(ctx, txn, query, scan.StructMapper[_rowWithID]())
 	if err != nil {
 		return nil, fmt.Errorf("insert: %w", err)
 	}
-	results := make([]int32, len(rows))
-	for _, row := range rows {
-		results = append(results, row.ID)
+	addresses, err := models.Addresses.Query(
+		sm.Where(
+			models.Addresses.Columns.Gid.EQ(psql.Any(gids)),
+		),
+	).All(ctx, txn)
+	if err != nil {
+		return nil, fmt.Errorf("query by gid: %w", err)
+	}
+	results := make([]types.Address, len(addresses))
+	for i, address := range addresses {
+		results[i] = types.AddressFromModel(address)
 	}
 	return results, nil
 }

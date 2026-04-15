@@ -56,6 +56,7 @@ type AddressesQuery = *psql.ViewQuery[*Address, AddressSlice]
 // addressR is where relationships are stored.
 type addressR struct {
 	Mailers      CommsMailerSlice             // comms.mailer.mailer_address_id_fkey
+	Pools        FileuploadPoolSlice          // fileupload.pool.pool_address_id_fkey
 	NuisanceOlds PublicreportNuisanceOldSlice // publicreport.nuisance_old.nuisance_address_id_fkey
 	Reports      PublicreportReportSlice      // publicreport.report.report_address_id_fkey
 	WaterOlds    PublicreportWaterOldSlice    // publicreport.water_old.pool_address_id_fkey
@@ -635,6 +636,30 @@ func (os AddressSlice) Mailers(mods ...bob.Mod[*dialect.SelectQuery]) CommsMaile
 	)...)
 }
 
+// Pools starts a query for related objects on fileupload.pool
+func (o *Address) Pools(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadPoolsQuery {
+	return FileuploadPools.Query(append(mods,
+		sm.Where(FileuploadPools.Columns.AddressID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os AddressSlice) Pools(mods ...bob.Mod[*dialect.SelectQuery]) FileuploadPoolsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return FileuploadPools.Query(append(mods,
+		sm.Where(psql.Group(FileuploadPools.Columns.AddressID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // NuisanceOlds starts a query for related objects on publicreport.nuisance_old
 func (o *Address) NuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisanceOldsQuery {
 	return PublicreportNuisanceOlds.Query(append(mods,
@@ -815,6 +840,74 @@ func (address0 *Address) AttachMailers(ctx context.Context, exec bob.Executor, r
 	}
 
 	address0.R.Mailers = append(address0.R.Mailers, commsMailers1...)
+
+	for _, rel := range related {
+		rel.R.Address = address0
+	}
+
+	return nil
+}
+
+func insertAddressPools0(ctx context.Context, exec bob.Executor, fileuploadPools1 []*FileuploadPoolSetter, address0 *Address) (FileuploadPoolSlice, error) {
+	for i := range fileuploadPools1 {
+		fileuploadPools1[i].AddressID = omitnull.From(address0.ID)
+	}
+
+	ret, err := FileuploadPools.Insert(bob.ToMods(fileuploadPools1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertAddressPools0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachAddressPools0(ctx context.Context, exec bob.Executor, count int, fileuploadPools1 FileuploadPoolSlice, address0 *Address) (FileuploadPoolSlice, error) {
+	setter := &FileuploadPoolSetter{
+		AddressID: omitnull.From(address0.ID),
+	}
+
+	err := fileuploadPools1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachAddressPools0: %w", err)
+	}
+
+	return fileuploadPools1, nil
+}
+
+func (address0 *Address) InsertPools(ctx context.Context, exec bob.Executor, related ...*FileuploadPoolSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	fileuploadPools1, err := insertAddressPools0(ctx, exec, related, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Pools = append(address0.R.Pools, fileuploadPools1...)
+
+	for _, rel := range fileuploadPools1 {
+		rel.R.Address = address0
+	}
+	return nil
+}
+
+func (address0 *Address) AttachPools(ctx context.Context, exec bob.Executor, related ...*FileuploadPool) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	fileuploadPools1 := FileuploadPoolSlice(related)
+
+	_, err = attachAddressPools0(ctx, exec, len(related), fileuploadPools1, address0)
+	if err != nil {
+		return err
+	}
+
+	address0.R.Pools = append(address0.R.Pools, fileuploadPools1...)
 
 	for _, rel := range related {
 		rel.R.Address = address0
@@ -1209,6 +1302,20 @@ func (o *Address) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "Pools":
+		rels, ok := retrieved.(FileuploadPoolSlice)
+		if !ok {
+			return fmt.Errorf("address cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Pools = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Address = o
+			}
+		}
+		return nil
 	case "NuisanceOlds":
 		rels, ok := retrieved.(PublicreportNuisanceOldSlice)
 		if !ok {
@@ -1306,6 +1413,7 @@ func buildAddressPreloader() addressPreloader {
 
 type addressThenLoader[Q orm.Loadable] struct {
 	Mailers      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pools        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	NuisanceOlds func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Reports      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	WaterOlds    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -1316,6 +1424,9 @@ type addressThenLoader[Q orm.Loadable] struct {
 func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
 	type MailersLoadInterface interface {
 		LoadMailers(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type PoolsLoadInterface interface {
+		LoadPools(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type NuisanceOldsLoadInterface interface {
 		LoadNuisanceOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1338,6 +1449,12 @@ func buildAddressThenLoader[Q orm.Loadable]() addressThenLoader[Q] {
 			"Mailers",
 			func(ctx context.Context, exec bob.Executor, retrieved MailersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadMailers(ctx, exec, mods...)
+			},
+		),
+		Pools: thenLoadBuilder[Q](
+			"Pools",
+			func(ctx context.Context, exec bob.Executor, retrieved PoolsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadPools(ctx, exec, mods...)
 			},
 		),
 		NuisanceOlds: thenLoadBuilder[Q](
@@ -1428,6 +1545,70 @@ func (os AddressSlice) LoadMailers(ctx context.Context, exec bob.Executor, mods 
 			rel.R.Address = o
 
 			o.R.Mailers = append(o.R.Mailers, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadPools loads the address's Pools into the .R struct
+func (o *Address) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Pools = nil
+
+	related, err := o.Pools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Address = o
+	}
+
+	o.R.Pools = related
+	return nil
+}
+
+// LoadPools loads the address's Pools into the .R struct
+func (os AddressSlice) LoadPools(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	fileuploadPools, err := os.Pools(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Pools = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range fileuploadPools {
+
+			if !rel.AddressID.IsValue() {
+				continue
+			}
+			if !(rel.AddressID.IsValue() && o.ID == rel.AddressID.MustGet()) {
+				continue
+			}
+
+			rel.R.Address = o
+
+			o.R.Pools = append(o.R.Pools, rel)
 		}
 	}
 

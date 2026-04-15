@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -58,8 +57,11 @@ func GeocodeRaw(ctx context.Context, org *models.Organization, address string) (
 	if err != nil {
 		return nil, fmt.Errorf("client raw geocode failure on %s: %w", address, err)
 	}
-	insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
-	return toGeocodeResult(*resp, address)
+	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	if err != nil {
+		return nil, fmt.Errorf("insert addresses: %w", err)
+	}
+	return toGeocodeResult(*resp, address, addresses)
 }
 func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Address) (*GeocodeResult, error) {
 	street := fmt.Sprintf("%s %s", a.Number, a.Street)
@@ -75,8 +77,11 @@ func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Ad
 	if err != nil {
 		return nil, fmt.Errorf("client structured geocode failure on %s: %w", a.String(), err)
 	}
-	insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
-	return toGeocodeResult(*resp, a.String())
+	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	if err != nil {
+		return nil, fmt.Errorf("insert addresses: %w", err)
+	}
+	return toGeocodeResult(*resp, a.String(), addresses)
 }
 func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResult, error) {
 	req := stadia.RequestReverseGeocode{
@@ -87,54 +92,33 @@ func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResul
 	if err != nil {
 		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
 	}
-	insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
-	return toGeocodeResult(*resp, location.String())
+	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	if err != nil {
+		return nil, fmt.Errorf("insert addresses: %w", err)
+	}
+	return toGeocodeResult(*resp, location.String(), addresses)
 
 }
-func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string) (*GeocodeResult, error) {
+func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string, addresses []types.Address) (*GeocodeResult, error) {
 	if len(resp.Features) < 1 {
 		return nil, fmt.Errorf("%s matched no locations", address_msg)
 	}
-	feature := resp.Features[0]
+	if len(addresses) < 1 {
+		return nil, fmt.Errorf("no addresses")
+	}
 	if len(resp.Features) > 1 {
 		if !allFeaturesIdenticalEnough(resp.Features) {
 			return nil, fmt.Errorf("%s matched more than one location, and they differ a lot", address_msg)
 		}
 	}
+	feature := resp.Features[0]
+	address := addresses[0]
 	if feature.Geometry.Type != "Point" {
 		return nil, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, address_msg)
 	}
-	longitude := feature.Geometry.Coordinates[0]
-	latitude := feature.Geometry.Coordinates[1]
-	cell, err := h3utils.GetCell(longitude, latitude, 15)
+	cell, err := h3utils.GetCell(address.Location.Longitude, address.Location.Latitude, 15)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", longitude, latitude)
-	}
-	country_s := strings.ToLower(feature.Properties.CountryA)
-	// Depending on what kind of request we made we'll get wildly different result structures
-	// This first structure generally works for forword geocoding
-	address := types.Address{
-		Country:  country_s,
-		GID:      feature.Properties.GID,
-		Locality: feature.Properties.Locality,
-		Location: &types.Location{
-			Longitude: feature.Geometry.Coordinates[0],
-			Latitude:  feature.Geometry.Coordinates[1],
-		},
-		Number:     feature.Properties.HouseNumber,
-		PostalCode: feature.Properties.PostalCode,
-		Region:     feature.Properties.Region,
-		Raw:        feature.Properties.FormattedAddressLine,
-		Street:     feature.Properties.Street,
-		Unit:       "",
-	}
-	// If we don't have a locality, try populating for reverse geocoding
-	if address.Country == "" {
-		address.Country = strings.ToLower(feature.Properties.Context.ISO3166A3)
-		address.Locality = feature.Properties.Context.WhosOnFirst.Locality.Name
-		address.Number = feature.Properties.AddressComponents.Number
-		address.PostalCode = feature.Properties.AddressComponents.PostalCode
-		address.Street = feature.Properties.AddressComponents.Street
+		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", address.Location.Longitude, address.Location.Latitude)
 	}
 	return &GeocodeResult{
 		Address: address,
