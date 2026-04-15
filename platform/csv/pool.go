@@ -113,10 +113,14 @@ func bulkGeocode(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c
 		SET is_in_district = (
     			EXISTS (
         			SELECT 1
-        			FROM import.district d
-				JOIN organization o ON d.gid = o.import_district_gid
-				WHERE o.id = p.organization_id
-					AND ST_Contains(d.geom_4326, p.geom)
+        			FROM organization o, fileupload.file f
+				WHERE
+					p.csv_file = f.id AND
+					f.organization_id = o.id AND (
+						ST_Contains(o.service_area_geometry, p.geom) OR
+						o.is_catchall
+					)
+						
 			)
 		)
 	WHERE p.geom IS NOT NULL;`
