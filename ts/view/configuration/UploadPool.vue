@@ -50,7 +50,7 @@
 								<i class="bi bi-filetype-csv me-1"></i> CSV Format
 							</span>
 						</div>
-						<RouterLink to="/configuration/upload/pool/flyover">
+						<RouterLink to="/_/configuration/upload/pool/flyover">
 							<button class="btn btn-primary btn-lg w-100">
 								<i class="bi bi-upload me-2"></i>Let's do this
 							</button>
@@ -82,7 +82,7 @@
 								<i class="bi bi-filetype-csv me-1"></i> CSV Format
 							</span>
 						</div>
-						<RouterLink to="/configuration/upload/pool/custom">
+						<RouterLink to="/_/configuration/upload/pool/custom">
 							<button class="btn btn-success btn-lg w-100">
 								<i class="bi bi-upload me-2"></i>Pick me
 							</button>
