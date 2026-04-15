@@ -86,6 +86,8 @@ body {
 		<template #right>
 			<ReviewPoolColumnAction
 				:changes="changes"
+				@doComplete="doComplete"
+				@doDiscard="doDiscard"
 				:selectedTask="selectedTask"
 				:submitting="submitting"
 			/>
@@ -339,11 +341,11 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 }
 
 // Action Handlers
-function markReviewed(): void {
+function doComplete(): void {
 	submitReview("committed");
 }
 
-function discardEntry(): void {
+function doDiscard(): void {
 	submitReview("discarded");
 }
 

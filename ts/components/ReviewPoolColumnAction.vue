@@ -64,16 +64,21 @@ import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 import { Changes } from "@/types";
 import { ReviewTask } from "@/type/api";
 
+interface Emits {
+	(e: "doComplete"): void;
+	(e: "doDiscard"): void;
+}
 interface Props {
 	changes: Changes;
 	selectedTask?: ReviewTask;
 	submitting: boolean;
 }
+const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
 function discardEntry() {
-	console.log("Fake discard entry");
+	emit("doDiscard");
 }
 function markReviewed() {
-	console.log("Fake mark reviewed");
+	emit("doComplete");
 }
 </script>
