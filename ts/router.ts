@@ -12,6 +12,7 @@ import ConfigurationRoot from "./view/configuration/Root.vue";
 import ConfigurationUpload from "./view/configuration/Upload.vue";
 import ConfigurationUploadDetail from "./view/configuration/UploadDetail.vue";
 import ConfigurationUploadPool from "./view/configuration/UploadPool.vue";
+import ConfigurationUploadPoolCustom from "./view/configuration/UploadPoolCustom.vue";
 import ConfigurationUploadPoolFlyover from "./view/configuration/UploadPoolFlyover.vue";
 import ConfigurationUser from "./view/configuration/User.vue";
 import ConfigurationUserAdd from "./view/configuration/UserAdd.vue";
@@ -93,6 +94,12 @@ const routes: RouteRecordRaw[] = [
 		path: "/_/configuration/upload/pool",
 		name: "Pool Upload",
 		component: ConfigurationUploadPool,
+		meta: { requiresAuth: true, showSidebar: true },
+	},
+	{
+		path: "/_/configuration/upload/pool/custom",
+		name: "Custom Pool Upload",
+		component: ConfigurationUploadPoolCustom,
 		meta: { requiresAuth: true, showSidebar: true },
 	},
 	{

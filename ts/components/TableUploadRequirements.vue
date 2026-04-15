@@ -23,7 +23,12 @@
 						{{ req.field }}
 					</td>
 					<td>{{ req.description }}</td>
-					<td>{{ req.format }}</td>
+					<td v-if="req.format == 'e164'">
+						<a href="https://www.twilio.com/docs/glossary/what-e164"
+							>E164 format</a
+						>, or enough digits to be a valid phone number
+					</td>
+					<td v-else>{{ req.format }}</td>
 					<td>{{ req.example }}</td>
 				</tr>
 			</tbody>
