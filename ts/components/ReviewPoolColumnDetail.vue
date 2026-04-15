@@ -24,9 +24,9 @@
 	</div>
 
 	<!-- Selected Task Details -->
-	<div v-else>
+	<div v-show="selectedTask">
 		<div class="mb-4">
-			<h4 class="mb-3">Entry #{{ selectedTask.id }} Details</h4>
+			<h4 class="mb-3">Entry #{{ selectedTask?.id ?? "" }} Details</h4>
 
 			<form @submit.prevent>
 				<div class="row mb-3">
@@ -51,7 +51,7 @@
 							:class="{
 								'border-warning':
 									modelValue.location.longitude !==
-									selectedTask.pool?.location?.longitude,
+									selectedTask?.pool?.location?.longitude,
 							}"
 						/>
 					</div>
@@ -67,7 +67,7 @@
 							:class="{
 								'border-warning':
 									modelValue.location.latitude !==
-									selectedTask.pool?.location?.latitude,
+									selectedTask?.pool?.location?.latitude,
 							}"
 						/>
 					</div>
@@ -81,7 +81,7 @@
 							v-model="modelValue.condition"
 							:class="{
 								'border-warning':
-									modelValue.condition !== selectedTask.pool?.condition,
+									modelValue.condition !== selectedTask?.pool?.condition,
 							}"
 						>
 							<option value="">-- Select --</option>
@@ -105,7 +105,7 @@
 							:class="{
 								'border-warning':
 									siteOwner.name !==
-									(selectedTask.pool?.site.owner?.name ?? ''),
+									(selectedTask?.pool?.site.owner?.name ?? ''),
 							}"
 						/>
 					</div>
@@ -123,7 +123,7 @@
 							:class="{
 								'border-warning':
 									siteResident.name !==
-									(selectedTask.pool?.site.resident?.name ?? ''),
+									(selectedTask?.pool?.site.resident?.name ?? ''),
 							}"
 						/>
 					</div>
@@ -141,7 +141,8 @@
 
 		<div
 			class="map-container"
-			v-if="session.organization && selectedTask.pool && session.urls"
+			v-if="session.organization && session.urls"
+			v-show="selectedTask?.pool"
 		>
 			<MapProxiedArcgisTile
 				@map-click="doPoolLocation"

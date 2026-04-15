@@ -62,14 +62,14 @@ body {
 	<ThreeColumn>
 		<template #left>
 			<ReviewPoolColumnList
-				v-if="storeReviewTask.all"
+				v-show="storeReviewTask.all"
 				@doSelectTask="selectTask"
 				:error="error"
 				:selectedTaskID="selectedTaskID"
 				:tasks="storeReviewTask.all()"
 				:total="totalPending"
 			/>
-			<div v-else>
+			<div v-show="!storeReviewTask.all">
 				<p>Loading</p>
 			</div>
 		</template>
@@ -256,32 +256,6 @@ function selectTask(id: number): void {
 		owner: pool.site.owner?.name ?? "",
 		resident: pool.site.resident?.name ?? "",
 	};
-
-	// Update map
-	updateMap(task);
-}
-
-// Map Update
-function updateMap(task: ReviewTask): void {
-	console.log("Updating map for task:", task.id);
-
-	const map = mapMultipoint.value;
-	if (!map) return;
-
-	const loc = task.pool?.location;
-	if (!loc) {
-		map.SetMarkers([]);
-		return;
-	}
-
-	const bounds = new maplibregl.LngLatBounds(
-		new maplibregl.LngLat(loc.longitude - 0.005, loc.latitude - 0.005),
-		new maplibregl.LngLat(loc.longitude + 0.005, loc.latitude + 0.005),
-	);
-
-	map.FitBounds(bounds, {
-		padding: 50,
-	});
 }
 
 // Submit Review
@@ -293,9 +267,13 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 
 	try {
 		const payload: any = {
-			task_id: selectedTask.value.id,
 			status: action,
-			//updates: selectedTaskChanges,
+			task_id: selectedTask.value.id,
+			updates: {
+				condition: reviewForm.value.condition,
+				latitude: reviewForm.value.location.latitude,
+				longitude: reviewForm.value.location.longitude,
+			},
 		};
 
 		const response = await fetch("/api/review/pool", {
@@ -322,7 +300,8 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 
 		// Select the next item in the list
 		let new_index = index < all_tasks.length ? index : all_tasks.length - 1;
-		selectedTaskID.value = all_tasks[new_index].id;
+		const new_id = all_tasks[new_index].id;
+		selectTask(new_id);
 	} catch (err) {
 		error.value = err instanceof Error ? err.message : "Unknown error";
 		console.error("Error submitting review:", err);
@@ -447,6 +426,8 @@ watch(
 onMounted(async () => {
 	initializeMaps();
 
+	loading.value = true;
 	await storeReviewTask.fetchAll();
+	loading.value = false;
 });
 </script>
