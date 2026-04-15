@@ -559,6 +559,17 @@ export interface ReviewTaskListResponse {
 }
 export interface UploadDTO {
 	created: string;
+	error: string;
+	filename: string;
+	id: number;
+	recordcount: number;
+	status: string;
+	type: string;
+	csv_pool?: CSVPoolDetail;
+}
+export interface UploadOptions {
+	created: Date;
+	error: string;
 	filename: string;
 	id: number;
 	recordcount: number;
@@ -567,25 +578,29 @@ export interface UploadDTO {
 	csv_pool?: CSVPoolDetail;
 }
 export class Upload {
-	constructor(
-		public created: Date,
-		public filename: string,
-		public id: number,
-		public recordcount: number,
-		public status: string,
-		public type: string,
-		public csv_pool?: CSVPoolDetail,
-	) {}
+	created: Date;
+	error: string;
+	filename: string;
+	id: number;
+	recordcount: number;
+	status: string;
+	type: string;
+	csv_pool?: CSVPoolDetail;
+	constructor(options: UploadOptions) {
+		this.created = options.created;
+		this.error = options.error;
+		this.filename = options.filename;
+		this.id = options.id;
+		this.recordcount = options.recordcount;
+		this.status = options.status;
+		this.type = options.type;
+		this.csv_pool = options.csv_pool;
+	}
 	static fromJSON(json: UploadDTO): Upload {
-		return new Upload(
-			new Date(json.created),
-			json.filename,
-			json.id,
-			json.recordcount,
-			json.status,
-			json.type,
-			json.csv_pool,
-		);
+		return new Upload({
+			...json,
+			created: new Date(json.created),
+		});
 	}
 }
 

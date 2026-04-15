@@ -36,6 +36,7 @@ const (
 
 type Upload struct {
 	Created     time.Time      `db:"created" json:"created"`
+	Error       string         `db:"error" json:"error"`
 	Filename    string         `db:"filename" json:"filename"`
 	ID          int32          `db:"id" json:"id"`
 	RecordCount int            `db:"recordcount" json:"recordcount"`
@@ -92,6 +93,7 @@ func NewUpload(ctx context.Context, u User, upload file.Upload, t enums.Fileuplo
 		Created:        omit.From(time.Now()),
 		CreatorID:      omit.From(int32(u.ID)),
 		Deleted:        omitnull.FromPtr[time.Time](nil),
+		Error:          omit.From(""),
 		Name:           omit.From(upload.Name),
 		OrganizationID: omit.From(u.Organization.ID),
 		Status:         omit.From(enums.FileuploadFilestatustypeUploaded),
@@ -167,6 +169,7 @@ func UploadList(ctx context.Context, org Organization) ([]Upload, error) {
 			"file.created AS created",
 			//"file.creator_id",
 			//"file.deleted",
+			"file.error AS error",
 			"file.id AS id",
 			"file.name AS filename",
 			//"file.organization_id",
@@ -235,9 +238,9 @@ func getUploadDetailPool(ctx context.Context, file *models.FileuploadFile) (*Upl
 			Tags:      tags,
 		})
 	}
-	log.Debug().Str("status", file.Status.String()).Int32("id", file.ID).Msg("returning")
 	return &Upload{
 		Created:     file.Created,
+		Error:       file.Error,
 		Filename:    file.Name,
 		ID:          file.ID,
 		RecordCount: len(pool_rows),

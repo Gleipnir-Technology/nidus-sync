@@ -150,12 +150,11 @@ tr.has-error {
 					<p>loading</p>
 				</div>
 				<div v-else>
-					<MapMultipoint
-						:bounds="session.organization!.service_area"
+					<MapLocator
 						:markers="[]"
 						:organizationId="session.organization!.id"
 						:tegola="session.urls?.tegola ?? ''"
-					></MapMultipoint>
+					/>
 				</div>
 			</div>
 
@@ -202,8 +201,13 @@ tr.has-error {
 					</div>
 
 					<template v-else>
+						<div v-if="upload.error" class="alert alert-error" role="alert">
+							<i class="bi bi-exclamation-triangle me-2"></i>
+							<strong>Error:</strong> Your upload failed to parse correctly. The
+							specific error was: '{{ upload.error }}'
+						</div>
 						<div
-							v-if="
+							v-else-if="
 								!upload.csv_pool?.pools || upload.csv_pool.pools.length === 0
 							"
 							class="alert alert-warning"

@@ -114,6 +114,15 @@ var FileuploadFiles = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Error: column{
+			Name:      "error",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: fileuploadFileIndexes{
 		FilePkey: index{
@@ -184,11 +193,12 @@ type fileuploadFileColumns struct {
 	SizeBytes      column
 	FileUUID       column
 	Committer      column
+	Error          column
 }
 
 func (c fileuploadFileColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.ContentType, c.Created, c.CreatorID, c.Deleted, c.Name, c.OrganizationID, c.Status, c.SizeBytes, c.FileUUID, c.Committer,
+		c.ID, c.ContentType, c.Created, c.CreatorID, c.Deleted, c.Name, c.OrganizationID, c.Status, c.SizeBytes, c.FileUUID, c.Committer, c.Error,
 	}
 }
 

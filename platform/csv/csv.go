@@ -192,9 +192,11 @@ func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
 		err = importCSV(ctx, file_id, parseCSVFlyover, processCSVFlyover)
 	}
 	if err != nil {
+		log.Debug().Err(err).Msg("failed to import CSV")
 		_, err := psql.Update(
 			um.Table("fileupload.file"),
 			um.SetCol("status").ToArg("error"),
+			um.SetCol("error").ToArg(err.Error()),
 			um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
 		).Exec(ctx, db.PGInstance.BobDB)
 		if err != nil {

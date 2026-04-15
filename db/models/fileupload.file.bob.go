@@ -38,6 +38,7 @@ type FileuploadFile struct {
 	SizeBytes      int32                          `db:"size_bytes" `
 	FileUUID       uuid.UUID                      `db:"file_uuid" `
 	Committer      null.Val[int32]                `db:"committer" `
+	Error          string                         `db:"error" `
 
 	R fileuploadFileR `db:"-" `
 }
@@ -65,7 +66,7 @@ type fileuploadFileR struct {
 func buildFileuploadFileColumns(alias string) fileuploadFileColumns {
 	return fileuploadFileColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"id", "content_type", "created", "creator_id", "deleted", "name", "organization_id", "status", "size_bytes", "file_uuid", "committer",
+			"id", "content_type", "created", "creator_id", "deleted", "name", "organization_id", "status", "size_bytes", "file_uuid", "committer", "error",
 		).WithParent("fileupload.file"),
 		tableAlias:     alias,
 		ID:             psql.Quote(alias, "id"),
@@ -79,6 +80,7 @@ func buildFileuploadFileColumns(alias string) fileuploadFileColumns {
 		SizeBytes:      psql.Quote(alias, "size_bytes"),
 		FileUUID:       psql.Quote(alias, "file_uuid"),
 		Committer:      psql.Quote(alias, "committer"),
+		Error:          psql.Quote(alias, "error"),
 	}
 }
 
@@ -96,6 +98,7 @@ type fileuploadFileColumns struct {
 	SizeBytes      psql.Expression
 	FileUUID       psql.Expression
 	Committer      psql.Expression
+	Error          psql.Expression
 }
 
 func (c fileuploadFileColumns) Alias() string {
@@ -121,10 +124,11 @@ type FileuploadFileSetter struct {
 	SizeBytes      omit.Val[int32]                          `db:"size_bytes" `
 	FileUUID       omit.Val[uuid.UUID]                      `db:"file_uuid" `
 	Committer      omitnull.Val[int32]                      `db:"committer" `
+	Error          omit.Val[string]                         `db:"error" `
 }
 
 func (s FileuploadFileSetter) SetColumns() []string {
-	vals := make([]string, 0, 11)
+	vals := make([]string, 0, 12)
 	if s.ID.IsValue() {
 		vals = append(vals, "id")
 	}
@@ -157,6 +161,9 @@ func (s FileuploadFileSetter) SetColumns() []string {
 	}
 	if !s.Committer.IsUnset() {
 		vals = append(vals, "committer")
+	}
+	if s.Error.IsValue() {
+		vals = append(vals, "error")
 	}
 	return vals
 }
@@ -195,6 +202,9 @@ func (s FileuploadFileSetter) Overwrite(t *FileuploadFile) {
 	if !s.Committer.IsUnset() {
 		t.Committer = s.Committer.MustGetNull()
 	}
+	if s.Error.IsValue() {
+		t.Error = s.Error.MustGet()
+	}
 }
 
 func (s *FileuploadFileSetter) Apply(q *dialect.InsertQuery) {
@@ -203,7 +213,7 @@ func (s *FileuploadFileSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 11)
+		vals := make([]bob.Expression, 12)
 		if s.ID.IsValue() {
 			vals[0] = psql.Arg(s.ID.MustGet())
 		} else {
@@ -270,6 +280,12 @@ func (s *FileuploadFileSetter) Apply(q *dialect.InsertQuery) {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
+		if s.Error.IsValue() {
+			vals[11] = psql.Arg(s.Error.MustGet())
+		} else {
+			vals[11] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -279,7 +295,7 @@ func (s FileuploadFileSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s FileuploadFileSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 11)
+	exprs := make([]bob.Expression, 0, 12)
 
 	if s.ID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -355,6 +371,13 @@ func (s FileuploadFileSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "committer")...),
 			psql.Arg(s.Committer),
+		}})
+	}
+
+	if s.Error.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "error")...),
+			psql.Arg(s.Error),
 		}})
 	}
 
@@ -1074,6 +1097,7 @@ type fileuploadFileWhere[Q psql.Filterable] struct {
 	SizeBytes      psql.WhereMod[Q, int32]
 	FileUUID       psql.WhereMod[Q, uuid.UUID]
 	Committer      psql.WhereNullMod[Q, int32]
+	Error          psql.WhereMod[Q, string]
 }
 
 func (fileuploadFileWhere[Q]) AliasedAs(alias string) fileuploadFileWhere[Q] {
@@ -1093,6 +1117,7 @@ func buildFileuploadFileWhere[Q psql.Filterable](cols fileuploadFileColumns) fil
 		SizeBytes:      psql.Where[Q, int32](cols.SizeBytes),
 		FileUUID:       psql.Where[Q, uuid.UUID](cols.FileUUID),
 		Committer:      psql.WhereNull[Q, int32](cols.Committer),
+		Error:          psql.Where[Q, string](cols.Error),
 	}
 }
 
