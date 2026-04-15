@@ -406,7 +406,7 @@ const handleDiscard = async () => {
 		if (!response.ok) throw new Error("Failed to discard upload");
 
 		// Navigate to uploads list or appropriate page
-		router.push("/uploads");
+		router.push("/_/configuration/upload");
 	} catch (error) {
 		console.error("Error discarding upload:", error);
 		alert("Failed to discard upload. Please try again.");
