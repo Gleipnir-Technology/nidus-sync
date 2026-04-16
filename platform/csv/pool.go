@@ -30,7 +30,8 @@ import (
 type headerPoolEnum int
 
 const (
-	headerPoolAddressLocality headerPoolEnum = iota
+	headerPoolUnknown headerPoolEnum = iota
+	headerPoolAddressLocality
 	headerPoolAddressPostalCode
 	headerPoolAddressRegion
 	headerPoolAddressStreet
