@@ -620,6 +620,7 @@ select.tall {
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
+import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import Tooltip from "@/components/Tooltip.vue";
 import { useStoreGeocode } from "@/store/geocode";
 import { useStoreLocal } from "@/store/local";
