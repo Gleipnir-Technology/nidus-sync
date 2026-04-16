@@ -13,7 +13,7 @@ type contentEmailReportConfirmation struct {
 	URLReportStatus string
 }
 
-func SendReportConfirmation(ctx context.Context, report_id, destination string) error {
+func SendReportConfirmation(ctx context.Context, destination, report_id string) error {
 	err := maybeSendInitialEmail(ctx, destination)
 	if err != nil {
 		return fmt.Errorf("Failed to handle initial email: %w", err)
