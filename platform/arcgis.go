@@ -308,6 +308,9 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 }
 
 func newFieldSeeker(ctx context.Context, oa *models.ArcgisOauthToken) (*fieldseeker.FieldSeeker, error) {
+	if oa == nil {
+		return nil, fmt.Errorf("no oath token")
+	}
 	row, err := sql.OrgByOauthId(oa.ID).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get org ID from oauth %d: %w", oa.ID, err)
