@@ -14,6 +14,7 @@ stadia/cmd/geocode-autocomplete/geocode-autocomplete
 stadia/cmd/geocode-bygid/geocode-bygid
 stadia/cmd/reverse-geocode/reverse-geocode
 stadia/cmd/structured-geocode/structured-geocode
+stadia/cmd/tile-raster/tile-raster
 static/gen/
 temp/
 ts/gen
