@@ -255,12 +255,8 @@ tr.has-error {
 										<td>
 											<Tooltip
 												placement="top"
-												:title="
-													errorsForLine(pool)
-														.map((e) => e.message)
-														.join(', ')
-												"
-												v-if="hasError(pool)"
+												:title="errorTooltip(pool)"
+												v-show="hasError(pool)"
 											>
 												<i class="bi bi-info-circle-fill text-primary ms-1"></i>
 											</Tooltip>
@@ -485,10 +481,10 @@ const markers = computed((): Marker[] => {
 	return markers;
 });
 function hasError(row: UploadPoolRow): boolean {
-	return !!errorsForLine(row);
+	return row.errors.length > 0;
 }
-function errorsForLine(row: UploadPoolRow): UploadPoolError[] {
-	return row.errors;
+function errorTooltip(row: UploadPoolRow): string {
+	return row.errors.map((e) => e.message).join(", ");
 }
 onMounted(() => {
 	initializeMap();
@@ -496,14 +492,5 @@ onMounted(() => {
 		console.log("got upload", u);
 		upload.value = u;
 	});
-
-	// Initialize Bootstrap tooltips
-	const tooltipTriggerList = document.querySelectorAll(
-		'[data-bs-toggle="tooltip"]',
-	);
-	// @ts-ignore - Bootstrap types
-	[...tooltipTriggerList].map(
-		(tooltipTriggerEl) => new bootstrap.Tooltip(tooltipTriggerEl),
-	);
 });
 </script>
