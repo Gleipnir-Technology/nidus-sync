@@ -190,6 +190,9 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 		})
 		return pools, nil
 	}
+	for i, header_name := range header_names {
+		log.Debug().Int("index", i).Str("name", header_name).Send()
+	}
 	// Start at 2 because the header is line 1, not line 0
 	line_number := int32(2)
 	for {
@@ -233,6 +236,8 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 				continue
 			}
 			switch hdr_t {
+			case headerPoolUnknown:
+				log.Error().Int("i", i).Str("col", col).Int32("line", line_number).Msg("unknown header. This should never happen.")
 			case headerPoolAddressLocality:
 				setter.AddressLocality = omit.From(col)
 			case headerPoolAddressPostalCode:
