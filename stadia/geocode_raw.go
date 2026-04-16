@@ -58,7 +58,7 @@ func (s *StadiaMaps) GeocodeRaw(ctx context.Context, req RequestGeocodeRaw) (*Ge
 		SetQueryParamsFromValues(query).
 		SetContext(ctx).
 		SetResult(&result).
-		SetPathParam("urlBase", s.urlBase).
+		SetPathParam("urlBase", s.urlBaseApi).
 		SetQueryParam("api_key", s.APIKey).
 		Get("https://{urlBase}/geocoding/v1/search")
 	if err != nil {

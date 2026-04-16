@@ -37,7 +37,7 @@ func (s *StadiaMaps) BulkGeocode(requests []BulkGeocodeQuery) ([]BulkGeocodeResp
 	resp, err := s.client.R().
 		SetBody(body).
 		SetContentType("application/json").
-		SetPathParam("urlBase", s.urlBase).
+		SetPathParam("urlBase", s.urlBaseApi).
 		SetQueryParam("api_key", s.APIKey).
 		SetError(&api_error).
 		SetResult(&results).

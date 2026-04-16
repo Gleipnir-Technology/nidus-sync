@@ -71,7 +71,7 @@ func (s *StadiaMaps) GeocodeStructured(ctx context.Context, req RequestGeocodeSt
 		SetQueryParamsFromValues(query).
 		SetContext(ctx).
 		SetResult(&result).
-		SetPathParam("urlBase", s.urlBase).
+		SetPathParam("urlBase", s.urlBaseApi).
 		SetQueryParam("api_key", s.APIKey).
 		Get("https://{urlBase}/geocoding/v1/search/structured")
 	if err != nil {

@@ -27,7 +27,7 @@ func (s *StadiaMaps) GeocodeByGID(ctx context.Context, req RequestGeocodeByGID) 
 		SetQueryParamsFromValues(query).
 		SetContext(ctx).
 		SetResult(&result).
-		SetPathParam("urlBase", s.urlBase).
+		SetPathParam("urlBase", s.urlBaseApi).
 		SetQueryParam("api_key", s.APIKey).
 		Get("https://{urlBase}/geocoding/v2/place_details")
 	if err != nil {

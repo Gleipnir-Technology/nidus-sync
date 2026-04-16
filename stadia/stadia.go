@@ -10,8 +10,9 @@ import (
 type StadiaMaps struct {
 	APIKey string
 
-	client  *resty.Client
-	urlBase string
+	client       *resty.Client
+	urlBaseApi   string
+	urlBaseTiles string
 }
 
 func NewStadiaMaps(api_key string) *StadiaMaps {
@@ -26,9 +27,10 @@ func NewStadiaMaps(api_key string) *StadiaMaps {
 		})
 	}
 	return &StadiaMaps{
-		APIKey:  api_key,
-		client:  r,
-		urlBase: "api.stadiamaps.com",
+		APIKey:       api_key,
+		client:       r,
+		urlBaseApi:   "api.stadiamaps.com",
+		urlBaseTiles: "tiles.stadiamaps.com",
 	}
 }
 

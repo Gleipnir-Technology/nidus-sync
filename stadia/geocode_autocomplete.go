@@ -58,7 +58,7 @@ func (s *StadiaMaps) GeocodeAutocomplete(ctx context.Context, req RequestGeocode
 		SetQueryParamsFromValues(query).
 		SetContext(ctx).
 		SetResult(&result).
-		SetPathParam("urlBase", s.urlBase).
+		SetPathParam("urlBase", s.urlBaseApi).
 		SetQueryParam("api_key", s.APIKey).
 		Get("https://{urlBase}/geocoding/v2/autocomplete")
 	if err != nil {

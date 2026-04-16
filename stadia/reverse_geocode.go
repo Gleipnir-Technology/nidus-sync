@@ -35,7 +35,7 @@ func (s *StadiaMaps) ReverseGeocode(ctx context.Context, req RequestReverseGeoco
 		SetQueryParamsFromValues(query).
 		SetContext(ctx).
 		SetResult(&result).
-		SetPathParam("urlBase", s.urlBase).
+		SetPathParam("urlBase", s.urlBaseApi).
 		SetQueryParam("api_key", s.APIKey).
 		Get("https://{urlBase}/geocoding/v2/reverse")
 	if err != nil {
