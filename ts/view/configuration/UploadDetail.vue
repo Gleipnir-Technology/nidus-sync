@@ -33,9 +33,16 @@ thead tr.header {
 	background-color: #f8f9fa;
 }
 
-#map {
+.map-container {
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 	height: 400px;
-	width: 100%;
+	margin-bottom: 20px;
+	margin-top: 20px;
+	align-items: center;
+	justify-content: center;
+	/* Prevent touch scrolling issues */
+	touch-action: pan-y pinch-zoom;
 }
 .badge.dry {
 	background-color: $info;
@@ -146,14 +153,18 @@ tr.has-error {
 			</div>
 
 			<div class="card mb-4">
-				<div v-if="session.organization == null || session.self == null">
+				<div v-if="!(session.organization && session.self)">
 					<p>loading</p>
 				</div>
-				<div v-else>
+				<div
+					class="map-container"
+					v-show="session.organization && session.self"
+				>
 					<MapLocator
-						:markers="[]"
+						:markers="markers"
 						:organizationId="session.organization!.id"
 						:tegola="session.urls?.tegola ?? ''"
+						v-model="mapCamera"
 					/>
 				</div>
 			</div>
@@ -237,22 +248,22 @@ tr.has-error {
 										v-for="(pool, index) in upload.csv_pool.pools"
 										:key="index"
 										:class="{
-											'has-error': hasError(upload.csv_pool, index),
+											'has-error': hasError(pool),
 										}"
 										:style="getRowStyle(pool)"
 									>
 										<td>
-											<i
-												v-if="hasError(upload.csv_pool, index)"
-												class="bi bi-info-circle-fill text-primary ms-1"
-												data-bs-toggle="tooltip"
-												data-bs-placement="top"
+											<Tooltip
+												placement="top"
 												:title="
-													errorsForLine(upload.csv_pool, index)
+													errorsForLine(pool)
 														.map((e) => e.message)
 														.join(', ')
 												"
-											></i>
+												v-if="hasError(pool)"
+											>
+												<i class="bi bi-info-circle-fill text-primary ms-1"></i>
+											</Tooltip>
 										</td>
 										<td>{{ pool.address?.number }}</td>
 										<td>{{ pool.address?.street }}</td>
@@ -310,10 +321,19 @@ tr.has-error {
 import * as bootstrap from "bootstrap";
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
-import MapMultipoint from "@/components/MapMultipoint.vue";
+import MapLocator from "@/components/MapLocator.vue";
+import Tooltip from "@/components/Tooltip.vue";
 import { useUploadStore } from "@/store/upload";
 import { useSessionStore } from "@/store/session";
-import { CSVPoolDetail, CSVPoolError, Upload, UploadPoolRow } from "@/type/api";
+import {
+	CSVPoolDetail,
+	CSVPoolError,
+	Upload,
+	UploadPoolError,
+	UploadPoolRow,
+} from "@/type/api";
+import { Camera } from "@/type/map";
+import type { Marker } from "@/types";
 
 interface ErrorMessage {
 	message: string;
@@ -325,6 +345,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const mapCamera = ref<Camera>(new Camera());
 const router = useRouter();
 const showIssuesOnly = ref(false);
 const isSubmitting = ref(false);
@@ -445,17 +466,29 @@ const handleCommit = async () => {
 		isSubmitting.value = false;
 	}
 };
-function hasError(csv: CSVPoolDetail, index: number): boolean {
-	return !!errorsForLine(csv, index);
-}
-function errorsForLine(csv: CSVPoolDetail, index: number): CSVPoolError[] {
-	let results = [];
-	for (const e of csv.errors) {
-		if (e.line == index) {
-			results.push(e);
-		}
+const markers = computed((): Marker[] => {
+	if (!upload.value?.csv_pool?.pools) {
+		return [];
 	}
-	return results;
+	let markers: Marker[] = [];
+	upload.value.csv_pool.pools.forEach((p: UploadPoolRow) => {
+		if (p.address.location) {
+			markers.push({
+				color: "#FF0000",
+				draggable: true,
+				id: "x",
+				location: p.address.location,
+			});
+		}
+	});
+	console.log("updated markers to", markers);
+	return markers;
+});
+function hasError(row: UploadPoolRow): boolean {
+	return !!errorsForLine(row);
+}
+function errorsForLine(row: UploadPoolRow): UploadPoolError[] {
+	return row.errors;
 }
 onMounted(() => {
 	initializeMap();
