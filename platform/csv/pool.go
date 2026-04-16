@@ -323,7 +323,7 @@ func parseHeaders(row []string) ([]headerPoolEnum, []string) {
 		ht := strings.TrimSpace(h)
 		hl := strings.ToLower(ht)
 		log.Debug().Str("header", hl).Msg("Saw CSV header")
-		var type_ headerPoolEnum
+		var type_ headerPoolEnum = headerPoolTag
 		switch hl {
 		case "city":
 			type_ = headerPoolAddressLocality
