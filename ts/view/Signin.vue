@@ -33,43 +33,48 @@
 						<p class="text-muted">Please enter your credentials</p>
 					</div>
 
-					<form method="POST" action="/signin">
-						<input type="hidden" name="next" value="none" />
-						<div class="mb-3">
-							<label for="username" class="form-label">Username</label>
-							<input
-								type="text"
-								class="form-control"
-								name="username"
-								required
-							/>
-						</div>
+					<input type="hidden" name="next" value="none" />
+					<div class="mb-3">
+						<label for="username" class="form-label">Username</label>
+						<input
+							type="text"
+							class="form-control"
+							name="username"
+							required
+							v-model="username"
+						/>
+					</div>
 
-						<div class="mb-3">
-							<label for="password" class="form-label">Password</label>
-							<input
-								type="password"
-								class="form-control"
-								name="password"
-								required
-							/>
-						</div>
+					<div class="mb-3">
+						<label for="password" class="form-label">Password</label>
+						<input
+							type="password"
+							class="form-control"
+							name="password"
+							v-model="password"
+							required
+						/>
+					</div>
 
-						<!--
+					<!--
 							<div class="alert alert-danger" role="alert">
 								The credentials you provided weren't recognized.
 							</div>
 						-->
 
-						<div class="d-grid gap-2">
-							<button type="submit" class="btn btn-primary">Login</button>
-						</div>
+					<div class="d-grid gap-2">
+						<ButtonLoading
+							@click="doLogin()"
+							:loading="loading"
+							text="Login"
+							variant="primary"
+						/>
+					</div>
 
-						<div class="mt-3 text-center">
-							<p>Don't have an account? <a href="/signup">Sign up</a></p>
-							<a href="forgot-password.html">Forgot password?</a>
-						</div>
-					</form>
+					<div class="mt-3 text-center">
+						<p>Don't have an account? <a href="/signup">Sign up</a></p>
+						<a href="forgot-password.html">Forgot password?</a>
+					</div>
 				</div>
 
 				<!-- Right side: Product Information -->
@@ -99,3 +104,27 @@
 		</div>
 	</div>
 </template>
+<script setup lang="ts">
+import { ref } from "vue";
+import { apiClient } from "@/client";
+import ButtonLoading from "@/components/common/ButtonLoading.vue";
+import { router } from "@/router";
+
+const loading = ref<boolean>(false);
+const password = ref<string>("");
+const username = ref<string>("");
+async function doLogin() {
+	loading.value = true;
+	try {
+		const resp = await apiClient.JSONPost("/api/signin", {
+			password: password.value,
+			username: username.value,
+		});
+		router.push("/");
+	} catch (e) {
+		console.log("login failed", e);
+	} finally {
+		loading.value = false;
+	}
+}
+</script>

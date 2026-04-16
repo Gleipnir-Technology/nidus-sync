@@ -1,34 +1,24 @@
 <template>
-	<div class="app-container">
-		<Sidebar v-if="$route.meta.showSidebar" />
-		<MainContent>
-			<div v-if="session.loading">Loading...</div>
-			<div v-else-if="session.error">Error: {{ session.error }}</div>
-			<router-view v-else />
-		</MainContent>
-	</div>
+	<router-view />
 </template>
 
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { useSessionStore } from "@/store/session";
 import { Session } from "@/type/api";
-
-import Sidebar from "./components/layout/Sidebar.vue";
-import MainContent from "./components/layout/MainContent.vue";
-import NavigationLink from "@/components/common/NavigationLink.vue";
+import { router } from "@/router";
 
 const session = useSessionStore();
 onMounted(() => {
-	session.get().then((session: Session) => {
-		console.log("session loaded", session);
-	});
+	session
+		.get()
+		.then((session: Session) => {
+			console.log("session loaded", session);
+			router.push("/_/dash");
+		})
+		.catch((e) => {
+			console.log("root session not loaded", e);
+		});
+	console.log("home mounted");
 });
 </script>
-
-<style scoped>
-.app-container {
-	display: flex;
-	height: 100vh;
-}
-</style>

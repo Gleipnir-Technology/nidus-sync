@@ -1,190 +1,207 @@
 import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
-import Home from "./view/Home.vue";
-import About from "./view/About.vue";
-import Communication from "./view/Communication.vue";
-import ConfigurationIntegration from "./view/configuration/Integration.vue";
-import ConfigurationIntegrationArcgis from "./view/configuration/IntegrationArcgis.vue";
-import ConfigurationOrganization from "./view/configuration/Organization.vue";
-import ConfigurationPesticide from "./view/configuration/Pesticide.vue";
-import ConfigurationPesticideAdd from "./view/configuration/PesticideAdd.vue";
-import ConfigurationRoot from "./view/configuration/Root.vue";
-import ConfigurationUpload from "./view/configuration/Upload.vue";
-import ConfigurationUploadDetail from "./view/configuration/UploadDetail.vue";
-import ConfigurationUploadPool from "./view/configuration/UploadPool.vue";
-import ConfigurationUploadPoolCustom from "./view/configuration/UploadPoolCustom.vue";
-import ConfigurationUploadPoolFlyover from "./view/configuration/UploadPoolFlyover.vue";
-import ConfigurationUser from "./view/configuration/User.vue";
-import ConfigurationUserAdd from "./view/configuration/UserAdd.vue";
-import ConfigurationUserEdit from "./view/configuration/UserEdit.vue";
-import Intelligence from "./view/Intelligence.vue";
-import NotFound from "./view/NotFound.vue";
-import OAuthRefreshArcgis from "./view/OAuthRefreshArcgis.vue";
-import Operations from "./view/Operations.vue";
-import Planning from "./view/Planning.vue";
-import ReviewPool from "./view/review/Pool.vue";
-import ReviewRoot from "./view/review/Root.vue";
-import ReviewSite from "./view/review/Site.vue";
-import Signin from "./view/Signin.vue";
-import Sudo from "./view/Sudo.vue";
-import apiClient from "@/client";
+import Home from "@/view/Home.vue";
+import Authenticated from "@/view/Authenticated.vue";
+import Communication from "@/view/Communication.vue";
+import ConfigurationIntegration from "@/view/configuration/Integration.vue";
+import ConfigurationIntegrationArcgis from "@/view/configuration/IntegrationArcgis.vue";
+import ConfigurationOrganization from "@/view/configuration/Organization.vue";
+import ConfigurationPesticide from "@/view/configuration/Pesticide.vue";
+import ConfigurationPesticideAdd from "@/view/configuration/PesticideAdd.vue";
+import ConfigurationRoot from "@/view/configuration/Root.vue";
+import ConfigurationUpload from "@/view/configuration/Upload.vue";
+import ConfigurationUploadDetail from "@/view/configuration/UploadDetail.vue";
+import ConfigurationUploadPool from "@/view/configuration/UploadPool.vue";
+import ConfigurationUploadPoolCustom from "@/view/configuration/UploadPoolCustom.vue";
+import ConfigurationUploadPoolFlyover from "@/view/configuration/UploadPoolFlyover.vue";
+import ConfigurationUser from "@/view/configuration/User.vue";
+import ConfigurationUserAdd from "@/view/configuration/UserAdd.vue";
+import ConfigurationUserEdit from "@/view/configuration/UserEdit.vue";
+import Dash from "@/view/Dash.vue";
+import Intelligence from "@/view/Intelligence.vue";
+import NotFound from "@/view/NotFound.vue";
+import OAuthRefreshArcgis from "@/view/OAuthRefreshArcgis.vue";
+import Operations from "@/view/Operations.vue";
+import Planning from "@/view/Planning.vue";
+import ReviewPool from "@/view/review/Pool.vue";
+import ReviewRoot from "@/view/review/Root.vue";
+import ReviewSite from "@/view/review/Site.vue";
+import Signin from "@/view/Signin.vue";
+import Signout from "@/view/Signout.vue";
+import Sudo from "@/view/Sudo.vue";
+import { apiClient } from "@/client";
 
 const routes: RouteRecordRaw[] = [
 	{
 		path: "/",
 		name: "Home",
 		component: Home,
-		meta: { requiresAuth: true, showSidebar: true },
 	},
 	{
-		path: "/_/communication",
-		name: "Communication",
-		component: Communication,
-		meta: { requiresAuth: true, showSidebar: true },
+		children: [
+			{
+				path: "/_/communication",
+				name: "Communication",
+				component: Communication,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration",
+				name: "Configuration",
+				component: ConfigurationRoot,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/integration",
+				name: "Integration Configuration",
+				component: ConfigurationIntegration,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/integration/arcgis",
+				name: "Arcgis Integration Configuration",
+				component: ConfigurationIntegrationArcgis,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/organization",
+				name: "Organization Configuration",
+				component: ConfigurationOrganization,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/pesticide",
+				name: "Pesticide Configuration",
+				component: ConfigurationPesticide,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/pesticide/add",
+				name: "Pesticide Add",
+				component: ConfigurationPesticideAdd,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/upload",
+				name: "Upload Configuration",
+				component: ConfigurationUpload,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				component: ConfigurationUploadDetail,
+				meta: { requiresAuth: true, showSidebar: true },
+				name: "Upload Detail",
+				path: "/_/configuration/upload/:id",
+				props: (route) => ({
+					id: parseInt(route.params.id as string, 10),
+				}),
+			},
+			{
+				path: "/_/configuration/upload/pool",
+				name: "Pool Upload",
+				component: ConfigurationUploadPool,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/upload/pool/custom",
+				name: "Custom Pool Upload",
+				component: ConfigurationUploadPoolCustom,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/upload/pool/flyover",
+				name: "Flyover Upload",
+				component: ConfigurationUploadPoolFlyover,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/user",
+				name: "User Configuration",
+				component: ConfigurationUser,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/configuration/user/add",
+				name: "User Add Configuration",
+				component: ConfigurationUserAdd,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				component: ConfigurationUserEdit,
+				meta: { requiresAuth: true, showSidebar: true },
+				name: "User Edit",
+				path: "/_/configuration/user/:id",
+				props: (route) => ({
+					id: parseInt(route.params.id as string, 10),
+				}),
+			},
+			{
+				path: "/_/dash",
+				name: "Dash",
+				component: Dash,
+			},
+			{
+				path: "/_/intelligence",
+				name: "Intelligence",
+				component: Intelligence,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/oauth/refresh/arcgis",
+				name: "Arcgis OAuth Refresh",
+				component: OAuthRefreshArcgis,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/operations",
+				name: "Operations",
+				component: Operations,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/planning",
+				name: "Planning",
+				component: Planning,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/review",
+				name: "Review",
+				component: ReviewRoot,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/review/pool",
+				name: "Pool Review",
+				component: ReviewPool,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/review/site",
+				name: "Site Review",
+				component: ReviewSite,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+			{
+				path: "/_/sudo",
+				name: "Sudo",
+				component: Sudo,
+				meta: { requiresAuth: true, showSidebar: true },
+			},
+		],
+		component: Authenticated,
+		path: "/_",
+		name: "Authenticated",
 	},
 	{
-		path: "/_/configuration",
-		name: "Configuration",
-		component: ConfigurationRoot,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/integration",
-		name: "Integration Configuration",
-		component: ConfigurationIntegration,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/integration/arcgis",
-		name: "Arcgis Integration Configuration",
-		component: ConfigurationIntegrationArcgis,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/organization",
-		name: "Organization Configuration",
-		component: ConfigurationOrganization,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/pesticide",
-		name: "Pesticide Configuration",
-		component: ConfigurationPesticide,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/pesticide/add",
-		name: "Pesticide Add",
-		component: ConfigurationPesticideAdd,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/upload",
-		name: "Upload Configuration",
-		component: ConfigurationUpload,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		component: ConfigurationUploadDetail,
-		meta: { requiresAuth: true, showSidebar: true },
-		name: "Upload Detail",
-		path: "/_/configuration/upload/:id",
-		props: (route) => ({
-			id: parseInt(route.params.id as string, 10),
-		}),
-	},
-	{
-		path: "/_/configuration/upload/pool",
-		name: "Pool Upload",
-		component: ConfigurationUploadPool,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/upload/pool/custom",
-		name: "Custom Pool Upload",
-		component: ConfigurationUploadPoolCustom,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/upload/pool/flyover",
-		name: "Flyover Upload",
-		component: ConfigurationUploadPoolFlyover,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/user",
-		name: "User Configuration",
-		component: ConfigurationUser,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/configuration/user/add",
-		name: "User Add Configuration",
-		component: ConfigurationUserAdd,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		component: ConfigurationUserEdit,
-		meta: { requiresAuth: true, showSidebar: true },
-		name: "User Edit",
-		path: "/_/configuration/user/:id",
-		props: (route) => ({
-			id: parseInt(route.params.id as string, 10),
-		}),
-	},
-	{
-		path: "/_/intelligence",
-		name: "Intelligence",
-		component: Intelligence,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/oauth/refresh/arcgis",
-		name: "Arcgis OAuth Refresh",
-		component: OAuthRefreshArcgis,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/operations",
-		name: "Operations",
-		component: Operations,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/planning",
-		name: "Planning",
-		component: Planning,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/review",
-		name: "Review",
-		component: ReviewRoot,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/review/pool",
-		name: "Pool Review",
-		component: ReviewPool,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/review/site",
-		name: "Site Review",
-		component: ReviewSite,
-		meta: { requiresAuth: true, showSidebar: true },
-	},
-	{
-		path: "/_/signin",
-		name: "Signin",
 		component: Signin,
-		meta: { requiresAuth: false, showSidebar: false },
+		name: "Signin",
+		path: "/signin",
 	},
 	{
-		path: "/_/sudo",
-		name: "Sudo",
-		component: Sudo,
-		meta: { requiresAuth: true, showSidebar: true },
+		component: Signout,
+		name: "Signout",
+		path: "/signout",
 	},
 	// Catch-all route - must be last
 	{
@@ -206,15 +223,14 @@ router.beforeEach(async (to, from) => {
 	if (requiresAuth) {
 		try {
 			// Check if user is authenticated (could be an API call)
-			const isAuthenticated = await apiClient.isAuthenticated();
-			if (!isAuthenticated) {
-				return "/signin";
+			if (!apiClient.isAuthenticated) {
+				return "/_/signin";
 			} else {
 				return;
 			}
 		} catch (error) {
 			console.log("check auth failed");
-			return "/signin";
+			return "/_/signin";
 		}
 	}
 });

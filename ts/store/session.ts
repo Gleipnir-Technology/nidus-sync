@@ -8,12 +8,13 @@ import {
 	URLs,
 	User,
 } from "@/type/api";
+import { apiClient } from "@/client";
 
 export const useSessionStore = defineStore("session", () => {
 	// State
 	const impersonating = ref<string | null>(null);
 	const error = ref<string | null>(null);
-	const loading = ref(false);
+	const loading = ref(true);
 	const current = ref<Session | null>(null);
 	const notification_counts = ref<SessionNotificationCounts | null>(null);
 	const ongoingFetch = ref<Promise<Session> | null>(null);
@@ -34,10 +35,7 @@ export const useSessionStore = defineStore("session", () => {
 		error.value = null;
 
 		try {
-			const response = await fetch("/api/session");
-			if (!response.ok) throw new Error("Failed to fetch user");
-
-			const data: Session = await response.json();
+			const data: Session = await apiClient.JSONGet("/api/session");
 			impersonating.value = data.impersonating || null;
 			notification_counts.value = data.notification_counts;
 			organization.value = data.organization;
@@ -50,6 +48,7 @@ export const useSessionStore = defineStore("session", () => {
 			throw new Error(error.value);
 		} finally {
 			loading.value = false;
+			console.log("no longer loading session");
 		}
 	}
 
@@ -72,6 +71,9 @@ export const useSessionStore = defineStore("session", () => {
 		ongoingFetch.value = null;
 		return s;
 	}
+	async function signout(): Promise<void> {
+		apiClient.JSONPost("/api/signout", {});
+	}
 	return {
 		// State
 		error,
@@ -85,5 +87,6 @@ export const useSessionStore = defineStore("session", () => {
 		fetchSession,
 		get,
 		isAuthenticated,
+		signout,
 	};
 });

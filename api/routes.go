@@ -12,6 +12,7 @@ func AddRoutes(r *mux.Router) {
 	//r.Use(render.SetContentType(render.ContentTypeJSON))
 	// Unauthenticated endpoints
 	r.HandleFunc("/signin", handlerJSONPost(postSignin))
+	r.Handle("/signout", authenticatedHandlerBasic(postSignout))
 	r.HandleFunc("/signup", handlerJSONPost(postSignup))
 	// Authenticated endpoints
 	r.Handle("/audio/{uuid}", auth.NewEnsureAuth(apiAudioPost)).Methods("POST")

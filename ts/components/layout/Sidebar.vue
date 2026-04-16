@@ -198,6 +198,9 @@
 				/>
 			</li>
 			<li>
+				<NavigationLink to="/signout" icon="door-open" label="Signout" />
+			</li>
+			<li>
 				<NavigationLink to="/_/sudo" icon="god" label="Sudo" />
 			</li>
 		</ul>

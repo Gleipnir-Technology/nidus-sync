@@ -85,14 +85,6 @@ export default defineConfig({
 				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
-			"/signin": {
-				target: "http://localhost:9003",
-				changeOrigin: false,
-			},
-			"/signup": {
-				target: "http://localhost:9003",
-				changeOrigin: false,
-			},
 		},
 		strictPort: true,
 	},

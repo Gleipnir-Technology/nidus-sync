@@ -7,6 +7,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
 
@@ -35,4 +36,8 @@ func postSignin(ctx context.Context, r *http.Request, req reqSignin) (string, *n
 		return "", nhttp.NewError("login server error")
 	}
 	return "/", nil
+}
+func postSignout(ctx context.Context, w http.ResponseWriter, r *http.Request, u platform.User) *nhttp.ErrorWithStatus {
+	auth.SignoutUser(r, u)
+	return nil
 }

@@ -24,6 +24,7 @@ type ErrorAPI struct {
 var decoder = schema.NewDecoder()
 
 type handlerBase func(context.Context, http.ResponseWriter, *http.Request) *nhttp.ErrorWithStatus
+type handlerBaseAuthenticated func(context.Context, http.ResponseWriter, *http.Request, platform.User) *nhttp.ErrorWithStatus
 type handlerFunctionDelete func(context.Context, *http.Request, platform.User) *nhttp.ErrorWithStatus
 type handlerFunctionGet[T any] func(context.Context, *http.Request, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
 type handlerFunctionGetAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
@@ -35,6 +36,17 @@ type handlerFunctionPostAuthenticated[RequestType any, ResponseType any] func(co
 type handlerFunctionPostFormMultipart[RequestType any, ResponseType any] func(context.Context, *http.Request, RequestType) (*ResponseType, *nhttp.ErrorWithStatus)
 type handlerFunctionPutAuthenticated[RequestType any] func(context.Context, *http.Request, platform.User, RequestType) (string, *nhttp.ErrorWithStatus)
 
+func authenticatedHandlerBasic(f handlerBaseAuthenticated) http.Handler {
+	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
+		ctx := r.Context()
+		e := f(ctx, w, r, u)
+		if e != nil {
+			respondErrorStatus(w, e)
+			return
+		}
+		return
+	})
+}
 func authenticatedHandlerDelete(f handlerFunctionDelete) http.Handler {
 	return auth.NewEnsureAuth(func(w http.ResponseWriter, r *http.Request, u platform.User) {
 		ctx := r.Context()
