@@ -1,4 +1,4 @@
-<style scoped>
+<style scoped lang="scss">
 body {
 	background-color: #f5f5f5;
 }
@@ -24,44 +24,16 @@ body {
 	border-left: 1px solid #dee2e6;
 	padding: 20px;
 }
-.placeholder-box {
-	background-color: #e9ecef;
-	border: 2px dashed #adb5bd;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: #6c757d;
-	font-size: 18px;
-	margin-bottom: 20px;
-}
-
-.map-placeholder {
-	height: 300px;
-}
-
-.image-placeholder {
-	height: 400px;
-}
-
-.action-btn {
-	width: 100%;
-	margin-bottom: 10px;
-	padding: 12px;
-	font-size: 16px;
-}
-
-.status-badge {
-	font-size: 11px;
-}
-
-.map-container {
-	margin-bottom: 20px;
-}
 </style>
 <template>
 	<ThreeColumn>
 		<template #left>
-			<ReviewSiteColumnList />
+			<ReviewSiteColumnList
+				@doDeselectSite="siteDeselect"
+				@doSelectSite="siteSelect"
+				:selectedSite="selectedSite"
+				:sites="storeSite.all()"
+			/>
 		</template>
 		<template #center>
 			<ReviewSiteColumnDetail />
@@ -83,7 +55,7 @@ import ReviewSiteColumnDetail from "@/components/ReviewSiteColumnDetail.vue";
 import ReviewSiteColumnList from "@/components/ReviewSiteColumnList.vue";
 import { formatAddress } from "@/format";
 import type { Changes } from "@/types";
-import { Bounds, Contact, Location, ReviewTask } from "@/type/api";
+import { Bounds, Contact, Location, Site } from "@/type/api";
 import { Camera } from "@/type/map";
 import { MapClickEvent, Marker } from "@/types";
 
@@ -93,6 +65,29 @@ interface Props {}
 const props = withDefaults(defineProps<Props>(), {});
 
 const storeSite = useStoreSite();
+const selectedSiteID = ref<number>(0);
+const selectedSite = computed((): Site | undefined => {
+	if (!selectedSiteID.value) {
+		return undefined;
+	}
+	return storeSite.byID(selectedSiteID.value);
+});
+function siteDeselect(id: number): void {
+	if (selectedSiteID.value == id) {
+		selectedSiteID.value = 0;
+	}
+}
+function siteSelect(id: number): void {
+	selectedSiteID.value = id;
+
+	const site = storeSite.byID(id);
+	if (!site) {
+		console.log("no site", id);
+		return;
+	}
+	console.log("selecting site", id, site);
+}
+
 // Lifecycle
 onMounted(async () => {
 	storeSite.fetchAll();

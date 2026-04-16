@@ -24,6 +24,7 @@ import Operations from "./view/Operations.vue";
 import Planning from "./view/Planning.vue";
 import ReviewPool from "./view/review/Pool.vue";
 import ReviewRoot from "./view/review/Root.vue";
+import ReviewSite from "./view/review/Site.vue";
 import Signin from "./view/Signin.vue";
 import Sudo from "./view/Sudo.vue";
 import apiClient from "@/client";
