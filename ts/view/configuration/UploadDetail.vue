@@ -234,6 +234,7 @@ tr.has-error {
 								<thead class="table-light">
 									<tr class="header">
 										<th></th>
+										<th>Row</th>
 										<th>Number</th>
 										<th>Street</th>
 										<th>City</th>
@@ -261,6 +262,7 @@ tr.has-error {
 												<i class="bi bi-info-circle-fill text-primary ms-1"></i>
 											</Tooltip>
 										</td>
+										<td>{{ index + 2 }}</td>
 										<td>{{ pool.address?.number }}</td>
 										<td>{{ pool.address?.street }}</td>
 										<td>{{ pool.address?.locality }}</td>
