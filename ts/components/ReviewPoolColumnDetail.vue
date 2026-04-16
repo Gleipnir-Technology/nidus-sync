@@ -133,7 +133,12 @@
 
 		<!-- Map Components -->
 		<div class="map-container" v-if="session.organization">
-			<MapLocator :markers="mapMarkers" v-model="mapCamera"></MapLocator>
+			<MapLocator
+				@click="doPoolLocation"
+				:markers="mapMarkers"
+				:useSatellite="true"
+				v-model="mapCamera"
+			></MapLocator>
 		</div>
 		<div v-else>
 			<p>loading...</p>
@@ -145,7 +150,7 @@
 			v-show="selectedTask?.pool"
 		>
 			<MapProxiedArcgisTile
-				@map-click="doPoolLocation"
+				@click="doPoolLocation"
 				:markers="mapMarkers"
 				:organizationId="session.organization.id"
 				:tegola="session.urls!.tegola"

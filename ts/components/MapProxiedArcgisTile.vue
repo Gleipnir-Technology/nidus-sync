@@ -140,12 +140,12 @@ import {
 
 import LayersControl from "@/components/LayersControl";
 import { boundsMarkers, boundsDefault } from "@/map-utils";
-import { MapClickEvent, Marker, Point } from "@/types";
+import { type MapClickEvent, type Marker, Point } from "@/types";
 import type { Location } from "@/type/api";
 import type { Camera, MoveEndEventInternal } from "@/type/map";
 
 interface Emits {
-	(e: "map-click", event: MapClickEvent): void;
+	(e: "click", event: MapClickEvent): void;
 	(e: "update:modelValue", value: Camera): void;
 }
 interface Props {
@@ -288,8 +288,9 @@ const initializeMap = () => {
 				type: "raster",
 			});
 
-			_map.on("click", (e) => {
-				emit("map-click", {
+			_map.on("click", (e: maplibregl.MapLayerMouseEvent) => {
+				e.preventDefault();
+				emit("click", {
 					location: {
 						latitude: e.lngLat.lat,
 						longitude: e.lngLat.lng,

@@ -16,6 +16,9 @@
 }
 </style>
 <template>
+	<div v-show="loading">
+		<p>Loading</p>
+	</div>
 	<!-- Error Alert -->
 	<div v-if="error" class="mt-3 alert alert-danger alert-dismissible">
 		{{ error }}
@@ -68,10 +71,13 @@ interface Emits {
 }
 interface Props {
 	error: string | null;
+	loading?: boolean;
 	selectedTaskID: number | null;
 	tasks: ReviewTask[];
 	total: number;
 }
 const emit = defineEmits<Emits>();
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+	loading: false,
+});
 </script>

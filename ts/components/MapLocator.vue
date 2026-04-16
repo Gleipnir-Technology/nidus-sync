@@ -164,14 +164,14 @@ import {
 	watch,
 } from "vue";
 import { boundsMarkers, boundsDefault } from "@/map-utils";
-import type { Marker } from "@/types";
+import type { MapClickEvent, Marker } from "@/types";
 import type { Location } from "@/type/api";
 import type { Camera, MoveEndEventInternal } from "@/type/map";
 
 // Emits interface
 interface Emits {
 	(e: "update:modelValue", value: Camera): void;
-	(e: "click", location: Location): void;
+	(e: "click", event: MapClickEvent): void;
 	(e: "marker-drag-end", location: Location): void;
 }
 
@@ -290,11 +290,14 @@ function initializeMap() {
 		}
 
 		clickTimeout.value = window.setTimeout(() => {
-			const location: Location = {
-				latitude: e.lngLat.lat,
-				longitude: e.lngLat.lng,
-			};
-			emit("click", location);
+			emit("click", {
+				location: {
+					latitude: e.lngLat.lat,
+					longitude: e.lngLat.lng,
+				},
+				map: _map,
+				point: e.point,
+			});
 		}, 100);
 	});
 

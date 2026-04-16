@@ -67,7 +67,7 @@ import { Address } from "@/type/api";
 import type { Geocode, GeocodeSuggestion, Location } from "@/type/api";
 import { useStoreGeocode } from "@/store/geocode";
 import { Camera } from "@/type/map";
-import type { Marker } from "@/types";
+import type { MapClickEvent, Marker } from "@/types";
 
 interface Emits {
 	(e: "update:modelValue", value: Address): void;
@@ -125,10 +125,10 @@ async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 	}
 	updateModel(data.address.gid, data.address.raw, data.address.location);
 }
-function doMapClick(location: Location) {
-	updateModel(props.modelValue.gid, props.modelValue.raw, location);
+function doMapClick(event: MapClickEvent) {
+	updateModel(props.modelValue.gid, props.modelValue.raw, event.location);
 	geocode
-		.reverse(location)
+		.reverse(event.location)
 		.then((code: Geocode) => {
 			updateModel(
 				code.address.gid,

@@ -62,16 +62,13 @@ body {
 	<ThreeColumn>
 		<template #left>
 			<ReviewPoolColumnList
-				v-show="storeReviewTask.all"
 				@doSelectTask="selectTask"
 				:error="error"
+				:loading="!!storeReviewTask.all()"
 				:selectedTaskID="selectedTaskID"
 				:tasks="storeReviewTask.all()"
 				:total="totalPending"
 			/>
-			<div v-show="!storeReviewTask.all">
-				<p>Loading</p>
-			</div>
 		</template>
 		<template #center>
 			<ReviewPoolColumnDetail
