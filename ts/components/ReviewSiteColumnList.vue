@@ -26,23 +26,20 @@
 		:class="{ active: selectedSite?.id === site.id }"
 		@click="doClick(site)"
 	>
-		<div class="d-flex justify-content-between align-items-start">
+		<div class="d-flex">
 			<div>
-				<i class="bi bi-droplet"></i>
-				<strong>Pool {{ site.id }}</strong>
+				<i class="bi bi-house"></i>
 			</div>
-			<small class="text-muted">{{ site.created }}</small>
+			<strong>{{ formatAddress(site.address) }}</strong>
 		</div>
-		<small class="text-muted d-block mt-1">
-			{{ formatAddress(site.address) }}
-		</small>
 	</div>
 </template>
 <script setup lang="ts">
 import { Site } from "@/type/api";
 import { formatAddress } from "@/format";
 interface Emits {
-	(e: "doSelectTask", id: number): void;
+	(e: "doSiteDeselect", id: number): void;
+	(e: "doSiteSelect", id: number): void;
 }
 interface Props {
 	selectedSite: Site | undefined;
@@ -51,6 +48,10 @@ interface Props {
 const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {});
 function doClick(site: Site) {
-	console.log("click", site);
+	if (props.selectedSite && site.id == props.selectedSite.id) {
+		emit("doSiteDeselect", site.id);
+	} else {
+		emit("doSiteSelect", site.id);
+	}
 }
 </script>

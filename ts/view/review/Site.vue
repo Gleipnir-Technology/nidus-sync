@@ -29,8 +29,8 @@ body {
 	<ThreeColumn>
 		<template #left>
 			<ReviewSiteColumnList
-				@doDeselectSite="siteDeselect"
-				@doSelectSite="siteSelect"
+				@doSiteDeselect="siteDeselect"
+				@doSiteSelect="siteSelect"
 				:selectedSite="selectedSite"
 				:sites="storeSite.all()"
 			/>

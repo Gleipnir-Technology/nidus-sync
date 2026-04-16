@@ -7,7 +7,7 @@ export function formatAddress(address?: Address): string {
 	if (address.number === "" && address.street === "") {
 		return "no address provided";
 	}
-	return `${address.number} ${address.street}, ${address.locality}`;
+	return `${address.number.trim()} ${address.street.trim()}, ${address.locality}`;
 }
 export function formatBigNumber(n: number): string {
 	// Convert the number to a string
