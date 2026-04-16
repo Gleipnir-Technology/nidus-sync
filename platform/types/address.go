@@ -55,7 +55,7 @@ func AddressList(ctx context.Context, ids []int32) (map[int32]*Address, error) {
 		sm.Columns(
 			"COALESCE(address.country, 'usa') AS \"country\"",
 			"COALESCE(address.gid, '') AS \"gid\"",
-			"COALESCE(address.id, '') AS \"id\"",
+			"address.id AS \"id\"",
 			"COALESCE(address.locality, '') AS \"locality\"",
 			"COALESCE(address.number_, '') AS \"number\"",
 			"COALESCE(address.postal_code, '') AS \"postal_code\"",
