@@ -28,8 +28,8 @@ func featuresBySiteID(ctx context.Context, site_ids []int32) (map[int32][]types.
 		sm.Columns(
 			"feature.id AS id",
 			"feature.site_id AS site_id",
-			"COALESCE(ST_X(feature.location), 0) AS \"location.longitude\"",
-			"COALESCE(ST_Y(feature.location), 0) AS \"location.latitude\"",
+			"COALESCE(feature.location_longitude, 0) AS \"location.longitude\"",
+			"COALESCE(feature.location_latitude, 0) AS \"location.latitude\"",
 			"'pool' AS type",
 		),
 		sm.From("feature"),
@@ -53,10 +53,7 @@ func featuresBySiteID(ctx context.Context, site_ids []int32) (map[int32][]types.
 		if !ok {
 			return nil, fmt.Errorf("impossible")
 		}
-		features = append(features, types.Feature{
-			ID:   row.ID,
-			Type: "pool",
-		})
+		features = append(features, row)
 		results[row.SiteID] = features
 	}
 	return results, nil
