@@ -195,6 +195,7 @@ func getUploadDetailPool(ctx context.Context, file *models.FileuploadFile) (*Upl
 	}
 	pool_rows, err := models.FileuploadPools.Query(
 		models.SelectWhere.FileuploadPools.CSVFile.EQ(file.ID),
+		sm.OrderBy(models.FileuploadPools.Columns.LineNumber).Asc(),
 	).All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query pools for %d: %w", file.ID, err)
