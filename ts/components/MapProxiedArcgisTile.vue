@@ -219,7 +219,8 @@ const initializeMap = () => {
 	try {
 		const _map = new maplibregl.Map({
 			container: mapContainer.value,
-			style: "https://tiles.stadiamaps.com/styles/osm_bright.json",
+			//style: "https://tiles.stadiamaps.com/styles/alidade_satellite.json",
+			style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
 			zoom: 19,
 		});
 		if (props.markers.length > 0) {
@@ -302,12 +303,12 @@ const initializeMap = () => {
 			console.log("MapProxiedArcgisTile loaded");
 		});
 		_map.addControl(new maplibregl.NavigationControl(), "top-left");
-		_map.addControl(
+		/*_map.addControl(
 			new LayersControl({
 				title: "layers",
 				customLabels: { "countries-fill": "Countries" },
 			}),
-		);
+		);*/
 		console.log("MapProxiedArcgisTile initialized");
 	} catch (e) {
 		console.error("hey dummy", e);
