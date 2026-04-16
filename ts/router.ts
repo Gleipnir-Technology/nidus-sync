@@ -168,6 +168,12 @@ const routes: RouteRecordRaw[] = [
 		meta: { requiresAuth: true, showSidebar: true },
 	},
 	{
+		path: "/_/review/site",
+		name: "Site Review",
+		component: ReviewSite,
+		meta: { requiresAuth: true, showSidebar: true },
+	},
+	{
 		path: "/_/signin",
 		name: "Signin",
 		component: Signin,

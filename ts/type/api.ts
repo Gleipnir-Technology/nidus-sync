@@ -557,6 +557,10 @@ export interface ReviewTaskListResponse {
 	tasks: ReviewTask[];
 	total: number;
 }
+export interface SiteListResponse {
+	sites: Site[];
+	total: number;
+}
 export interface UploadDTO {
 	created: string;
 	error: string;
@@ -768,6 +772,7 @@ interface URLsAPI {
 	review_task: string;
 	service_request: string;
 	signal: string;
+	site: string;
 	sync: string;
 	upload: string;
 	user: string;

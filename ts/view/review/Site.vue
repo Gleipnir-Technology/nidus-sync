@@ -74,7 +74,7 @@ body {
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { useStoreReviewTask } from "@/store/review-task";
+import { useStoreSite } from "@/store/site";
 import { useSessionStore } from "@/store/session";
 import maplibregl from "maplibre-gl";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
@@ -92,6 +92,9 @@ interface Props {}
 
 const props = withDefaults(defineProps<Props>(), {});
 
+const storeSite = useStoreSite();
 // Lifecycle
-onMounted(async () => {});
+onMounted(async () => {
+	storeSite.fetchAll();
+});
 </script>
