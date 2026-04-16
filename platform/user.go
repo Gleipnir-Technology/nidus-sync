@@ -237,14 +237,18 @@ func userSuggestionRoot(ctx context.Context, user User, query_arg string) ([]*Us
 	return results, nil
 }
 func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User, error) {
+	log.Info().Msg("begin querying for user ...")
 	user, err := models.Users.Query(
 		models.Preload.User.Organization(),
 		where,
 	).One(ctx, db.PGInstance.BobDB)
+	log.Info().Msg("done querying for user.")
 	if err != nil {
-		log.Debug().Err(err).Msg("getUser failed")
+		log.Info().Err(err).Msg("getUser failed")
 		if err.Error() == "No such user" || err.Error() == "sql: no rows in result set" {
 			return nil, &NoUserError{}
+		} else if err.Error() == "context canceled" {
+			return nil, err
 		} else {
 			debug.LogErrorTypeInfo(err)
 			log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
