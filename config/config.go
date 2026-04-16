@@ -26,6 +26,7 @@ var (
 	ForwardEmailNidusAddress   string
 	ForwardEmailNidusPassword  string
 	ForwardEmailNidusUsername  string
+	LobAPIKey                  string
 	PGDSN                      string
 	PhoneNumberReport          phonenumbers.PhoneNumber
 	PhoneNumberReportStr       string
@@ -134,6 +135,10 @@ func Parse() (err error) {
 	ForwardEmailNidusPassword = os.Getenv("FORWARDEMAIL_NIDUS_PASSWORD")
 	if ForwardEmailNidusPassword == "" {
 		return fmt.Errorf("You must specify a non-empty FORWARDEMAIL_NIDUS_PASSWORD")
+	}
+	LobAPIKey = os.Getenv("LOB_API_KEY")
+	if LobAPIKey == "" {
+		return fmt.Errorf("You must specify a non-empty LOB_API_KEY")
 	}
 	PGDSN = os.Getenv("POSTGRES_DSN")
 	if PGDSN == "" {
