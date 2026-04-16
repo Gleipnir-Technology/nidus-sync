@@ -199,6 +199,20 @@ func getUploadDetailPool(ctx context.Context, file *models.FileuploadFile) (*Upl
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query pools for %d: %w", file.ID, err)
 	}
+	address_ids := make([]int32, 0)
+	for _, r := range pool_rows {
+		if r.AddressID.IsValue() {
+			address_ids = append(address_ids, r.AddressID.MustGet())
+		}
+	}
+	addresses, err := AddressList(ctx, address_ids)
+	if err != nil {
+		return nil, fmt.Errorf("get address list: %w", err)
+	}
+	addresses_by_id := make(map[int32]*types.Address, len(address_ids))
+	for _, a := range addresses {
+		addresses_by_id[*a.ID] = a
+	}
 
 	pools := make([]UploadPoolRow, 0)
 	count_existing := 0
@@ -223,15 +237,21 @@ func getUploadDetailPool(ctx context.Context, file *models.FileuploadFile) (*Upl
 		if !ok {
 			errors = []UploadPoolError{}
 		}
-		pools = append(pools, UploadPoolRow{
-			Address: types.Address{
+		var address *types.Address
+		if r.AddressID.IsValue() {
+			address = addresses_by_id[r.AddressID.MustGet()]
+		} else {
+			address = &types.Address{
 				Country:    "usa",
 				Locality:   r.AddressLocality,
 				Number:     r.AddressNumber,
 				PostalCode: r.AddressPostalCode,
 				Region:     r.AddressRegion,
 				Street:     r.AddressStreet,
-			},
+			}
+		}
+		pools = append(pools, UploadPoolRow{
+			Address:   *address,
 			Condition: r.Condition.String(),
 			Errors:    errors,
 			Status:    status,
