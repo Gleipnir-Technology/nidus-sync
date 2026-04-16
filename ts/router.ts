@@ -224,13 +224,13 @@ router.beforeEach(async (to, from) => {
 		try {
 			// Check if user is authenticated (could be an API call)
 			if (!apiClient.isAuthenticated) {
-				return "/_/signin";
+				return "/signin";
 			} else {
 				return;
 			}
 		} catch (error) {
 			console.log("check auth failed");
-			return "/_/signin";
+			return "/signin";
 		}
 	}
 });

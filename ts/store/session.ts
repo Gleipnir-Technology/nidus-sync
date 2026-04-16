@@ -36,6 +36,7 @@ export const useSessionStore = defineStore("session", () => {
 
 		try {
 			const data: Session = await apiClient.JSONGet("/api/session");
+			apiClient.setAuthenticated(true);
 			impersonating.value = data.impersonating || null;
 			notification_counts.value = data.notification_counts;
 			organization.value = data.organization;
@@ -43,6 +44,7 @@ export const useSessionStore = defineStore("session", () => {
 			urls.value = data.urls;
 			return data;
 		} catch (e) {
+			apiClient.setAuthenticated(false);
 			error.value = e instanceof Error ? e.message : "an error ocurred";
 			console.error("Error fetching user:", e);
 			throw new Error(error.value);

@@ -10,15 +10,7 @@
 			Active Investigation Workbench
 		</div>
 		<div class="card-body">
-			<div class="map-container" v-if="session.organization">
-				<MapMultipoint
-					id="map"
-					:bounds="session.organization.service_area"
-					:markers="markers"
-					:organizationId="session.organization.id"
-					:tegola="session.urls?.tegola ?? ''"
-				></MapMultipoint>
-			</div>
+			<div class="map-container" v-if="session.organization"></div>
 			<div v-else>
 				<p>loading...</p>
 			</div>

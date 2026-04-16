@@ -44,7 +44,7 @@ class ApiClient {
 		return this._isAuthenticated;
 	}
 
-	setLoggedIn(value: boolean): void {
+	setAuthenticated(value: boolean): void {
 		this._isAuthenticated = value;
 	}
 
