@@ -180,10 +180,12 @@ interface Props {
 	initialCamera?: Camera;
 	modelValue: Camera;
 	markers?: Marker[];
+	useSatellite?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
 	markers: () => [],
+	useSatellite: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -227,9 +229,13 @@ function deactivateMap() {
 function initializeMap() {
 	if (!mapContainer.value) return;
 
+	let style = "https://tiles.stadiamaps.com/styles/alidade_smooth.json";
+	if (props.useSatellite) {
+		style = "https://tiles.stadiamaps.com/styles/alidade_satellite.json";
+	}
 	const _map = new maplibregl.Map({
 		container: mapContainer.value,
-		style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
+		style: style,
 		// Disable interactions by default
 		doubleClickZoom: false,
 		dragPan: false,
