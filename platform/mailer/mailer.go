@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -55,7 +56,8 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 		return fmt.Errorf("organization %d has no Lob Address ID", organization.ID)
 	}
 
-	content, err := pdf.GeneratePDF(ctx, compliance_req.PublicID)
+	path := fmt.Sprintf("/mailer/mode-3/%s", compliance_req.PublicID)
+	content, err := pdf.GeneratePDF(ctx, path)
 	if err != nil {
 		return fmt.Errorf("generate pdf: %w", err)
 	}
@@ -130,8 +132,13 @@ func sendMail(ctx context.Context, org_address_id string, public_id string, site
 	var ltr = lob.NewLetterEditable(true, to_addr, from_addr, content_path, *lob.NewNullableLtrUseType(&use_type))
 	desc := fmt.Sprintf("Compliance request %s", public_id)
 	ltr.SetDescription(desc)
-	result, _, err := client.LettersApi.Create(ctx_lob).LetterEditable(*ltr).Execute()
+	result, resp, err := client.LettersApi.Create(ctx_lob).LetterEditable(*ltr).Execute()
 
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read lob response")
+	}
+	log.Debug().Str("status", resp.Status).Bytes("body", body).Msg("response from lob")
 	if err != nil {
 		return nil, fmt.Errorf("create letter: %w", err)
 	}
