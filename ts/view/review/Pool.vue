@@ -62,6 +62,7 @@ body {
 	<ThreeColumn>
 		<template #left>
 			<ReviewPoolColumnList
+				@doDeselectTask="deselectTask"
 				@doSelectTask="selectTask"
 				:error="error"
 				:loading="!!storeReviewTask.all()"
@@ -230,6 +231,11 @@ const selectedTask = computed<ReviewTask | undefined>(() => {
 	return storeReviewTask.byID(selectedTaskID.value);
 });
 // Helper Functions
+function deselectTask(id: number): void {
+	if (selectedTaskID.value == id) {
+		selectedTaskID.value = null;
+	}
+}
 // Task Selection
 function selectTask(id: number): void {
 	selectedTaskID.value = id;

@@ -48,7 +48,7 @@
 		:key="task.id"
 		class="entry-item"
 		:class="{ active: selectedTaskID === task.id }"
-		@click="emit('doSelectTask', task.id)"
+		@click="doClick(task)"
 	>
 		<div class="d-flex justify-content-between align-items-start">
 			<div>
@@ -67,6 +67,7 @@ import { formatAddress } from "@/format";
 import { ReviewTask } from "@/type/api";
 
 interface Emits {
+	(e: "doDeselectTask", id: number): void;
 	(e: "doSelectTask", id: number): void;
 }
 interface Props {
@@ -80,4 +81,11 @@ const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
 	loading: false,
 });
+function doClick(task: ReviewTask) {
+	if (task.id == props.selectedTaskID) {
+		emit("doDeselectTask", task.id);
+	} else {
+		emit("doSelectTask", task.id);
+	}
+}
 </script>
