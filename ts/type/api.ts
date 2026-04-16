@@ -523,6 +523,11 @@ export class Signal {
 		);
 	}
 }
+export interface Parcel {
+	apn: string;
+	description: string;
+	id: number;
+}
 export interface Site {
 	address: Address;
 	created: string;
@@ -532,7 +537,7 @@ export interface Site {
 	notes: string;
 	organization_id: number;
 	owner?: Contact;
-	parcel_id?: number;
+	parcel: Parcel;
 	resident?: Contact;
 	resident_owned: boolean;
 	tags: Map<string, string>;

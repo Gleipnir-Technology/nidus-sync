@@ -15,7 +15,7 @@ type Site struct {
 	Notes          string            `db:"notes" json:"notes"`
 	OrganizationID int32             `db:"organization_id" json:"organization_id"`
 	Owner          Contact           `db:"owner" json:"owner"`
-	ParcelID       *int32            `db:"parcel_id" json:"parcel_id"`
+	Parcel         *Parcel           `db:"parcel" json:"parcel"`
 	Resident       *Contact          `db:"resident" json:"resident"`
 	ResidentOwned  *bool             `db:"resident_owned" json:"resident_owned"`
 	Tags           map[string]string `db:"tags" json:"tags"`

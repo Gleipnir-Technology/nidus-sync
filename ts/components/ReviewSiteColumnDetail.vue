@@ -12,6 +12,28 @@
 }
 </style>
 <template>
+	<div class="card" v-show="!!selectedSite">
+		<table class="table">
+			<tbody>
+				<tr>
+					<td><b>Address</b></td>
+					<td>{{ formatAddress(selectedSite?.address) }}</td>
+				</tr>
+				<tr>
+					<td><b>Owner</b></td>
+					<td>{{ selectedSite?.owner?.name }}</td>
+				</tr>
+				<tr>
+					<td><b>Parcel APN</b></td>
+					<td>{{ selectedSite?.parcel?.apn }}</td>
+				</tr>
+				<tr>
+					<td><b>Parcel Description</b></td>
+					<td>{{ selectedSite?.parcel?.description }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
 	<div class="map-container" v-if="session.organization">
 		<MapLocator
 			:markers="mapMarkers"
@@ -33,6 +55,7 @@
 import { ref, watch } from "vue";
 import MapLocator from "@/components/MapLocator.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
+import { formatAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
 import { Site } from "@/type/api";
 import { Camera } from "@/type/map";
