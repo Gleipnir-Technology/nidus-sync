@@ -36,7 +36,11 @@ body {
 			/>
 		</template>
 		<template #center>
-			<ReviewSiteColumnDetail />
+			<ReviewSiteColumnDetail
+				:mapFlyoverCamera="mapFlyoverCamera"
+				:mapMarkers="mapMarkers"
+				:selectedSite="selectedSite"
+			/>
 		</template>
 		<template #right>
 			<ReviewSiteColumnAction />
@@ -64,6 +68,7 @@ interface Props {}
 
 const props = withDefaults(defineProps<Props>(), {});
 
+const mapFlyoverCamera = ref<Camera>(new Camera());
 const storeSite = useStoreSite();
 const selectedSiteID = ref<number>(0);
 const selectedSite = computed((): Site | undefined => {
@@ -71,6 +76,19 @@ const selectedSite = computed((): Site | undefined => {
 		return undefined;
 	}
 	return storeSite.byID(selectedSiteID.value);
+});
+const mapMarkers = computed<Marker[]>(() => {
+	const site = selectedSite.value;
+	if (!(site && site.address.location)) {
+		return [];
+	}
+	const markers = {
+		color: "#FF0000",
+		draggable: false,
+		id: "address",
+		location: site.address.location,
+	};
+	return [markers];
 });
 function siteDeselect(id: number): void {
 	if (selectedSiteID.value == id) {
@@ -85,6 +103,7 @@ function siteSelect(id: number): void {
 		console.log("no site", id);
 		return;
 	}
+	mapFlyoverCamera.value = new Camera(site.address.location, 20);
 	console.log("selecting site", id, site);
 }
 
