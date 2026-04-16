@@ -6,6 +6,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"net/http"
 	"os"
@@ -30,17 +31,47 @@ var emptyTileFS embed.FS
 func GetTile(ctx context.Context, w http.ResponseWriter, org Organization, z, y, x uint) error {
 	return getTile(ctx, w, org.model, z, y, x)
 }
+func GetTileLatLng(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, lat, lng float64) error {
+	y, x := LatLngToTile(level, lat, lng)
+	return getTile(ctx, w, org, level, y, x)
+}
+
 func ImageAtPoint(ctx context.Context, org Organization, level uint, lat, lng float64) (*TileRaster, error) {
 	return imageAtPoint(ctx, org.model, level, lat, lng)
 }
 
-func WriteTile(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, lat, lng float64) error {
-	image, err := imageAtPoint(ctx, org, level, lat, lng)
-	if err != nil {
-		return fmt.Errorf("image at point: %w", err)
+// LatLngToTile converts GPS coordinates to ArcGIS tile coordinates
+func LatLngToTile(level uint, lat, lng float64) (row, column uint) {
+	// Get number of tiles per dimension at this zoom level
+	numTiles := math.Pow(2, float64(level))
+
+	// Convert longitude to tile column
+	// Range: -180 to 180 degrees maps to 0 to numTiles
+	column = uint(math.Floor((lng + 180.0) / 360.0 * numTiles))
+
+	// Convert latitude to tile row using Mercator projection
+	// First convert lat to radians
+	latRad := lat * math.Pi / 180.0
+
+	// Apply Mercator projection formula
+	// This maps latitude from -85.0511 to 85.0511 degrees to 0 to numTiles
+	mercatorY := 0.5 - math.Log(math.Tan(latRad)+1/math.Cos(latRad))/(2*math.Pi)
+	row = uint(math.Floor(mercatorY * numTiles))
+
+	// Ensure values are within valid range
+	if column < 0 {
+		column = 0
+	} else if column >= uint(numTiles) {
+		column = uint(numTiles) - 1
 	}
-	writeTile(w, image)
-	return nil
+
+	if row < 0 {
+		row = 0
+	} else if row >= uint(numTiles) {
+		row = uint(numTiles) - 1
+	}
+
+	return row, column
 }
 
 // Writes a random tile from the cache. This is a very odd thing to do, it's for testing

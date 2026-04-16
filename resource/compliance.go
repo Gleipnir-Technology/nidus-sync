@@ -101,9 +101,11 @@ func imagePoolGet(ctx context.Context, w http.ResponseWriter, public_id string) 
 		return fmt.Errorf("no pool feature")
 	}
 
-	level := uint(15)
-	err = platform.WriteTile(ctx, w, organization, level, pool_feature.Location.Latitude, pool_feature.Location.Longitude)
+	level := uint(19)
+	err = platform.GetTileLatLng(ctx, w, organization, level, pool_feature.Location.Latitude, pool_feature.Location.Longitude)
 	if err != nil {
+		// Try to get the tile from stadia
+
 		return fmt.Errorf("write tile at %d, %f %f: %w", level, pool_feature.Location.Longitude, pool_feature.Location.Latitude, err)
 	}
 	w.WriteHeader(http.StatusOK)
