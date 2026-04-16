@@ -64,6 +64,42 @@ func SiteCreate(ctx context.Context, txn bob.Tx, user User, address_id int32) (*
 		Version:        omit.From(int32(1)),
 	}).One(ctx, txn)
 }
+func SiteList(ctx context.Context, user User, limit int) ([]*types.Site, error) {
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"address.country AS \"address.country\"",
+			"address.locality AS \"address.locality\"",
+			"COALESCE(address.location_latitude, 0) AS \"address.location.latitude\"",
+			"COALESCE(address.location_longitude, 0) AS \"address.location.longitude\"",
+			"address.number_ AS \"address.number\"",
+			"address.postal_code AS \"address.postal_code\"",
+			"address.region AS \"address.region\"",
+			"address.street AS \"address.street\"",
+			"address.unit AS \"address.unit\"",
+			"site.created AS \"created\"",
+			"site.id AS \"id\"",
+			"site.notes AS \"notes\"",
+			"site.owner_name AS \"owner.name\"",
+			"site.owner_phone_e164 AS \"owner.phone\"",
+			"site.parcel_id AS \"parcel_id\"",
+		),
+		sm.From("site"),
+		sm.InnerJoin("address").OnEQ(
+			psql.Quote("site", "address_id"),
+			psql.Quote("address", "id"),
+		),
+		sm.Where(psql.Quote("site", "organization_id").EQ(psql.Arg(user.Organization.ID))),
+		sm.Limit(limit),
+	), scan.StructMapper[types.Site]())
+	if err != nil {
+		return nil, fmt.Errorf("query sites: %w", err)
+	}
+	results := make([]*types.Site, len(rows))
+	for i, row := range rows {
+		results[i] = &row
+	}
+	return results, nil
+}
 func siteFromAddress(ctx context.Context, txn bob.Tx, user User, address_id int32) (*models.Site, error) {
 	site, err := models.Sites.Query(
 		models.SelectWhere.Sites.AddressID.EQ(address_id),
