@@ -11,7 +11,7 @@ import (
 )
 
 func ImageFileFromReader(collection Collection, uid uuid.UUID, body io.Reader) error {
-	filepath := fileContentPath(collection, uid)
+	filepath := fileContentPathUUID(collection, uid)
 
 	// Create file in configured directory
 	dst, err := os.Create(filepath)
@@ -29,6 +29,6 @@ func ImageFileFromReader(collection Collection, uid uuid.UUID, body io.Reader) e
 	return nil
 }
 func ImageFileToWriter(collection Collection, uid uuid.UUID, w http.ResponseWriter) {
-	image_path := fileContentPath(collection, uid)
+	image_path := fileContentPathUUID(collection, uid)
 	writeFileContent(w, image_path)
 }

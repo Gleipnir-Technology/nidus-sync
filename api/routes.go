@@ -25,6 +25,8 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/communication", authenticatedHandlerJSON(communication.List)).Methods("GET")
 	compliance_request := resource.ComplianceRequest(router)
 	r.Handle("/compliance-request/mailer", authenticatedHandlerJSONPost(compliance_request.CreateMailer)).Methods("POST")
+	r.HandleFunc("/compliance-request/image/pool/{public_id}", compliance_request.ImagePoolGet).Methods("GET")
+	//r.HandleFunc("/compliance-request/image/pool/{public_id}", getComplianceRequestImagePool).Methods("GET")
 	r.Handle("/configuration/integration/arcgis", authenticatedHandlerJSONPost(postConfigurationIntegrationArcgis)).Methods("POST")
 	r.Handle("/events", auth.NewEnsureAuth(streamEvents)).Methods("GET")
 	r.Handle("/image/{uuid}", auth.NewEnsureAuth(apiImagePost)).Methods("POST")
@@ -101,7 +103,6 @@ func AddRoutes(r *mux.Router) {
 
 	//r.HandleFunc("/district", apiGetDistrict).Methods("GET")
 	r.HandleFunc("/district/{slug}/logo", apiGetDistrictLogo).Methods("GET").Name("district.logo.BySlug")
-	r.HandleFunc("/compliance-request/image/pool/{public_id}", getComplianceRequestImagePool).Methods("GET")
 	r.HandleFunc("/twilio/call", twilioCallPost).Methods("POST")
 	r.HandleFunc("/twilio/call/status", twilioCallStatusPost).Methods("POST")
 	r.HandleFunc("/twilio/message", twilioMessagePost).Methods("POST")

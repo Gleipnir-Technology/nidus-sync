@@ -33,8 +33,34 @@ var ComplianceReportRequestMailers = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ID: column{
+			Name:      "id",
+			DBType:    "integer",
+			Default:   "nextval('compliance_report_request_mailer_id_seq'::regclass)",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: complianceReportRequestMailerIndexes{
+		ComplianceReportRequestMailerPkey: index{
+			Type: "btree",
+			Name: "compliance_report_request_mailer_pkey",
+			Columns: []indexColumn{
+				{
+					Name:         "id",
+					Desc:         null.FromCond(false, true),
+					IsExpression: false,
+				},
+			},
+			Unique:        true,
+			Comment:       "",
+			NullsFirst:    []bool{false},
+			NullsDistinct: false,
+			Where:         "",
+			Include:       []string{},
+		},
 		ComplianceReportRequestMaiComplianceReportRequestIDKey: index{
 			Type: "btree",
 			Name: "compliance_report_request_mai_compliance_report_request_id__key",
@@ -58,7 +84,11 @@ var ComplianceReportRequestMailers = Table[
 			Include:       []string{},
 		},
 	},
-
+	PrimaryKey: &constraint{
+		Name:    "compliance_report_request_mailer_pkey",
+		Columns: []string{"id"},
+		Comment: "",
+	},
 	ForeignKeys: complianceReportRequestMailerForeignKeys{
 		ComplianceReportRequestMailerComplianceReportRequestMaiComplianceReportRequestIDFkey: foreignKey{
 			constraint: constraint{
@@ -93,21 +123,23 @@ var ComplianceReportRequestMailers = Table[
 type complianceReportRequestMailerColumns struct {
 	ComplianceReportRequestID column
 	MailerID                  column
+	ID                        column
 }
 
 func (c complianceReportRequestMailerColumns) AsSlice() []column {
 	return []column{
-		c.ComplianceReportRequestID, c.MailerID,
+		c.ComplianceReportRequestID, c.MailerID, c.ID,
 	}
 }
 
 type complianceReportRequestMailerIndexes struct {
+	ComplianceReportRequestMailerPkey                      index
 	ComplianceReportRequestMaiComplianceReportRequestIDKey index
 }
 
 func (i complianceReportRequestMailerIndexes) AsSlice() []index {
 	return []index{
-		i.ComplianceReportRequestMaiComplianceReportRequestIDKey,
+		i.ComplianceReportRequestMailerPkey, i.ComplianceReportRequestMaiComplianceReportRequestIDKey,
 	}
 }
 

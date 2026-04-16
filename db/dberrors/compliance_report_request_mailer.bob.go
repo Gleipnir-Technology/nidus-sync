@@ -4,6 +4,13 @@
 package dberrors
 
 var ComplianceReportRequestMailerErrors = &complianceReportRequestMailerErrors{
+	ErrUniqueComplianceReportRequestMailerPkey: &UniqueConstraintError{
+		schema:  "",
+		table:   "compliance_report_request_mailer",
+		columns: []string{"id"},
+		s:       "compliance_report_request_mailer_pkey",
+	},
+
 	ErrUniqueComplianceReportRequestMaiComplianceReportRequestId_Key: &UniqueConstraintError{
 		schema:  "",
 		table:   "compliance_report_request_mailer",
@@ -13,5 +20,7 @@ var ComplianceReportRequestMailerErrors = &complianceReportRequestMailerErrors{
 }
 
 type complianceReportRequestMailerErrors struct {
+	ErrUniqueComplianceReportRequestMailerPkey *UniqueConstraintError
+
 	ErrUniqueComplianceReportRequestMaiComplianceReportRequestId_Key *UniqueConstraintError
 }

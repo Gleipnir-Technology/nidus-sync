@@ -10,5 +10,6 @@ const (
 	CollectionCSV
 	CollectionImageRaw
 	CollectionLogo
+	CollectionMailerPDF
 	CollectionPublicImage
 )

@@ -28,76 +28,19 @@ import (
 var emptyTileFS embed.FS
 
 func GetTile(ctx context.Context, w http.ResponseWriter, org Organization, z, y, x uint) error {
-	if org.model.ArcgisMapServiceID.IsNull() {
-		return fmt.Errorf("no map service ID set")
-	}
-	map_service_id := org.model.ArcgisMapServiceID.MustGet()
-	tile_path := tilePath(map_service_id, z, y, x)
-	tile_row, err := models.TileCachedImages.Query(
-		models.SelectWhere.TileCachedImages.ArcgisID.EQ(map_service_id),
-		models.SelectWhere.TileCachedImages.X.EQ(int32(x)),
-		models.SelectWhere.TileCachedImages.Y.EQ(int32(y)),
-		models.SelectWhere.TileCachedImages.Z.EQ(int32(z)),
-	).One(ctx, db.PGInstance.BobDB)
-	if err == nil {
-		var tile *TileRaster
-		if tile_row.IsEmpty {
-			tile = TileRasterPlaceholder()
-		} else {
-			tile, err = loadTileFromDisk(tile_path)
-			if err != nil {
-				return fmt.Errorf("load tile from disk: %w", err)
-			}
-		}
-		log.Debug().Uint("z", z).Uint("y", y).Uint("x", x).Bool("is empty", tile_row.IsEmpty).Msg("tile from cache")
-		return writeTile(w, tile)
-	}
-	if err.Error() != "sql: no rows in result set" {
-		return fmt.Errorf("query db: %w", err)
-	}
-	image, err := ImageAtTile(ctx, org.model, uint(z), uint(y), uint(x))
-	if err != nil {
-		return fmt.Errorf("image at tile: %w", err)
-	}
-	if !image.IsPlaceholder {
-		err = saveTileToDisk(image, tile_path)
-		if err != nil {
-			return fmt.Errorf("save tile: %w", err)
-		}
-	}
-	_, err = models.TileCachedImages.Insert(&models.TileCachedImageSetter{
-		ArcgisID: omit.From(map_service_id),
-		X:        omit.From(int32(x)),
-		Y:        omit.From(int32(y)),
-		Z:        omit.From(int32(z)),
-		IsEmpty:  omit.From(image.IsPlaceholder),
-	}).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return fmt.Errorf("save to db: %w", err)
-	}
-	log.Debug().Uint("z", z).Uint("y", y).Uint("x", x).Bool("placeholder", image.IsPlaceholder).Msg("caching tile")
-	return writeTile(w, image)
+	return getTile(ctx, w, org.model, z, y, x)
 }
 func ImageAtPoint(ctx context.Context, org Organization, level uint, lat, lng float64) (*TileRaster, error) {
-	fssync, err := getFieldseeker(ctx, org.model)
+	return imageAtPoint(ctx, org.model, level, lat, lng)
+}
+
+func WriteTile(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, lat, lng float64) error {
+	image, err := imageAtPoint(ctx, org, level, lat, lng)
 	if err != nil {
-		return nil, fmt.Errorf("create fssync: %w", err)
+		return fmt.Errorf("image at point: %w", err)
 	}
-	map_service, err := aerialImageService(ctx, fssync.Arcgis)
-	if err != nil {
-		return nil, fmt.Errorf("no map service: %w", err)
-	}
-	data, e := map_service.TileGPS(ctx, level, lat, lng)
-	if e != nil {
-		return nil, fmt.Errorf("tilegps: %w", e)
-	}
-	if len(data) == 0 {
-		return TileRasterPlaceholder(), nil
-	}
-	return &TileRaster{
-		Content:       data,
-		IsPlaceholder: false,
-	}, nil
+	writeTile(w, image)
+	return nil
 }
 
 // Writes a random tile from the cache. This is a very odd thing to do, it's for testing
@@ -122,6 +65,78 @@ func WriteTileRandom(ctx context.Context, w http.ResponseWriter) error {
 	}
 	log.Debug().Int32("z", tile_row.Z).Int32("y", tile_row.Y).Int32("x", tile_row.X).Bool("is empty", tile_row.IsEmpty).Msg("random tile")
 	return writeTile(w, tile)
+}
+func getTile(ctx context.Context, w http.ResponseWriter, org *models.Organization, z, y, x uint) error {
+	if org.ArcgisMapServiceID.IsNull() {
+		return fmt.Errorf("no map service ID set")
+	}
+	map_service_id := org.ArcgisMapServiceID.MustGet()
+	tile_path := tilePath(map_service_id, z, y, x)
+	tile_row, err := models.TileCachedImages.Query(
+		models.SelectWhere.TileCachedImages.ArcgisID.EQ(map_service_id),
+		models.SelectWhere.TileCachedImages.X.EQ(int32(x)),
+		models.SelectWhere.TileCachedImages.Y.EQ(int32(y)),
+		models.SelectWhere.TileCachedImages.Z.EQ(int32(z)),
+	).One(ctx, db.PGInstance.BobDB)
+	if err == nil {
+		var tile *TileRaster
+		if tile_row.IsEmpty {
+			tile = TileRasterPlaceholder()
+		} else {
+			tile, err = loadTileFromDisk(tile_path)
+			if err != nil {
+				return fmt.Errorf("load tile from disk: %w", err)
+			}
+		}
+		log.Debug().Uint("z", z).Uint("y", y).Uint("x", x).Bool("is empty", tile_row.IsEmpty).Msg("tile from cache")
+		return writeTile(w, tile)
+	}
+	if err.Error() != "sql: no rows in result set" {
+		return fmt.Errorf("query db: %w", err)
+	}
+	image, err := ImageAtTile(ctx, org, uint(z), uint(y), uint(x))
+	if err != nil {
+		return fmt.Errorf("image at tile: %w", err)
+	}
+	if !image.IsPlaceholder {
+		err = saveTileToDisk(image, tile_path)
+		if err != nil {
+			return fmt.Errorf("save tile: %w", err)
+		}
+	}
+	_, err = models.TileCachedImages.Insert(&models.TileCachedImageSetter{
+		ArcgisID: omit.From(map_service_id),
+		X:        omit.From(int32(x)),
+		Y:        omit.From(int32(y)),
+		Z:        omit.From(int32(z)),
+		IsEmpty:  omit.From(image.IsPlaceholder),
+	}).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("save to db: %w", err)
+	}
+	log.Debug().Uint("z", z).Uint("y", y).Uint("x", x).Bool("placeholder", image.IsPlaceholder).Msg("caching tile")
+	return writeTile(w, image)
+}
+func imageAtPoint(ctx context.Context, org *models.Organization, level uint, lat, lng float64) (*TileRaster, error) {
+	fssync, err := getFieldseeker(ctx, org)
+	if err != nil {
+		return nil, fmt.Errorf("create fssync: %w", err)
+	}
+	map_service, err := aerialImageService(ctx, fssync.Arcgis)
+	if err != nil {
+		return nil, fmt.Errorf("no map service: %w", err)
+	}
+	data, e := map_service.TileGPS(ctx, level, lat, lng)
+	if e != nil {
+		return nil, fmt.Errorf("tilegps: %w", e)
+	}
+	if len(data) == 0 {
+		return TileRasterPlaceholder(), nil
+	}
+	return &TileRaster{
+		Content:       data,
+		IsPlaceholder: false,
+	}, nil
 }
 func loadTileFromDisk(tile_path string) (*TileRaster, error) {
 	file, err := os.Open(tile_path)

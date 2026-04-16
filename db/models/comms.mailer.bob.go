@@ -20,16 +20,16 @@ import (
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/aarondl/opt/omit"
 	"github.com/google/uuid"
-	"github.com/stephenafamo/scan"
 )
 
 // CommsMailer is an object representing the database table.
 type CommsMailer struct {
-	AddressID int32     `db:"address_id" `
-	Created   time.Time `db:"created" `
-	ID        int32     `db:"id,pk" `
-	Recipient string    `db:"recipient" `
-	UUID      uuid.UUID `db:"uuid" `
+	AddressID  int32     `db:"address_id" `
+	Created    time.Time `db:"created" `
+	ID         int32     `db:"id,pk" `
+	Recipient  string    `db:"recipient" `
+	UUID       uuid.UUID `db:"uuid" `
+	ExternalID string    `db:"external_id" `
 
 	R commsMailerR `db:"-" `
 }
@@ -46,14 +46,14 @@ type CommsMailersQuery = *psql.ViewQuery[*CommsMailer, CommsMailerSlice]
 
 // commsMailerR is where relationships are stored.
 type commsMailerR struct {
-	Address                  *Address                     // comms.mailer.mailer_address_id_fkey
-	ComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request_mailer.compliance_report_request_mai_compliance_report_request_id_fkeycompliance_report_request_mailer.compliance_report_request_mailer_mailer_id_fkey
+	Address                        *Address                           // comms.mailer.mailer_address_id_fkey
+	ComplianceReportRequestMailers ComplianceReportRequestMailerSlice // compliance_report_request_mailer.compliance_report_request_mailer_mailer_id_fkey
 }
 
 func buildCommsMailerColumns(alias string) commsMailerColumns {
 	return commsMailerColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_id", "created", "id", "recipient", "uuid",
+			"address_id", "created", "id", "recipient", "uuid", "external_id",
 		).WithParent("comms.mailer"),
 		tableAlias: alias,
 		AddressID:  psql.Quote(alias, "address_id"),
@@ -61,6 +61,7 @@ func buildCommsMailerColumns(alias string) commsMailerColumns {
 		ID:         psql.Quote(alias, "id"),
 		Recipient:  psql.Quote(alias, "recipient"),
 		UUID:       psql.Quote(alias, "uuid"),
+		ExternalID: psql.Quote(alias, "external_id"),
 	}
 }
 
@@ -72,6 +73,7 @@ type commsMailerColumns struct {
 	ID         psql.Expression
 	Recipient  psql.Expression
 	UUID       psql.Expression
+	ExternalID psql.Expression
 }
 
 func (c commsMailerColumns) Alias() string {
@@ -86,15 +88,16 @@ func (commsMailerColumns) AliasedAs(alias string) commsMailerColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type CommsMailerSetter struct {
-	AddressID omit.Val[int32]     `db:"address_id" `
-	Created   omit.Val[time.Time] `db:"created" `
-	ID        omit.Val[int32]     `db:"id,pk" `
-	Recipient omit.Val[string]    `db:"recipient" `
-	UUID      omit.Val[uuid.UUID] `db:"uuid" `
+	AddressID  omit.Val[int32]     `db:"address_id" `
+	Created    omit.Val[time.Time] `db:"created" `
+	ID         omit.Val[int32]     `db:"id,pk" `
+	Recipient  omit.Val[string]    `db:"recipient" `
+	UUID       omit.Val[uuid.UUID] `db:"uuid" `
+	ExternalID omit.Val[string]    `db:"external_id" `
 }
 
 func (s CommsMailerSetter) SetColumns() []string {
-	vals := make([]string, 0, 5)
+	vals := make([]string, 0, 6)
 	if s.AddressID.IsValue() {
 		vals = append(vals, "address_id")
 	}
@@ -109,6 +112,9 @@ func (s CommsMailerSetter) SetColumns() []string {
 	}
 	if s.UUID.IsValue() {
 		vals = append(vals, "uuid")
+	}
+	if s.ExternalID.IsValue() {
+		vals = append(vals, "external_id")
 	}
 	return vals
 }
@@ -129,6 +135,9 @@ func (s CommsMailerSetter) Overwrite(t *CommsMailer) {
 	if s.UUID.IsValue() {
 		t.UUID = s.UUID.MustGet()
 	}
+	if s.ExternalID.IsValue() {
+		t.ExternalID = s.ExternalID.MustGet()
+	}
 }
 
 func (s *CommsMailerSetter) Apply(q *dialect.InsertQuery) {
@@ -137,7 +146,7 @@ func (s *CommsMailerSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 5)
+		vals := make([]bob.Expression, 6)
 		if s.AddressID.IsValue() {
 			vals[0] = psql.Arg(s.AddressID.MustGet())
 		} else {
@@ -168,6 +177,12 @@ func (s *CommsMailerSetter) Apply(q *dialect.InsertQuery) {
 			vals[4] = psql.Raw("DEFAULT")
 		}
 
+		if s.ExternalID.IsValue() {
+			vals[5] = psql.Arg(s.ExternalID.MustGet())
+		} else {
+			vals[5] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -177,7 +192,7 @@ func (s CommsMailerSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommsMailerSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 5)
+	exprs := make([]bob.Expression, 0, 6)
 
 	if s.AddressID.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -211,6 +226,13 @@ func (s CommsMailerSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "uuid")...),
 			psql.Arg(s.UUID),
+		}})
+	}
+
+	if s.ExternalID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "external_id")...),
+			psql.Arg(s.ExternalID),
 		}})
 	}
 
@@ -464,16 +486,14 @@ func (os CommsMailerSlice) Address(mods ...bob.Mod[*dialect.SelectQuery]) Addres
 	)...)
 }
 
-// ComplianceReportRequests starts a query for related objects on compliance_report_request
-func (o *CommsMailer) ComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
-	return ComplianceReportRequests.Query(append(mods,
-		sm.InnerJoin(ComplianceReportRequestMailers.NameAs()).On(
-			ComplianceReportRequests.Columns.ID.EQ(ComplianceReportRequestMailers.Columns.ComplianceReportRequestID)),
+// ComplianceReportRequestMailers starts a query for related objects on compliance_report_request_mailer
+func (o *CommsMailer) ComplianceReportRequestMailers(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestMailersQuery {
+	return ComplianceReportRequestMailers.Query(append(mods,
 		sm.Where(ComplianceReportRequestMailers.Columns.MailerID.EQ(psql.Arg(o.ID))),
 	)...)
 }
 
-func (os CommsMailerSlice) ComplianceReportRequests(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestsQuery {
+func (os CommsMailerSlice) ComplianceReportRequestMailers(mods ...bob.Mod[*dialect.SelectQuery]) ComplianceReportRequestMailersQuery {
 	pkID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
@@ -485,10 +505,7 @@ func (os CommsMailerSlice) ComplianceReportRequests(mods ...bob.Mod[*dialect.Sel
 		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
 	))
 
-	return ComplianceReportRequests.Query(append(mods,
-		sm.InnerJoin(ComplianceReportRequestMailers.NameAs()).On(
-			ComplianceReportRequests.Columns.ID.EQ(ComplianceReportRequestMailers.Columns.ComplianceReportRequestID),
-		),
+	return ComplianceReportRequestMailers.Query(append(mods,
 		sm.Where(psql.Group(ComplianceReportRequestMailers.Columns.MailerID).OP("IN", PKArgExpr)),
 	)...)
 }
@@ -541,12 +558,81 @@ func (commsMailer0 *CommsMailer) AttachAddress(ctx context.Context, exec bob.Exe
 	return nil
 }
 
+func insertCommsMailerComplianceReportRequestMailers0(ctx context.Context, exec bob.Executor, complianceReportRequestMailers1 []*ComplianceReportRequestMailerSetter, commsMailer0 *CommsMailer) (ComplianceReportRequestMailerSlice, error) {
+	for i := range complianceReportRequestMailers1 {
+		complianceReportRequestMailers1[i].MailerID = omit.From(commsMailer0.ID)
+	}
+
+	ret, err := ComplianceReportRequestMailers.Insert(bob.ToMods(complianceReportRequestMailers1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsMailerComplianceReportRequestMailers0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsMailerComplianceReportRequestMailers0(ctx context.Context, exec bob.Executor, count int, complianceReportRequestMailers1 ComplianceReportRequestMailerSlice, commsMailer0 *CommsMailer) (ComplianceReportRequestMailerSlice, error) {
+	setter := &ComplianceReportRequestMailerSetter{
+		MailerID: omit.From(commsMailer0.ID),
+	}
+
+	err := complianceReportRequestMailers1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsMailerComplianceReportRequestMailers0: %w", err)
+	}
+
+	return complianceReportRequestMailers1, nil
+}
+
+func (commsMailer0 *CommsMailer) InsertComplianceReportRequestMailers(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequestMailerSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	complianceReportRequestMailers1, err := insertCommsMailerComplianceReportRequestMailers0(ctx, exec, related, commsMailer0)
+	if err != nil {
+		return err
+	}
+
+	commsMailer0.R.ComplianceReportRequestMailers = append(commsMailer0.R.ComplianceReportRequestMailers, complianceReportRequestMailers1...)
+
+	for _, rel := range complianceReportRequestMailers1 {
+		rel.R.Mailer = commsMailer0
+	}
+	return nil
+}
+
+func (commsMailer0 *CommsMailer) AttachComplianceReportRequestMailers(ctx context.Context, exec bob.Executor, related ...*ComplianceReportRequestMailer) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	complianceReportRequestMailers1 := ComplianceReportRequestMailerSlice(related)
+
+	_, err = attachCommsMailerComplianceReportRequestMailers0(ctx, exec, len(related), complianceReportRequestMailers1, commsMailer0)
+	if err != nil {
+		return err
+	}
+
+	commsMailer0.R.ComplianceReportRequestMailers = append(commsMailer0.R.ComplianceReportRequestMailers, complianceReportRequestMailers1...)
+
+	for _, rel := range related {
+		rel.R.Mailer = commsMailer0
+	}
+
+	return nil
+}
+
 type commsMailerWhere[Q psql.Filterable] struct {
-	AddressID psql.WhereMod[Q, int32]
-	Created   psql.WhereMod[Q, time.Time]
-	ID        psql.WhereMod[Q, int32]
-	Recipient psql.WhereMod[Q, string]
-	UUID      psql.WhereMod[Q, uuid.UUID]
+	AddressID  psql.WhereMod[Q, int32]
+	Created    psql.WhereMod[Q, time.Time]
+	ID         psql.WhereMod[Q, int32]
+	Recipient  psql.WhereMod[Q, string]
+	UUID       psql.WhereMod[Q, uuid.UUID]
+	ExternalID psql.WhereMod[Q, string]
 }
 
 func (commsMailerWhere[Q]) AliasedAs(alias string) commsMailerWhere[Q] {
@@ -555,11 +641,12 @@ func (commsMailerWhere[Q]) AliasedAs(alias string) commsMailerWhere[Q] {
 
 func buildCommsMailerWhere[Q psql.Filterable](cols commsMailerColumns) commsMailerWhere[Q] {
 	return commsMailerWhere[Q]{
-		AddressID: psql.Where[Q, int32](cols.AddressID),
-		Created:   psql.Where[Q, time.Time](cols.Created),
-		ID:        psql.Where[Q, int32](cols.ID),
-		Recipient: psql.Where[Q, string](cols.Recipient),
-		UUID:      psql.Where[Q, uuid.UUID](cols.UUID),
+		AddressID:  psql.Where[Q, int32](cols.AddressID),
+		Created:    psql.Where[Q, time.Time](cols.Created),
+		ID:         psql.Where[Q, int32](cols.ID),
+		Recipient:  psql.Where[Q, string](cols.Recipient),
+		UUID:       psql.Where[Q, uuid.UUID](cols.UUID),
+		ExternalID: psql.Where[Q, string](cols.ExternalID),
 	}
 }
 
@@ -581,17 +668,17 @@ func (o *CommsMailer) Preload(name string, retrieved any) error {
 			rel.R.Mailers = CommsMailerSlice{o}
 		}
 		return nil
-	case "ComplianceReportRequests":
-		rels, ok := retrieved.(ComplianceReportRequestSlice)
+	case "ComplianceReportRequestMailers":
+		rels, ok := retrieved.(ComplianceReportRequestMailerSlice)
 		if !ok {
 			return fmt.Errorf("commsMailer cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.ComplianceReportRequests = rels
+		o.R.ComplianceReportRequestMailers = rels
 
 		for _, rel := range rels {
 			if rel != nil {
-				rel.R.Mailers = CommsMailerSlice{o}
+				rel.R.Mailer = o
 			}
 		}
 		return nil
@@ -623,16 +710,16 @@ func buildCommsMailerPreloader() commsMailerPreloader {
 }
 
 type commsMailerThenLoader[Q orm.Loadable] struct {
-	Address                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Address                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ComplianceReportRequestMailers func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsMailerThenLoader[Q orm.Loadable]() commsMailerThenLoader[Q] {
 	type AddressLoadInterface interface {
 		LoadAddress(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type ComplianceReportRequestsLoadInterface interface {
-		LoadComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ComplianceReportRequestMailersLoadInterface interface {
+		LoadComplianceReportRequestMailers(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return commsMailerThenLoader[Q]{
@@ -642,10 +729,10 @@ func buildCommsMailerThenLoader[Q orm.Loadable]() commsMailerThenLoader[Q] {
 				return retrieved.LoadAddress(ctx, exec, mods...)
 			},
 		),
-		ComplianceReportRequests: thenLoadBuilder[Q](
-			"ComplianceReportRequests",
-			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadComplianceReportRequests(ctx, exec, mods...)
+		ComplianceReportRequestMailers: thenLoadBuilder[Q](
+			"ComplianceReportRequestMailers",
+			func(ctx context.Context, exec bob.Executor, retrieved ComplianceReportRequestMailersLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadComplianceReportRequestMailers(ctx, exec, mods...)
 			},
 		),
 	}
@@ -703,81 +790,61 @@ func (os CommsMailerSlice) LoadAddress(ctx context.Context, exec bob.Executor, m
 	return nil
 }
 
-// LoadComplianceReportRequests loads the commsMailer's ComplianceReportRequests into the .R struct
-func (o *CommsMailer) LoadComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadComplianceReportRequestMailers loads the commsMailer's ComplianceReportRequestMailers into the .R struct
+func (o *CommsMailer) LoadComplianceReportRequestMailers(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.ComplianceReportRequests = nil
+	o.R.ComplianceReportRequestMailers = nil
 
-	related, err := o.ComplianceReportRequests(mods...).All(ctx, exec)
+	related, err := o.ComplianceReportRequestMailers(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	for _, rel := range related {
-		rel.R.Mailers = CommsMailerSlice{o}
+		rel.R.Mailer = o
 	}
 
-	o.R.ComplianceReportRequests = related
+	o.R.ComplianceReportRequestMailers = related
 	return nil
 }
 
-// LoadComplianceReportRequests loads the commsMailer's ComplianceReportRequests into the .R struct
-func (os CommsMailerSlice) LoadComplianceReportRequests(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadComplianceReportRequestMailers loads the commsMailer's ComplianceReportRequestMailers into the .R struct
+func (os CommsMailerSlice) LoadComplianceReportRequestMailers(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	// since we are changing the columns, we need to check if the original columns were set or add the defaults
-	sq := dialect.SelectQuery{}
-	for _, mod := range mods {
-		mod.Apply(&sq)
-	}
-
-	if len(sq.SelectList.Columns) == 0 {
-		mods = append(mods, sm.Columns(ComplianceReportRequests.Columns))
-	}
-
-	q := os.ComplianceReportRequests(append(
-		mods,
-		sm.Columns(ComplianceReportRequestMailers.Columns.MailerID.As("related_comms.mailer.ID")),
-	)...)
-
-	IDSlice := []int32{}
-
-	mapper := scan.Mod(scan.StructMapper[*ComplianceReportRequest](), func(ctx context.Context, cols []string) (scan.BeforeFunc, func(any, any) error) {
-		return func(row *scan.Row) (any, error) {
-				IDSlice = append(IDSlice, *new(int32))
-				row.ScheduleScanByName("related_comms.mailer.ID", &IDSlice[len(IDSlice)-1])
-
-				return nil, nil
-			},
-			func(any, any) error {
-				return nil
-			}
-	})
-
-	complianceReportRequests, err := bob.Allx[bob.SliceTransformer[*ComplianceReportRequest, ComplianceReportRequestSlice]](ctx, exec, q, mapper)
+	complianceReportRequestMailers, err := os.ComplianceReportRequestMailers(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
 
 	for _, o := range os {
-		o.R.ComplianceReportRequests = nil
+		if o == nil {
+			continue
+		}
+
+		o.R.ComplianceReportRequestMailers = nil
 	}
 
 	for _, o := range os {
-		for i, rel := range complianceReportRequests {
-			if !(o.ID == IDSlice[i]) {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range complianceReportRequestMailers {
+
+			if !(o.ID == rel.MailerID) {
 				continue
 			}
 
-			rel.R.Mailers = append(rel.R.Mailers, o)
+			rel.R.Mailer = o
 
-			o.R.ComplianceReportRequests = append(o.R.ComplianceReportRequests, rel)
+			o.R.ComplianceReportRequestMailers = append(o.R.ComplianceReportRequestMailers, rel)
 		}
 	}
 

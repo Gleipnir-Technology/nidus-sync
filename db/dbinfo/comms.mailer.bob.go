@@ -60,6 +60,15 @@ var CommsMailers = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ExternalID: column{
+			Name:      "external_id",
+			DBType:    "text",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: commsMailerIndexes{
 		MailerPkey: index{
@@ -101,16 +110,17 @@ var CommsMailers = Table[
 }
 
 type commsMailerColumns struct {
-	AddressID column
-	Created   column
-	ID        column
-	Recipient column
-	UUID      column
+	AddressID  column
+	Created    column
+	ID         column
+	Recipient  column
+	UUID       column
+	ExternalID column
 }
 
 func (c commsMailerColumns) AsSlice() []column {
 	return []column{
-		c.AddressID, c.Created, c.ID, c.Recipient, c.UUID,
+		c.AddressID, c.Created, c.ID, c.Recipient, c.UUID, c.ExternalID,
 	}
 }
 

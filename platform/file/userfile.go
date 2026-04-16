@@ -27,7 +27,7 @@ func CreateDirectories() error {
 }
 func FileContentWrite(body io.Reader, collection Collection, uid uuid.UUID) error {
 	// Create file in configured directory
-	filepath := fileContentPath(collection, uid)
+	filepath := fileContentPathUUID(collection, uid)
 	dst, err := os.Create(filepath)
 	if err != nil {
 		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create upload file")
@@ -45,6 +45,6 @@ func FileContentWrite(body io.Reader, collection Collection, uid uuid.UUID) erro
 }
 
 func NewFileReader(collection Collection, uid uuid.UUID) (io.Reader, error) {
-	path := fileContentPath(collection, uid)
+	path := fileContentPathUUID(collection, uid)
 	return os.Open(path)
 }

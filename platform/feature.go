@@ -15,6 +15,14 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
+func FeaturesForSite(ctx context.Context, site_id int32) ([]types.Feature, error) {
+	features, err := featuresBySiteID(ctx, []int32{site_id})
+	if err != nil {
+		return nil, fmt.Errorf("features by site ID: %w", err)
+	}
+	return features[site_id], nil
+}
+
 func featuresBySiteID(ctx context.Context, site_ids []int32) (map[int32][]types.Feature, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
@@ -30,7 +38,7 @@ func featuresBySiteID(ctx context.Context, site_ids []int32) (map[int32][]types.
 			psql.Quote("feature_pool", "feature_id"),
 		),
 		sm.Where(
-			models.Features.Columns.ID.EQ(psql.Any(site_ids)),
+			models.Features.Columns.SiteID.EQ(psql.Any(site_ids)),
 		),
 	), scan.StructMapper[types.Feature]())
 	if err != nil {

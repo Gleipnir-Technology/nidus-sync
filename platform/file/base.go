@@ -22,6 +22,7 @@ var collectionToExtension map[Collection]string = map[Collection]string{
 	CollectionAvatar:          "png",
 	CollectionCSV:             "csv",
 	CollectionLogo:            "png",
+	CollectionMailerPDF:       "pdf",
 	CollectionPublicImage:     "img",
 	CollectionImageRaw:        "raw",
 }
@@ -32,20 +33,34 @@ var collectionToSubdir map[Collection]string = map[Collection]string{
 	CollectionAvatar:          "avatar",
 	CollectionCSV:             "csv",
 	CollectionLogo:            "logo",
+	CollectionMailerPDF:       "mailer",
 	CollectionPublicImage:     "public-image",
 	CollectionImageRaw:        "image-raw",
 }
 
-func ContentPath(collection Collection, uid uuid.UUID) string {
-	return fileContentPath(collection, uid)
+func ContentPath(collection Collection, id string) string {
+	return fileContentPath(collection, id)
 }
-func fileContentPath(collection Collection, uid uuid.UUID) string {
+func ContentPathUUID(collection Collection, uid uuid.UUID) string {
+	return fileContentPathUUID(collection, uid)
+}
+func collectionName(collection Collection) string {
+	n, ok := collectionToSubdir[collection]
+	if !ok {
+		return "unknown"
+	}
+	return n
+}
+func fileContentPath(collection Collection, id string) string {
 	subdir, ok := collectionToSubdir[collection]
 	if !ok {
 		panic(fmt.Sprintf("No subdir for collection %d", int(collection)))
 	}
 	extension, ok := collectionToExtension[collection]
-	return fmt.Sprintf("%s/%s/%s.%s", config.FilesDirectory, subdir, uid.String(), extension)
+	return fmt.Sprintf("%s/%s/%s.%s", config.FilesDirectory, subdir, id, extension)
+}
+func fileContentPathUUID(collection Collection, uid uuid.UUID) string {
+	return fileContentPath(collection, uid.String())
 }
 
 /*

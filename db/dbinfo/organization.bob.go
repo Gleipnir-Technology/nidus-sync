@@ -321,6 +321,15 @@ var Organizations = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		LobAddressID: column{
+			Name:      "lob_address_id",
+			DBType:    "text",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: organizationIndexes{
 		OrganizationPkey: index{
@@ -486,11 +495,12 @@ type organizationColumns struct {
 	FieldseekerServiceFeatureItemID column
 	ArcgisMapServiceID              column
 	IsCatchall                      column
+	LobAddressID                    column
 }
 
 func (c organizationColumns) AsSlice() []column {
 	return []column{
-		c.ID, c.Name, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY, c.MailingAddressCountry, c.MailingAddressState, c.OfficeAddressCountry, c.OfficeAddressState, c.ArcgisAccountID, c.FieldseekerServiceFeatureItemID, c.ArcgisMapServiceID, c.IsCatchall,
+		c.ID, c.Name, c.ImportDistrictGid, c.Website, c.LogoUUID, c.Slug, c.GeneralManagerName, c.MailingAddressCity, c.MailingAddressPostalCode, c.MailingAddressStreet, c.OfficeAddressCity, c.OfficeAddressPostalCode, c.OfficeAddressStreet, c.ServiceAreaGeometry, c.ServiceAreaSquareMeters, c.ServiceAreaCentroid, c.ServiceAreaExtent, c.OfficeFax, c.OfficePhone, c.ServiceAreaXmin, c.ServiceAreaYmin, c.ServiceAreaXmax, c.ServiceAreaYmax, c.ServiceAreaCentroidGeojson, c.ServiceAreaCentroidX, c.ServiceAreaCentroidY, c.MailingAddressCountry, c.MailingAddressState, c.OfficeAddressCountry, c.OfficeAddressState, c.ArcgisAccountID, c.FieldseekerServiceFeatureItemID, c.ArcgisMapServiceID, c.IsCatchall, c.LobAddressID,
 	}
 }
 
