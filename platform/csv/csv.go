@@ -62,12 +62,17 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 	}
 	for _, row := range rows {
 		var a *types.Address
+		var parcel *models.Parcel
 		if row.AddressID.IsValue() {
 			var ok bool
 			a, ok = addresses[row.AddressID.MustGet()]
 			if !ok {
 				log.Error().Int32("id", row.AddressID.MustGet()).Msg("address is missing")
 				continue
+			}
+			parcel, err = geocode.GetParcel(ctx, txn, *a)
+			if err != nil {
+				return fmt.Errorf("get parcel: %w", err)
 			}
 		} else {
 			a = &types.Address{
@@ -79,10 +84,6 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 				Street:     row.AddressStreet,
 				Unit:       "",
 			}
-		}
-		parcel, err := geocode.GetParcel(ctx, txn, *a)
-		if err != nil {
-			return fmt.Errorf("get parcel: %w", err)
 		}
 		var site *models.Site
 		site, err = models.Sites.Query(
