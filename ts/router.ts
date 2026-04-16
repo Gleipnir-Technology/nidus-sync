@@ -88,7 +88,9 @@ const routes: RouteRecordRaw[] = [
 		meta: { requiresAuth: true, showSidebar: true },
 		name: "Upload Detail",
 		path: "/_/configuration/upload/:id",
-		props: true,
+		props: (route) => ({
+			id: parseInt(route.params.id as string, 10),
+		}),
 	},
 	{
 		path: "/_/configuration/upload/pool",
