@@ -9,6 +9,7 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -39,34 +40,75 @@ type Signal struct {
 	Type      string              `db:"type" json:"type"`
 }
 
+type _rowWithID struct {
+	ID int32 `db:"id"`
+}
+
 func SignalCreateFromPool(ctx context.Context, txn bob.Executor, user User, site_id int32, feature_id int32, location types.Location) (*int32, error) {
-	setter := models.SignalSetter{
-		Addressed: omitnull.FromPtr[time.Time](nil),
-		Addressor: omitnull.FromPtr[int32](nil),
-		Created:   omit.From(time.Now()),
-		Creator:   omit.From(int32(user.ID)),
-		//ID
-		OrganizationID: omit.From(user.Organization.ID),
-		Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
-		Type:           omit.From(enums.SignaltypeFlyoverPool),
-		SiteID:         omitnull.From(site_id),
-		//Location:
-		//LocationType         null.Val[string]                `db:"location_type,generated" `
-		FeaturePoolFeatureID: omitnull.From(feature_id),
-		ReportID:             omitnull.FromPtr[int32](nil),
-	}
-	signal, err := models.Signals.Insert(&setter).One(ctx, db.PGInstance.BobDB)
+	/*
+		setter := models.SignalSetter{
+			Addressed: omitnull.FromPtr[time.Time](nil),
+			Addressor: omitnull.FromPtr[int32](nil),
+			Created:   omit.From(time.Now()),
+			Creator:   omit.From(int32(user.ID)),
+			//ID
+			OrganizationID: omit.From(user.Organization.ID),
+			Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
+			Type:           omit.From(enums.SignaltypeFlyoverPool),
+			SiteID:         omitnull.From(site_id),
+			Location: omit.From(""),
+			//Location:
+			//LocationType         null.Val[string]                `db:"location_type,generated" `
+			FeaturePoolFeatureID: omitnull.From(feature_id),
+			ReportID:             omitnull.FromPtr[int32](nil),
+		}
+		signal, err := models.Signals.Insert(&setter).One(ctx, db.PGInstance.BobDB)
+	*/
+	query := psql.Insert(
+		im.Into("signal",
+			"addressed",
+			"addressor",
+			"created",
+			"creator",
+			"feature_pool_feature_id",
+			"id",
+			"location",
+			"organization_id",
+			"report_id",
+			"site_id",
+			"species",
+			"type_",
+		),
+		im.Values(
+			psql.Raw("NULL"),
+			psql.Raw("NULL"),
+			psql.Arg(time.Now()),
+			psql.Arg(user.ID),
+			psql.Arg(feature_id),
+			psql.Raw("DEFAULT"),
+			psql.F("ST_Point", location.Longitude, location.Latitude, 4326),
+			psql.Arg(user.Organization.ID),
+			psql.Raw("NULL"),
+			psql.Arg(site_id),
+			psql.Raw("NULL"),
+			psql.Arg("flyover pool"),
+		),
+		im.Returning("id"),
+	)
+	row, err := bob.One(ctx, txn, query, scan.StructMapper[_rowWithID]())
 	if err != nil {
 		return nil, fmt.Errorf("insert signal: %w", err)
 	}
-	geom_query, _ := location.GeometryQuery()
-	_, err = psql.Update(
-		um.Table(models.Signals.Name()),
-		um.SetCol(models.Signals.Columns.Location.String()).To(geom_query),
-		um.Where(models.Signals.Columns.ID.EQ(psql.Arg(signal.ID))),
-	).Exec(ctx, txn)
+	/*
+		geom_query, _ := location.GeometryQuery()
+		_, err = psql.Update(
+			um.Table(models.Signals.Name()),
+			um.SetCol(models.Signals.Columns.Location.String()).To(geom_query),
+			um.Where(models.Signals.Columns.ID.EQ(psql.Arg(row.ID))),
+		).Exec(ctx, txn)
+	*/
 
-	return &signal.ID, nil
+	return &row.ID, nil
 }
 
 // Create a lead from the given signal and site
