@@ -253,10 +253,16 @@ func getFieldseeker(ctx context.Context, org *models.Organization) (*fieldseeker
 	if err != nil {
 		return nil, fmt.Errorf("get oauth for org: %w", err)
 	}
+	if oauth == nil {
+		return nil, fmt.Errorf("no live oauth for org %d", org.ID)
+	}
 	fssync, err = newFieldSeeker(
 		ctx,
 		oauth,
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create fieldseeker: %w", err)
+	}
 	clientByOrgID[org.ID] = fssync
 	return fssync, nil
 }
