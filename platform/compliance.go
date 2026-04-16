@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -84,6 +85,10 @@ func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32
 	req, err := models.ComplianceReportRequests.Insert(&setter).One(ctx, txn)
 	if err != nil {
 		return 0, fmt.Errorf("create compliance report request: %w", err)
+	}
+	err = background.NewComplianceMailer(ctx, txn, req.ID)
+	if err != nil {
+		return 0, fmt.Errorf("create background compliance mailer job: %w", err)
 	}
 	txn.Commit(ctx)
 	return req.ID, nil

@@ -19,6 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/mailer"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/jackc/pgx/v5"
 	//"github.com/Gleipnir-Technology/nidus-sync/userfile"
@@ -108,6 +109,8 @@ func handleJob(ctx context.Context, txn bob.Executor, job *models.Job) error {
 	switch job.Type {
 	case enums.JobtypeAudioTranscode:
 		return processAudioFile(ctx, txn, job.RowID)
+	case enums.JobtypeComplianceMailerSend:
+		return mailer.ComplianceSend(ctx, txn, job.RowID)
 	case enums.JobtypeCSVCommit:
 		return csv.JobCommit(ctx, txn, job.RowID)
 	case enums.JobtypeCSVImport:

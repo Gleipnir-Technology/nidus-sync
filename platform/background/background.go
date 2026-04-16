@@ -15,6 +15,9 @@ import (
 func NewAudioTranscode(ctx context.Context, txn bob.Executor, audio_id int32) error {
 	return newJob(ctx, txn, enums.JobtypeAudioTranscode, audio_id)
 }
+func NewComplianceMailer(ctx context.Context, txn bob.Executor, compliance_report_request_id int32) error {
+	return newJob(ctx, txn, enums.JobtypeComplianceMailerSend, compliance_report_request_id)
+}
 func NewCSVCommit(ctx context.Context, txn bob.Executor, csv_id int32) error {
 	return newJob(ctx, txn, enums.JobtypeCSVCommit, csv_id)
 }

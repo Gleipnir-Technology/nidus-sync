@@ -1234,6 +1234,7 @@ const (
 	JobtypeEmailSend              Jobtype = "email-send"
 	JobtypeTextRespond            Jobtype = "text-respond"
 	JobtypeTextSend               Jobtype = "text-send"
+	JobtypeComplianceMailerSend   Jobtype = "compliance-mailer-send"
 )
 
 func AllJobtype() []Jobtype {
@@ -1245,6 +1246,7 @@ func AllJobtype() []Jobtype {
 		JobtypeEmailSend,
 		JobtypeTextRespond,
 		JobtypeTextSend,
+		JobtypeComplianceMailerSend,
 	}
 }
 
@@ -1262,7 +1264,8 @@ func (e Jobtype) Valid() bool {
 		JobtypeLabelStudioAudioCreate,
 		JobtypeEmailSend,
 		JobtypeTextRespond,
-		JobtypeTextSend:
+		JobtypeTextSend,
+		JobtypeComplianceMailerSend:
 		return true
 	default:
 		return false
