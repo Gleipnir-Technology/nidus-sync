@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -16,7 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
 	"github.com/aarondl/opt/omit"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/uber/h3-go/v4"
 	"resty.dev/v3"
 )
@@ -32,6 +33,18 @@ func InitializeStadia(key string) {
 	client = stadia.NewStadiaMaps(key)
 	client.AddResponseMiddleware(restyMiddleware)
 }
+func redactQueryParam(u string, param string) (string, error) {
+	parsedURL, err := url.Parse(u)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse URL: %w", err)
+	}
+
+	queryParams := parsedURL.Query()
+	queryParams.Del(param)
+	parsedURL.RawQuery = queryParams.Encode()
+
+	return parsedURL.String(), nil
+}
 func restyMiddleware(rclient *resty.Client, response *resty.Response) error {
 	//log.Info().Msg("middleware")
 	ctx := context.Background()
@@ -40,9 +53,14 @@ func restyMiddleware(rclient *resty.Client, response *resty.Response) error {
 	if err != nil {
 		return fmt.Errorf("unmarshal json in middleware: %w", err)
 	}
+	u, err := redactQueryParam(response.Request.URL, "api_key")
+	if err != nil {
+		log.Error().Err(err).Str("url", response.Request.URL).Msg("failed to redact url")
+		return nil
+	}
 	models.StadiaAPIRequests.Insert(&models.StadiaAPIRequestSetter{
 		CreatedAt: omit.From(time.Now()),
-		Request:   omit.From(response.Request.URL),
+		Request:   omit.From(u),
 		Response:  omit.From(body),
 	}).One(ctx, db.PGInstance.BobDB)
 	return nil
