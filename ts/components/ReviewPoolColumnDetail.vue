@@ -98,10 +98,11 @@
 					<input
 						type="text"
 						class="form-control"
-						v-model="siteOwner.name"
+						v-model="modelValue.owner"
 						:class="{
 							'border-warning':
-								siteOwner.name !== (selectedTask?.pool?.site.owner?.name ?? ''),
+								modelValue.owner !==
+								(selectedTask?.pool?.site.owner?.name ?? ''),
 						}"
 					/>
 				</div>
@@ -183,7 +184,6 @@ const emit = defineEmits<Emits>();
 const mapCamera = ref<Camera>(new Camera());
 const _mapFlyoverCamera = ref<Camera>(new Camera());
 const props = defineProps<Props>();
-const siteOwner = ref<Contact>(new Contact());
 const siteResident = ref<Contact>(new Contact());
 const session = useSessionStore();
 function doPoolLocation(event: MapClickEvent) {
