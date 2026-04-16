@@ -14,7 +14,6 @@ onMounted(() => {
 		.get()
 		.then((session: Session) => {
 			console.log("session loaded", session);
-			router.push("/_/dash");
 		})
 		.catch((e) => {
 			console.log("root session not loaded", e);
