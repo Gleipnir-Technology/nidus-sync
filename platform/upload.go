@@ -205,15 +205,10 @@ func getUploadDetailPool(ctx context.Context, file *models.FileuploadFile) (*Upl
 			address_ids = append(address_ids, r.AddressID.MustGet())
 		}
 	}
-	addresses, err := AddressList(ctx, address_ids)
+	addresses, err := types.AddressList(ctx, address_ids)
 	if err != nil {
 		return nil, fmt.Errorf("get address list: %w", err)
 	}
-	addresses_by_id := make(map[int32]*types.Address, len(address_ids))
-	for _, a := range addresses {
-		addresses_by_id[*a.ID] = a
-	}
-
 	pools := make([]UploadPoolRow, 0)
 	count_existing := 0
 	count_new := 0
@@ -239,7 +234,12 @@ func getUploadDetailPool(ctx context.Context, file *models.FileuploadFile) (*Upl
 		}
 		var address *types.Address
 		if r.AddressID.IsValue() {
-			address = addresses_by_id[r.AddressID.MustGet()]
+			var ok bool
+			address, ok = addresses[r.AddressID.MustGet()]
+			if !ok {
+				log.Error().Int32("id", r.AddressID.MustGet()).Msg("address missing")
+				continue
+			}
 		} else {
 			address = &types.Address{
 				Country:    "usa",

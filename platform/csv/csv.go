@@ -50,33 +50,43 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get all rows of file %d: %w", file_id, err)
 	}
+	address_ids := make([]int32, 0)
+	for _, r := range rows {
+		if r.AddressID.IsValue() {
+			address_ids = append(address_ids, r.AddressID.MustGet())
+		}
+	}
+	addresses, err := types.AddressList(ctx, address_ids)
+	if err != nil {
+		return fmt.Errorf("get address list: %w", err)
+	}
 	for _, row := range rows {
-		a := types.Address{
-			Country:    "usa",
-			Locality:   row.AddressLocality,
-			Number:     row.AddressNumber,
-			PostalCode: row.AddressPostalCode,
-			Region:     row.AddressRegion,
-			Street:     row.AddressStreet,
-			Unit:       "",
-		}
-		geo, err := geocode.GeocodeStructured(ctx, org, a)
-		if err != nil {
-			//return fmt.Errorf("ensure address: %w", err)
-			if geo == nil || geo.Address.ID == nil {
-				log.Warn().Err(err).Msg("ensure address failure")
-			} else {
-				log.Warn().Err(err).Int32("address.id", *geo.Address.ID).Msg("ensure address failure")
+		var a *types.Address
+		if row.AddressID.IsValue() {
+			var ok bool
+			a, ok = addresses[row.AddressID.MustGet()]
+			if !ok {
+				log.Error().Int32("id", row.AddressID.MustGet()).Msg("address is missing")
+				continue
 			}
-			continue
+		} else {
+			a = &types.Address{
+				Country:    "usa",
+				Locality:   row.AddressLocality,
+				Number:     row.AddressNumber,
+				PostalCode: row.AddressPostalCode,
+				Region:     row.AddressRegion,
+				Street:     row.AddressStreet,
+				Unit:       "",
+			}
 		}
-		parcel, err := geocode.GetParcel(ctx, txn, geo.Address)
+		parcel, err := geocode.GetParcel(ctx, txn, *a)
 		if err != nil {
 			return fmt.Errorf("get parcel: %w", err)
 		}
 		var site *models.Site
 		site, err = models.Sites.Query(
-			models.SelectWhere.Sites.AddressID.EQ(*geo.Address.ID),
+			models.SelectWhere.Sites.AddressID.EQ(*a.ID),
 		).One(ctx, txn)
 		if err != nil {
 			if err.Error() != "sql: no rows in result set" {
@@ -87,7 +97,7 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 				parcel_id = &(*parcel).ID
 			}
 			setter := models.SiteSetter{
-				AddressID: omit.From(*geo.Address.ID),
+				AddressID: omit.From(*a.ID),
 				Created:   omit.From(time.Now()),
 				CreatorID: omit.FromPtr(file.Committer.Ptr()),
 				FileID:    omitnull.From(file_id),

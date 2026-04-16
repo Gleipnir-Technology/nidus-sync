@@ -1,10 +1,17 @@
 package types
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/bob/dialect/psql"
+	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	//"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/scan"
 )
 
 type Address struct {
@@ -42,4 +49,33 @@ func AddressFromModel(m *models.Address) Address {
 		Street:     m.Street,
 		Unit:       m.Unit,
 	}
+}
+func AddressList(ctx context.Context, ids []int32) (map[int32]*Address, error) {
+	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			"COALESCE(address.country, 'usa') AS \"country\"",
+			"COALESCE(address.gid, '') AS \"gid\"",
+			"COALESCE(address.id, '') AS \"id\"",
+			"COALESCE(address.locality, '') AS \"locality\"",
+			"COALESCE(address.number_, '') AS \"number\"",
+			"COALESCE(address.postal_code, '') AS \"postal_code\"",
+			"COALESCE(address.region, '') AS \"region\"",
+			"COALESCE(address.street, '') AS \"street\"",
+			"COALESCE(address.unit, '') AS \"unit\"",
+			// This will work great, up until we add polygons to signal
+			"COALESCE(address.location_latitude, 0) AS \"location.latitude\"",
+			"COALESCE(address.location_longitude, 0) AS \"location.longitude\"",
+		),
+		sm.From("address"),
+		sm.Where(psql.Quote("address", "id").EQ(psql.Any(ids))),
+	), scan.StructMapper[*Address]())
+	if err != nil {
+		return nil, fmt.Errorf("query addresses: %w", err)
+	}
+	addresses_by_id := make(map[int32]*Address, len(rows))
+	for _, a := range rows {
+		addresses_by_id[*a.ID] = a
+	}
+
+	return addresses_by_id, err
 }
