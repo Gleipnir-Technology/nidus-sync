@@ -9,7 +9,7 @@ pkgs.buildGoModule rec {
   src = ./.;
   subPackages = [];
   version = "0.0.12";
-  vendorHash = "sha256-o+AFNJX/7/jnaRPVEWSn0R3MuT7lVCiXC7HRHYJOCK8=";
+  vendorHash = "sha256-p1H+iNyDOH3hoTRYWIlqn/lpE0yW158cPk1Wj/KhfkQ=";
 
   buildInputs = [ pkgs.proj ];
 
