@@ -39,6 +39,36 @@ type Signal struct {
 	Type      string              `db:"type" json:"type"`
 }
 
+func SignalCreateFromPool(ctx context.Context, txn bob.Executor, user User, site_id int32, feature_id int32, location types.Location) (*int32, error) {
+	setter := models.SignalSetter{
+		Addressed: omitnull.FromPtr[time.Time](nil),
+		Addressor: omitnull.FromPtr[int32](nil),
+		Created:   omit.From(time.Now()),
+		Creator:   omit.From(int32(user.ID)),
+		//ID
+		OrganizationID: omit.From(user.Organization.ID),
+		Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
+		Type:           omit.From(enums.SignaltypeFlyoverPool),
+		SiteID:         omitnull.From(site_id),
+		//Location:
+		//LocationType         null.Val[string]                `db:"location_type,generated" `
+		FeaturePoolFeatureID: omitnull.From(feature_id),
+		ReportID:             omitnull.FromPtr[int32](nil),
+	}
+	signal, err := models.Signals.Insert(&setter).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("insert signal: %w", err)
+	}
+	geom_query, _ := location.GeometryQuery()
+	_, err = psql.Update(
+		um.Table(models.Signals.Name()),
+		um.SetCol(models.Signals.Columns.Location.String()).To(geom_query),
+		um.Where(models.Signals.Columns.ID.EQ(psql.Arg(signal.ID))),
+	).Exec(ctx, txn)
+
+	return &signal.ID, nil
+}
+
 // Create a lead from the given signal and site
 func SignalCreateFromPublicreport(ctx context.Context, user User, report_id string) (*int32, error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)

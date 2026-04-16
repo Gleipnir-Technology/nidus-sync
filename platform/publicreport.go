@@ -2,8 +2,11 @@ package platform
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"math/big"
+	"strings"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -20,11 +23,35 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/rs/zerolog/log"
 )
+
+// GenerateReportID creates a 12-character random string using only unambiguous
+// capital letters and numbers
+func GenerateReportID() (string, error) {
+	// Define character set (no O/0, I/l/1, 2/Z to avoid confusion)
+	const charset = "ABCDEFGHJKLMNPQRSTUVWXY3456789"
+	const length = 12
+
+	var builder strings.Builder
+	builder.Grow(length)
+
+	// Use crypto/rand for secure randomness
+	for i := 0; i < length; i++ {
+		// Generate a random index within our charset
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", fmt.Errorf("failed to generate random number: %w", err)
+		}
+
+		// Add the randomly selected character to our ID
+		builder.WriteByte(charset[n.Int64()])
+	}
+
+	return builder.String(), nil
+}
 
 func PublicreportByID(ctx context.Context, report_id string) (*types.PublicReport, error) {
 	return publicreport.ByID(ctx, report_id)
@@ -238,7 +265,7 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	}
 	defer txn.Rollback(ctx)
 
-	public_id, err := report.GenerateReportID()
+	public_id, err := GenerateReportID()
 	if err != nil {
 		return nil, fmt.Errorf("create public ID: %w", err)
 	}

@@ -44,6 +44,7 @@ body {
 		</template>
 		<template #right>
 			<ReviewSiteColumnAction
+				@doRequestComplianceMailer="doRequestComplianceMailer"
 				:selectedSite="selectedSite"
 				:submitting="submitting"
 			/>
@@ -71,6 +72,7 @@ interface Props {}
 
 const props = withDefaults(defineProps<Props>(), {});
 
+const error = ref<string>("");
 const mapFlyoverCamera = ref<Camera>(new Camera());
 const storeSite = useStoreSite();
 const selectedSiteID = ref<number>(0);
@@ -94,6 +96,29 @@ const mapMarkers = computed<Marker[]>(() => {
 	};
 	return [markers];
 });
+async function doRequestComplianceMailer(id: number) {
+	submitting.value = true;
+	try {
+		const payload: any = {
+			site_id: id,
+		};
+		const response = await fetch("/api/compliance-request/mailer", {
+			body: JSON.stringify(payload),
+			headers: {
+				"Content-Type": "application/json",
+			},
+			method: "POST",
+		});
+		if (!response.ok) {
+			throw new Error("failed to create compliance request");
+		}
+	} catch (err) {
+		error.value = err instanceof Error ? err.message : "Unknown error";
+		console.error("Error submitting review:", err);
+	} finally {
+		submitting.value = false;
+	}
+}
 function siteDeselect(id: number): void {
 	if (selectedSiteID.value == id) {
 		selectedSiteID.value = 0;

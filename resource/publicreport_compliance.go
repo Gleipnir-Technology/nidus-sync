@@ -18,7 +18,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func Compliance(r *router) *complianceR {
+func PublicReportCompliance(r *router) *complianceR {
 	return &complianceR{
 		router: r,
 	}
