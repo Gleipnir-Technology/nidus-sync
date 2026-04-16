@@ -43,7 +43,10 @@ body {
 			/>
 		</template>
 		<template #right>
-			<ReviewSiteColumnAction />
+			<ReviewSiteColumnAction
+				:selectedSite="selectedSite"
+				:submitting="submitting"
+			/>
 		</template>
 	</ThreeColumn>
 </template>
@@ -71,6 +74,7 @@ const props = withDefaults(defineProps<Props>(), {});
 const mapFlyoverCamera = ref<Camera>(new Camera());
 const storeSite = useStoreSite();
 const selectedSiteID = ref<number>(0);
+const submitting = ref<boolean>(false);
 const selectedSite = computed((): Site | undefined => {
 	if (!selectedSiteID.value) {
 		return undefined;

@@ -10,6 +10,7 @@ type Site struct {
 	Address        Address           `db:"address" json:"address"`
 	Created        time.Time         `db:"created" json:"created"`
 	CreatorID      int32             `db:"creator_id" json:"creator_id"`
+	Features       []Feature         `db:"-" json:"features"`
 	FileID         int32             `db:"file_id" json:"file_id"`
 	ID             int32             `db:"id" json:"id"`
 	Notes          string            `db:"notes" json:"notes"`

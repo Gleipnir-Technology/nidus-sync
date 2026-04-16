@@ -100,9 +100,22 @@ func SiteList(ctx context.Context, user User, limit int) ([]*types.Site, error) 
 	if err != nil {
 		return nil, fmt.Errorf("query sites: %w", err)
 	}
+	site_ids := make([]int32, len(rows))
 	results := make([]*types.Site, len(rows))
 	for i, row := range rows {
 		results[i] = &row
+		site_ids[i] = row.ID
+	}
+	features_by_site_id, err := featuresBySiteID(ctx, site_ids)
+	if err != nil {
+		return nil, fmt.Errorf("query features for sites: %w", err)
+	}
+	for _, result := range results {
+		features, ok := features_by_site_id[result.ID]
+		if !ok {
+			return nil, fmt.Errorf("impossible")
+		}
+		result.Features = features
 	}
 	return results, nil
 }
