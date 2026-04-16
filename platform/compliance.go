@@ -85,5 +85,6 @@ func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32
 	if err != nil {
 		return 0, fmt.Errorf("create compliance report request: %w", err)
 	}
+	txn.Commit(ctx)
 	return req.ID, nil
 }
