@@ -17,7 +17,11 @@
 			<tbody>
 				<tr>
 					<td><b>Address</b></td>
-					<td>{{ formatAddress(selectedSite?.address) }}</td>
+					<td>
+						{{ formatAddress(selectedSite?.address) }}
+						{{ selectedSite?.address.region }}
+						{{ selectedSite?.address.postal_code }}
+					</td>
 				</tr>
 				<tr>
 					<td><b>Owner</b></td>
