@@ -85,12 +85,11 @@ func bulkGeocode(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c
 		go worker(ctx, txn, client, jobs, errors, &wg)
 	}
 
-	for i, pool := range pools {
+	for _, pool := range pools {
 		jobs <- &jobGeocode{
-			csv:       c,
-			rownumber: int32(i),
-			org:       org,
-			pool:      pool,
+			csv:  c,
+			org:  org,
+			pool: pool,
 		}
 	}
 	close(jobs)
@@ -133,10 +132,9 @@ func bulkGeocode(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c
 }
 
 type jobGeocode struct {
-	csv       *models.FileuploadCSV
-	rownumber int32
-	org       *models.Organization
-	pool      *models.FileuploadPool
+	csv  *models.FileuploadCSV
+	org  *models.Organization
+	pool *models.FileuploadPool
 }
 
 func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job *jobGeocode) error {
@@ -150,11 +148,11 @@ func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job
 	}
 	geo, err := geocode.GeocodeStructured(ctx, job.org, a)
 	if err != nil {
-		addError(ctx, txn, job.csv, job.rownumber, 0, err.Error())
+		addError(ctx, txn, job.csv, pool.LineNumber, 0, err.Error())
 		return nil
 	}
 	if geo.Address.Location == nil {
-		addError(ctx, txn, job.csv, job.rownumber, 0, fmt.Sprintf("nil location from geocoding"))
+		addError(ctx, txn, job.csv, pool.LineNumber, 0, fmt.Sprintf("nil location from geocoding"))
 		return nil
 	}
 	geom_query := geom.PostgisPointQuery(*geo.Address.Location)
