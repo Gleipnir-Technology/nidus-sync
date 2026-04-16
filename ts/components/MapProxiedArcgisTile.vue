@@ -138,6 +138,7 @@ import {
 	watch,
 } from "vue";
 
+import LayersControl from "@/components/LayersControl";
 import { boundsMarkers, boundsDefault } from "@/map-utils";
 import { MapClickEvent, Marker, Point } from "@/types";
 import type { Location } from "@/type/api";
@@ -254,9 +255,9 @@ const initializeMap = () => {
 			console.log("initial map fitting default bounds", bounds);
 			_map.fitBounds(bounds);
 		}
-		_map.addControl(new maplibregl.NavigationControl(), "top-left");
 		map.value = _map;
 		_map.on("load", () => {
+			console.log("proxied tile loaded");
 			isLoaded.value = true;
 			if (props.organizationId !== 0) {
 				_map.addSource("tegola", {
@@ -299,6 +300,13 @@ const initializeMap = () => {
 			});
 			console.log("MapProxiedArcgisTile loaded");
 		});
+		_map.addControl(new maplibregl.NavigationControl(), "top-left");
+		_map.addControl(
+			new LayersControl({
+				title: "layers",
+				customLabels: { "countries-fill": "Countries" },
+			}),
+		);
 		console.log("MapProxiedArcgisTile initialized");
 	} catch (e) {
 		console.error("hey dummy", e);
