@@ -80,10 +80,14 @@ func bulkGeocode(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c
 	errors := make(chan error, len(pools))
 
 	var wg sync.WaitGroup
-	for i := 0; i < 20; i++ {
-		wg.Add(1)
-		go worker(ctx, txn, client, jobs, errors, &wg)
-	}
+	/*
+		for i := 0; i < 20; i++ {
+			wg.Add(1)
+			go worker(ctx, txn, client, jobs, errors, &wg)
+		}
+	*/
+	wg.Add(1)
+	go worker(ctx, txn, client, jobs, errors, &wg)
 
 	for _, pool := range pools {
 		jobs <- &jobGeocode{
