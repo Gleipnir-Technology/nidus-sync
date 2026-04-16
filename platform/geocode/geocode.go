@@ -165,14 +165,35 @@ func allFeaturesIdenticalEnough(features []stadia.GeocodeFeature) bool {
 	if len(features) < 2 {
 		return true
 	}
-	f := features[0].Properties
+	// We may have a 'fallback feature' which is a match for a street, but not the rest
+	// We therefore search for a feature that is 'full' or has all the properties we care about
+	// So long as we find only one, and no conflicts, we're fine.
+	var full_feature *stadia.GeocodeFeature
 	for _, feature := range features {
-		if feature.Properties.CountryCode != f.CountryCode ||
-			feature.Properties.County != f.County ||
-			feature.Properties.HouseNumber != f.HouseNumber ||
-			feature.Properties.Locality != f.Locality ||
-			feature.Properties.RegionA != f.RegionA {
-			return false
+		if feature.Number() != "" &&
+			feature.Street() != "" &&
+			feature.Locality() != "" &&
+			feature.Region() != "" {
+			if full_feature == nil {
+				full_feature = &feature
+			} else if feature.Number() == full_feature.Number() &&
+				feature.Street() == full_feature.Street() &&
+				feature.Locality() == full_feature.Locality() &&
+				feature.Region() == full_feature.Region() {
+				continue
+			} else {
+				log.Info().
+					Str("ff_number", full_feature.Number()).
+					Str("ff_street", full_feature.Street()).
+					Str("ff_locality", full_feature.Locality()).
+					Str("ff_region", full_feature.Region()).
+					Str("number", feature.Number()).
+					Str("street", feature.Street()).
+					Str("locality", feature.Locality()).
+					Str("region", feature.Region()).
+					Msg("This is where the features first disagreed")
+				return false
+			}
 		}
 	}
 	return true

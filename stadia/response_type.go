@@ -162,7 +162,7 @@ func (gf GeocodeFeature) CountryCode() string {
 	if gf.Properties.Context.WhosOnFirst.Country.Abbreviation != "" {
 		return gf.Properties.Context.WhosOnFirst.Country.Abbreviation
 	}
-	return "none"
+	return ""
 }
 func (gf GeocodeFeature) Locality() string {
 	if gf.Properties.Locality != "" {
@@ -171,7 +171,7 @@ func (gf GeocodeFeature) Locality() string {
 	if gf.Properties.Context.WhosOnFirst.Locality.Name != "" {
 		return gf.Properties.Context.WhosOnFirst.Locality.Name
 	}
-	return "none"
+	return ""
 }
 func (gf GeocodeFeature) Number() string {
 	if gf.Properties.AddressComponents.Number != "" {
@@ -180,7 +180,7 @@ func (gf GeocodeFeature) Number() string {
 	if gf.Properties.HouseNumber != "" {
 		return gf.Properties.HouseNumber
 	}
-	return "none"
+	return ""
 }
 func (gf GeocodeFeature) PostalCode() string {
 	if gf.Properties.PostalCode != "" {
@@ -189,7 +189,7 @@ func (gf GeocodeFeature) PostalCode() string {
 	if gf.Properties.AddressComponents.PostalCode != "" {
 		return gf.Properties.AddressComponents.PostalCode
 	}
-	return "none"
+	return ""
 }
 func (gf GeocodeFeature) Region() string {
 	if gf.Properties.Region != "" {
@@ -198,7 +198,7 @@ func (gf GeocodeFeature) Region() string {
 	if gf.Properties.Context.WhosOnFirst.Region.Name != "" {
 		return gf.Properties.Context.WhosOnFirst.Region.Name
 	}
-	return "none"
+	return ""
 }
 func (gf GeocodeFeature) Street() string {
 	if gf.Properties.Street != "" {
@@ -207,5 +207,5 @@ func (gf GeocodeFeature) Street() string {
 	if gf.Properties.AddressComponents.Street != "" {
 		return gf.Properties.AddressComponents.Street
 	}
-	return "none"
+	return ""
 }
