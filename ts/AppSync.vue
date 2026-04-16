@@ -18,6 +18,7 @@ onMounted(() => {
 		})
 		.catch((e) => {
 			console.log("root session not loaded", e);
+			router.push("/signin");
 		});
 	console.log("home mounted");
 });
