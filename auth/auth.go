@@ -103,31 +103,34 @@ func NewEnsureAuth(handlerToWrap AuthenticatedHandler) *EnsureAuth {
 
 func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// If this is an API request respond with a more machine-readable error state
-	accept := r.Header.Values("Accept")
-	offers := []string{"application/json", "text/html"}
+	accept := r.Header.Get("Accept")
+	/*
+		offers := []string{"application/json", "text/html"}
 
-	content_type := NegotiateContent(accept, offers)
+		content_type := NegotiateContent(accept, offers)
+	*/
 	user, err := GetAuthenticatedUser(r)
 	if err != nil || user == nil {
 		var msg []byte
-		// Separate return codes for different authentication failures
-		if _, ok := err.(*NoCredentialsError); ok {
-			log.Info().Msg("No credentials present and no session")
-			w.Header().Set("WWW-Authenticate-Error", "no-credentials")
-			msg = []byte("Please provide credentials.\n")
-		} else if _, ok := err.(*platform.NoUserError); ok {
-			w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
-			msg = []byte("Invalid credentials provided.\n")
-		} else if _, ok := err.(*InvalidCredentials); ok {
-			w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
-			msg = []byte("Invalid credentials provided.\n")
+		// Don't send authentication headers for browsers because it forces the authentication popup
+		requested_with := r.Header.Get("X-Requested-With")
+		//log.Debug().Str("x-requested-with", requested_with).Send()
+		if !(strings.HasPrefix(requested_with, "nidus-web") || accept == "text/event-stream") {
+			w.Header().Set("WWW-Authenticate", `Basic realm="Nidus Sync"`)
+			// Separate return codes for different authentication failures
+			if _, ok := err.(*NoCredentialsError); ok {
+				log.Info().Msg("No credentials present and no session")
+				w.Header().Set("WWW-Authenticate-Error", "no-credentials")
+				msg = []byte("Please provide credentials.\n")
+			} else if _, ok := err.(*platform.NoUserError); ok {
+				w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
+				msg = []byte("Invalid credentials provided.\n")
+			} else if _, ok := err.(*InvalidCredentials); ok {
+				w.Header().Set("WWW-Authenticate-Error", "invalid-credentials")
+				msg = []byte("Invalid credentials provided.\n")
+			}
 		}
 
-		if content_type == "text/html" {
-			http.Redirect(w, r, "/signin?next="+r.URL.Path, http.StatusSeeOther)
-			return
-		}
-		w.Header().Set("WWW-Authenticate", `Basic realm="Nidus Sync"`)
 		w.WriteHeader(401)
 		w.Write(msg)
 		return
