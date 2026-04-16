@@ -100,6 +100,21 @@ func SiteList(ctx context.Context, user User, limit int) ([]*types.Site, error) 
 	}
 	return results, nil
 }
+func SitesByID(ctx context.Context, ids []int32) (map[int32]*models.Site, error) {
+	rows, err := models.Sites.Query(
+		sm.Where(
+			models.Sites.Columns.ID.EQ(psql.Any(ids)),
+		),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("query sites: %w", err)
+	}
+	results := make(map[int32]*models.Site, len(rows))
+	for _, row := range rows {
+		results[row.ID] = row
+	}
+	return results, err
+}
 func siteFromAddress(ctx context.Context, txn bob.Tx, user User, address_id int32) (*models.Site, error) {
 	site, err := models.Sites.Query(
 		models.SelectWhere.Sites.AddressID.EQ(address_id),

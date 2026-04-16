@@ -39,7 +39,6 @@ type reviewTask struct {
 type reviewTaskPool struct {
 	Condition string         `json:"condition"`
 	Location  types.Location `json:"location"`
-	Owner     types.Contact  `json:"owner"`
 	Site      types.Site     `json:"site"`
 }
 type contentListReviewTask struct {
@@ -77,7 +76,7 @@ func (res *reviewTaskR) List(ctx context.Context, r *http.Request, user platform
 		Longitude  float64       `db:"longitude"`
 		Reviewed   *time.Time    `db:"reviewed"`
 		ReviewerID *int32        `db:"reviewer_id"`
-		Species    *string       `db:"species"`
+		SiteID     int32         `db:"site_id"`
 		Title      string        `db:"title"`
 		Type       string        `db:"type"`
 	}
@@ -98,6 +97,7 @@ func (res *reviewTaskR) List(ctx context.Context, r *http.Request, user platform
 			"address.unit AS \"address.unit\"",
 			"ST_Y(address.location) AS latitude",
 			"ST_X(address.location) AS longitude",
+			"site.id AS site_id",
 		),
 		sm.From("review_task_pool"),
 		sm.InnerJoin("feature_pool").OnEQ(
@@ -130,8 +130,20 @@ func (res *reviewTaskR) List(ctx context.Context, r *http.Request, user platform
 	if err != nil {
 		return nil, nhttp.NewError("users by id: %w", err)
 	}
+	site_ids := make([]int32, len(rows))
+	for i, row := range rows {
+		site_ids[i] = row.SiteID
+	}
+	sites_by_id, err := platform.SitesByID(ctx, site_ids)
+	if err != nil {
+		return nil, nhttp.NewError("sites by id: %w", err)
+	}
 	tasks := make([]reviewTask, len(rows))
 	for i, row := range rows {
+		site, ok := sites_by_id[row.SiteID]
+		if !ok {
+			return nil, nhttp.NewError("no site %d", row.SiteID)
+		}
 		tasks[i] = reviewTask{
 			Address: row.Address,
 			Created: row.Created,
@@ -143,6 +155,7 @@ func (res *reviewTaskR) List(ctx context.Context, r *http.Request, user platform
 					Latitude:  row.Latitude,
 					Longitude: row.Longitude,
 				},
+				Site: types.SiteFromModel(site),
 			},
 			Reviewed: row.Reviewed,
 			Reviewer: userOrNil(users_by_id, row.ReviewerID),
