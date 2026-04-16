@@ -472,7 +472,7 @@ const markers = computed((): Marker[] => {
 			markers.push({
 				color: "#FF0000",
 				draggable: true,
-				id: "x",
+				id: p.address.gid,
 				location: p.address.location,
 			});
 		}

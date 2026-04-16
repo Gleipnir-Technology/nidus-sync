@@ -424,19 +424,32 @@ function frameMarkers() {
 		}
 	} else {
 		// Multiple markers: fit bounds
-		console.log("framing multiple markers", props.markers);
-		const bounds = new maplibregl.LngLatBounds();
-		props.markers.forEach((marker) => {
-			bounds.extend([marker.location.longitude, marker.location.latitude]);
-		});
+		if (map.value) {
+			console.log("framing multiple markers", isLoaded.value, props.markers);
+			if (isLoaded.value) {
+				panToMarkers(props.markers);
+			} else {
+				map.value.on("load", () => {
+					panToMarkers(props.markers);
+				});
+			}
+		} else {
+			console.error("Can't frame multiple markers before the map is created");
+		}
+	}
+}
+function panToMarkers(markers: Marker[]) {
+	setTimeout(() => {
+		if (!map.value) return;
+		const bounds = boundsMarkers(markers);
 		map.value.fitBounds(
 			bounds,
 			{ padding: 10, duration: 1000 },
 			{ isInternalUpdate: true },
 		);
-	}
+		console.log("fitting map to bounds", bounds);
+	}, 1);
 }
-
 function panToLocation(location: Location, zoom: number) {
 	if (!map.value) return;
 	map.value.panTo(
