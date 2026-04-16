@@ -23,7 +23,7 @@ export const useSessionStore = defineStore("session", () => {
 
 	// Subscription
 	SSEManager.subscribe((msg: SSEMessage) => {
-		if (msg.type !== "sync:session") {
+		if (msg.type == "sync:session") {
 			fetchSession();
 		}
 	});

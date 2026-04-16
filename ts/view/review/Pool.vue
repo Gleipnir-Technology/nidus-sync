@@ -280,11 +280,11 @@ async function submitReview(action: "committed" | "discarded"): Promise<void> {
 		};
 
 		const response = await fetch("/api/review/pool", {
-			method: "POST",
+			body: JSON.stringify(payload),
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify(payload),
+			method: "POST",
 		});
 
 		if (!response.ok) {
