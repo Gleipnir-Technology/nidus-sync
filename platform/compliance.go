@@ -97,3 +97,21 @@ func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32
 
 	return req.ID, nil
 }
+
+func ComplianceReportRequestByLeadID(ctx context.Context, lead_ids []int32) (map[int32][]*types.ComplianceReportRequest, error) {
+	rows, err := models.ComplianceReportRequests.Query(
+		sm.Where(models.ComplianceReportRequests.Columns.LeadID.EQ(psql.Any(lead_ids))),
+	).All(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nil, fmt.Errorf("query reports: %w", err)
+	}
+	results := make(map[int32][]*types.ComplianceReportRequest, len(lead_ids))
+	for _, row := range rows {
+		crrs, ok := results[row.LeadID.MustGet()]
+		if !ok {
+			return nil, fmt.Errorf("impossible")
+		}
+		crrs = append(crrs, types.ComplianceReportRequestFromModel(row))
+	}
+	return results, nil
+}

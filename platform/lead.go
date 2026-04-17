@@ -54,19 +54,26 @@ func leadsBySiteID(ctx context.Context, site_ids []int32) (map[int32][]types.Lea
 			models.Leads.Columns.ID.As("id"),
 			models.Leads.Columns.SiteID.As("site_id"),
 			models.Leads.Columns.Type.As("type"),
-			models.ComplianceReportRequests.Columns.ID.As("compliance_report_request_id"),
 		),
 		sm.From(models.Leads.Name()),
-		sm.LeftJoin(models.ComplianceReportRequests.Name()).OnEQ(
-			models.Leads.Columns.ID,
-			models.ComplianceReportRequests.Columns.LeadID,
-		),
 		sm.Where(
 			models.Leads.Columns.SiteID.EQ(psql.Any(site_ids)),
 		),
 	), scan.StructMapper[types.Lead]())
 	if err != nil {
 		return nil, fmt.Errorf("query leads: %w", err)
+	}
+	lead_ids := make([]int32, len(rows))
+	for i, row := range rows {
+		lead_ids[i] = row.ID
+	}
+	compliance_report_requests, err := ComplianceReportRequestByLeadID(ctx, lead_ids)
+	for _, row := range rows {
+		crrs, ok := compliance_report_requests[row.ID]
+		if !ok {
+			return nil, fmt.Errorf("impossible")
+		}
+		row.ComplianceReportRequests = crrs
 	}
 	results := make(map[int32][]types.Lead, len(site_ids))
 	for _, site_id := range site_ids {
