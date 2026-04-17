@@ -53,10 +53,45 @@ type Address struct {
 	RecipientMoved bool                   `json:"recipient_moved"`
 	Object         string                 `json:"object"`
 }
+type Letter struct {
+	ID                   string                 `json:"id"`
+	Description          string                 `json:"description"`
+	Metadata             map[string]interface{} `json:"metadata"`
+	To                   Address                `json:"to"`
+	From                 Address                `json:"from"`
+	Color                bool                   `json:"color"`
+	DoubleSided          bool                   `json:"double_sided"`
+	AddressPlacement     string                 `json:"address_placement"`
+	ReturnEnvelope       bool                   `json:"return_envelope"`
+	PerforatedPage       *int                   `json:"perforated_page"`
+	ExtraService         string                 `json:"extra_service"`
+	CustomEnvelope       *string                `json:"custom_envelope"`
+	TemplateID           string                 `json:"template_id"`
+	TemplateVersionID    string                 `json:"template_version_id"`
+	MailType             string                 `json:"mail_type"`
+	URL                  string                 `json:"url"`
+	MergeVariables       map[string]interface{} `json:"merge_variables"`
+	Carrier              string                 `json:"carrier"`
+	TrackingNumber       string                 `json:"tracking_number"`
+	TrackingEvents       []interface{}          `json:"tracking_events"`
+	Thumbnails           []interface{}          `json:"thumbnails"`
+	ExpectedDeliveryDate string                 `json:"expected_delivery_date"`
+	DateCreated          string                 `json:"date_created"`
+	DateModified         string                 `json:"date_modified"`
+	SendDate             string                 `json:"send_date"`
+	UseType              string                 `json:"use_type"`
+	FSC                  bool                   `json:"fsc"`
+	Object               string                 `json:"object"`
+}
 type ResponseAddressList struct {
 	Addresses  []Address `json:"data"`
 	Count      int       `json:"count"`
 	CountTotal int       `json:"total_count"`
+}
+type ResponseLetterList struct {
+	Letters    []Letter `json:"data"`
+	Count      int      `json:"count"`
+	CountTotal int      `json:"total_count"`
 }
 
 type RequestAddressCreate struct {
@@ -65,6 +100,13 @@ type RequestAddressCreate struct {
 	AddressState string `json:"address_state"`
 	AddressZip   string `json:"address_zip"`
 	Name         string `json:"name"`
+}
+type RequestLetterCreate struct {
+	Color   bool   `json:"color"`
+	From    string `json:"from"`
+	File    string `json:"file"`
+	To      string `json:"to"`
+	UseType string `json:"use_type"`
 }
 
 func (l *Lob) AddressCreate(ctx context.Context, req RequestAddressCreate) (Address, error) {
@@ -100,4 +142,39 @@ func (l *Lob) AddressList(ctx context.Context) ([]Address, error) {
 		return nil, fmt.Errorf("not successful")
 	}
 	return result.Addresses, nil
+}
+
+func (l *Lob) LetterCreate(ctx context.Context, req RequestLetterCreate) (Letter, error) {
+	var result Letter
+	resp, err := l.client.R().
+		SetBody(req).
+		SetContext(ctx).
+		SetContentType("application/json").
+		SetResult(&result).
+		SetPathParam("urlBase", l.urlBaseApi).
+		Post("https://{urlBase}/v1/letters")
+	if err != nil {
+		return result, fmt.Errorf("letters list post: %w", err)
+	}
+	if !resp.IsSuccess() {
+		return result, fmt.Errorf("not successful")
+	}
+	return result, nil
+}
+func (l *Lob) LetterList(ctx context.Context) ([]Letter, error) {
+	var result ResponseLetterList
+
+	resp, err := l.client.R().
+		//SetQueryParamsFromValues(query).
+		SetContext(ctx).
+		SetResult(&result).
+		SetPathParam("urlBase", l.urlBaseApi).
+		Get("https://{urlBase}/v1/letters")
+	if err != nil {
+		return nil, fmt.Errorf("letter list get: %w", err)
+	}
+	if !resp.IsSuccess() {
+		return nil, fmt.Errorf("not successful")
+	}
+	return result.Letters, nil
 }

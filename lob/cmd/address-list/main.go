@@ -24,6 +24,6 @@ func main() {
 	}
 
 	for _, addr := range addresses {
-		log.Printf("%s %s %s: %s %s, %s, %s", addr.ID, addr.Name, addr.Company, addr.AddressLine1, addr.AddressCity, addr.AddressState, addr.AddressCountry, addr.AddressZip)
+		log.Printf("%s %s %s: %s %s, %s, %s, %s", addr.ID, addr.Name, addr.Company, addr.AddressLine1, addr.AddressCity, addr.AddressState, addr.AddressCountry, addr.AddressZip)
 	}
 }
