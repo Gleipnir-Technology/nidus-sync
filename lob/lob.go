@@ -34,14 +34,32 @@ func NewLob(api_key string) *Lob {
 	return l
 }
 
-type Address struct{}
+type Address struct {
+	ID             string                 `json:"id"`
+	Description    string                 `json:"description"`
+	Name           string                 `json:"name"`
+	Company        string                 `json:"company"`
+	Phone          *string                `json:"phone"`
+	Email          *string                `json:"email"`
+	AddressLine1   string                 `json:"address_line1"`
+	AddressLine2   *string                `json:"address_line2"`
+	AddressCity    string                 `json:"address_city"`
+	AddressState   string                 `json:"address_state"`
+	AddressZip     string                 `json:"address_zip"`
+	AddressCountry string                 `json:"address_country"`
+	Metadata       map[string]interface{} `json:"metadata"`
+	DateCreated    string                 `json:"date_created"`
+	DateModified   string                 `json:"date_modified"`
+	RecipientMoved bool                   `json:"recipient_moved"`
+	Object         string                 `json:"object"`
+}
 type ResponseAddressList struct {
 	Addresses  []Address `json:"data"`
 	Count      int       `json:"count"`
 	CountTotal int       `json:"total_count"`
 }
 
-func (l *Lob) AddressList(ctx context.Context) ([]*Address, error) {
+func (l *Lob) AddressList(ctx context.Context) ([]Address, error) {
 	var result ResponseAddressList
 
 	resp, err := l.client.R().
@@ -56,5 +74,5 @@ func (l *Lob) AddressList(ctx context.Context) ([]*Address, error) {
 	if !resp.IsSuccess() {
 		return nil, fmt.Errorf("not successful")
 	}
-	return []*Address{}, nil
+	return result.Addresses, nil
 }

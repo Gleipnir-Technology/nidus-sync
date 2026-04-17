@@ -17,10 +17,13 @@ func main() {
 
 	client := lob.NewLob(key)
 	ctx := context.TODO()
-	_, err := client.AddressList(ctx)
+	addresses, err := client.AddressList(ctx)
 	if err != nil {
 		log.Printf("err: %v", err)
 		os.Exit(2)
 	}
 
+	for _, addr := range addresses {
+		log.Printf("%s %s %s: %s %s, %s, %s", addr.ID, addr.Name, addr.Company, addr.AddressLine1, addr.AddressCity, addr.AddressState, addr.AddressCountry, addr.AddressZip)
+	}
 }
