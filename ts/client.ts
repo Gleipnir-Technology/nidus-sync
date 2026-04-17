@@ -4,6 +4,7 @@ import router from "@/router";
 
 class ApiClient {
 	private client: AxiosInstance;
+	private _hasSession: boolean = false;
 	private _isAuthenticated: boolean = false;
 
 	constructor() {
@@ -38,14 +39,6 @@ class ApiClient {
 				return Promise.reject(error);
 			},
 		);
-	}
-
-	get isAuthenticated(): boolean {
-		return this._isAuthenticated;
-	}
-
-	setAuthenticated(value: boolean): void {
-		this._isAuthenticated = value;
 	}
 
 	async JSONGet<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {

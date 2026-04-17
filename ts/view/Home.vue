@@ -12,13 +12,12 @@ onMounted(() => {
 	session
 		.get()
 		.then((session: Session) => {
-			console.log("session loaded", session);
+			console.log("hit home with a valid session, going to dash");
 			router.push("/_/dash");
 		})
 		.catch((e) => {
-			console.log("root session not loaded", e);
+			console.log("hit home with no session, going to signin");
 			router.push("/signin");
 		});
-	console.log("home mounted");
 });
 </script>

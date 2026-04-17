@@ -12,9 +12,11 @@ import { apiClient } from "@/client";
 
 export const useSessionStore = defineStore("session", () => {
 	// State
+	const hasSession = ref<boolean>(false);
+	const isAuthenticated = ref<boolean>(false);
+	const isLoading = ref(true);
 	const impersonating = ref<string | null>(null);
 	const error = ref<string | null>(null);
-	const loading = ref(true);
 	const current = ref<Session | null>(null);
 	const notification_counts = ref<SessionNotificationCounts | null>(null);
 	const ongoingFetch = ref<Promise<Session> | null>(null);
@@ -31,12 +33,11 @@ export const useSessionStore = defineStore("session", () => {
 
 	// Actions
 	async function fetchSession(): Promise<Session> {
-		loading.value = true;
 		error.value = null;
 
 		try {
 			const data: Session = await apiClient.JSONGet("/api/session");
-			apiClient.setAuthenticated(true);
+			isAuthenticated.value = true;
 			impersonating.value = data.impersonating || null;
 			notification_counts.value = data.notification_counts;
 			organization.value = data.organization;
@@ -44,19 +45,19 @@ export const useSessionStore = defineStore("session", () => {
 			urls.value = data.urls;
 			return data;
 		} catch (e) {
-			apiClient.setAuthenticated(false);
 			error.value = e instanceof Error ? e.message : "an error ocurred";
 			console.error("Error fetching user:", e);
 			throw new Error(error.value);
 		} finally {
-			loading.value = false;
+			hasSession.value = true;
+			isLoading.value = false;
 			console.log("no longer loading session");
 		}
 	}
 
-	async function isAuthenticated(): Promise<boolean> {
-		console.log("pretend check user auth");
-		return true;
+	async function getAuthenticated(): Promise<boolean> {
+		await get();
+		return isAuthenticated.value;
 	}
 
 	async function get(): Promise<Session> {
@@ -74,13 +75,17 @@ export const useSessionStore = defineStore("session", () => {
 		return s;
 	}
 	async function signout(): Promise<void> {
+		isAuthenticated.value = false;
 		apiClient.JSONPost("/api/signout", {});
 	}
 	return {
 		// State
 		error,
+		getAuthenticated,
+		hasSession,
 		impersonating,
-		loading,
+		isAuthenticated,
+		isLoading,
 		notification_counts,
 		organization,
 		self,
@@ -88,7 +93,6 @@ export const useSessionStore = defineStore("session", () => {
 		// Actions
 		fetchSession,
 		get,
-		isAuthenticated,
 		signout,
 	};
 });

@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
+
+import { useSessionStore } from "@/store/session";
 import Home from "@/view/Home.vue";
 import Authenticated from "@/view/Authenticated.vue";
 import Communication from "@/view/Communication.vue";
@@ -43,53 +45,44 @@ const routes: RouteRecordRaw[] = [
 				path: "/_/communication",
 				name: "Communication",
 				component: Communication,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration",
 				name: "Configuration",
 				component: ConfigurationRoot,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/integration",
 				name: "Integration Configuration",
 				component: ConfigurationIntegration,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/integration/arcgis",
 				name: "Arcgis Integration Configuration",
 				component: ConfigurationIntegrationArcgis,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/organization",
 				name: "Organization Configuration",
 				component: ConfigurationOrganization,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/pesticide",
 				name: "Pesticide Configuration",
 				component: ConfigurationPesticide,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/pesticide/add",
 				name: "Pesticide Add",
 				component: ConfigurationPesticideAdd,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/upload",
 				name: "Upload Configuration",
 				component: ConfigurationUpload,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				component: ConfigurationUploadDetail,
-				meta: { requiresAuth: true, showSidebar: true },
 				name: "Upload Detail",
 				path: "/_/configuration/upload/:id",
 				props: (route) => ({
@@ -100,35 +93,29 @@ const routes: RouteRecordRaw[] = [
 				path: "/_/configuration/upload/pool",
 				name: "Pool Upload",
 				component: ConfigurationUploadPool,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/upload/pool/custom",
 				name: "Custom Pool Upload",
 				component: ConfigurationUploadPoolCustom,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/upload/pool/flyover",
 				name: "Flyover Upload",
 				component: ConfigurationUploadPoolFlyover,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/user",
 				name: "User Configuration",
 				component: ConfigurationUser,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/configuration/user/add",
 				name: "User Add Configuration",
 				component: ConfigurationUserAdd,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				component: ConfigurationUserEdit,
-				meta: { requiresAuth: true, showSidebar: true },
 				name: "User Edit",
 				path: "/_/configuration/user/:id",
 				props: (route) => ({
@@ -144,49 +131,41 @@ const routes: RouteRecordRaw[] = [
 				path: "/_/intelligence",
 				name: "Intelligence",
 				component: Intelligence,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/oauth/refresh/arcgis",
 				name: "Arcgis OAuth Refresh",
 				component: OAuthRefreshArcgis,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/operations",
 				name: "Operations",
 				component: Operations,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/planning",
 				name: "Planning",
 				component: Planning,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/review",
 				name: "Review",
 				component: ReviewRoot,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/review/pool",
 				name: "Pool Review",
 				component: ReviewPool,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/review/site",
 				name: "Site Review",
 				component: ReviewSite,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 			{
 				path: "/_/sudo",
 				name: "Sudo",
 				component: Sudo,
-				meta: { requiresAuth: true, showSidebar: true },
 			},
 		],
 		component: Authenticated,
@@ -218,21 +197,19 @@ export const router = createRouter({
 
 // Global navigation guard
 router.beforeEach(async (to, from) => {
-	const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
-
-	if (requiresAuth) {
-		try {
-			// Check if user is authenticated (could be an API call)
-			if (!apiClient.isAuthenticated) {
-				return "/signin";
-			} else {
-				return;
-			}
-		} catch (error) {
-			console.log("check auth failed");
-			return "/signin";
-		}
+	if (to.fullPath == "/signin") {
+		return;
 	}
+	const storeSession = useSessionStore();
+	try {
+		if (!storeSession.isLoading && !storeSession.isAuthenticated) {
+			console.log("sending to signin because we're not authenticated");
+			return `/signin?next=${from.fullPath}`;
+		}
+	} catch (error) {
+		console.log("check auth failed");
+	}
+	return;
 });
 
 export default router;

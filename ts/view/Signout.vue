@@ -10,7 +10,6 @@ import { useSessionStore } from "@/store/session";
 const session = useSessionStore();
 onMounted(() => {
 	session.signout().then(() => {
-		apiClient.setAuthenticated(false);
 		router.push("/signin");
 	});
 });

@@ -13,12 +13,11 @@ onMounted(() => {
 	session
 		.get()
 		.then((session: Session) => {
-			console.log("session loaded", session);
+			console.log("session loaded by AppSync", session);
 		})
 		.catch((e) => {
 			console.log("root session not loaded", e);
 			router.push("/signin");
 		});
-	console.log("home mounted");
 });
 </script>

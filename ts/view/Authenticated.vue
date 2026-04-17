@@ -6,7 +6,7 @@
 </style>
 <template>
 	<div class="app-container">
-		<template v-if="session.loading">Loading...</template>
+		<template v-if="session.isLoading">Loading...</template>
 		<template v-else-if="session.error">Error: {{ session.error }}</template>
 		<template v-else>
 			<Sidebar />
