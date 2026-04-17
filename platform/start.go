@@ -83,8 +83,8 @@ func addWaitingJobs(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("Failed to query waiting jobs: %w", err)
 	}
-	for _, job := range jobs {
-		go func() {
+	go func() {
+		for _, job := range jobs {
 			txn, err := db.PGInstance.BobDB.Begin(ctx)
 			if err != nil {
 				log.Error().Err(err).Msg("failed begin txn")
@@ -102,8 +102,8 @@ func addWaitingJobs(ctx context.Context) error {
 				return
 			}
 			txn.Commit(ctx)
-		}()
-	}
+		}
+	}()
 	return nil
 }
 func handleJob(ctx context.Context, txn bob.Executor, job *models.Job) error {
