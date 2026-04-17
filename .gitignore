@@ -4,6 +4,10 @@ cmd/geocode-test/geocode-test
 cmd/passwordgen/passwordgen
 districts/
 flogo.log
+lob/cmd/letter-create/letter-create
+lob/cmd/letter-list/letter-list
+lob/cmd/address-create/address-create
+lob/cmd/address-list/address-list
 nidus-sync
 nidus-sync.log
 node_modules/
