@@ -60,8 +60,8 @@ func getMailer3(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "empty code", http.StatusBadRequest)
 		return
 	}
-
-	content, err := pdf.GeneratePDF(r.Context(), code)
+	path := fmt.Sprintf("/mailer/mode-3/%s/preview", code)
+	content, err := pdf.GeneratePDF(r.Context(), path)
 	if err != nil {
 		respondError(w, "generate pdf failure", err, http.StatusInternalServerError)
 		return

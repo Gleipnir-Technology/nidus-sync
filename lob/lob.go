@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/rs/zerolog/log"
@@ -102,11 +103,11 @@ type RequestAddressCreate struct {
 	Name         string `json:"name"`
 }
 type RequestLetterCreate struct {
-	Color   bool   `json:"color"`
-	From    string `json:"from"`
-	File    string `json:"file"`
-	To      string `json:"to"`
-	UseType string `json:"use_type"`
+	Color   bool
+	From    string
+	File    io.Reader
+	To      string
+	UseType string
 }
 
 func (l *Lob) AddressCreate(ctx context.Context, req RequestAddressCreate) (Address, error) {
@@ -146,10 +147,24 @@ func (l *Lob) AddressList(ctx context.Context) ([]Address, error) {
 
 func (l *Lob) LetterCreate(ctx context.Context, req RequestLetterCreate) (Letter, error) {
 	var result Letter
+	color_str := "false"
+	if req.Color {
+		color_str = "true"
+	}
 	resp, err := l.client.R().
-		SetBody(req).
+		SetMultipartField(
+			"file",
+			"content.pdf",
+			"application/pdf",
+			req.File,
+		).
+		SetMultipartFormData(map[string]string{
+			"color":    color_str,
+			"from":     req.From,
+			"to":       req.To,
+			"use_type": req.UseType,
+		}).
 		SetContext(ctx).
-		SetContentType("application/json").
 		SetResult(&result).
 		SetPathParam("urlBase", l.urlBaseApi).
 		Post("https://{urlBase}/v1/letters")

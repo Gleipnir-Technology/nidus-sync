@@ -17,7 +17,7 @@ func GeneratePDF(ctx context.Context, path string) ([]byte, error) {
 
 	// capture pdf
 	var buf []byte
-	url := fmt.Sprintf("http://%s%s", config.Bind, path)
+	url := fmt.Sprintf("https://%s%s", config.DomainNidus, path)
 	log.Info().Str("url", url).Msg("Getting with headless chrome")
 	if err := chromedp.Run(chrome_ctx, printToPDF(url, &buf)); err != nil {
 		return nil, fmt.Errorf("print to pdf: %w", err)

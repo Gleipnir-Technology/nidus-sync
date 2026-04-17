@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/lob"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/pdf"
 	"github.com/aarondl/opt/omit"
 	"github.com/google/uuid"
-	lob "github.com/lob/lob-go"
 	"github.com/rs/zerolog/log"
 )
 
@@ -71,7 +70,7 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 		return fmt.Errorf("lob address for %d is null", organization.ID)
 	}
 	lob_address := organization.LobAddressID.MustGet()
-	letter, err := sendMail(ctx, lob_address, compliance_req.PublicID, site, address)
+	letter, err := sendMail(ctx, lob_address, compliance_req.PublicID, site, address, content)
 	if err != nil {
 		return fmt.Errorf("send mail: %w", err)
 	}
@@ -83,7 +82,7 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 	mailer, err := models.CommsMailers.Insert(&models.CommsMailerSetter{
 		AddressID:  omit.From(address.ID),
 		Created:    omit.From(time.Now()),
-		ExternalID: omit.From(letter.Id),
+		ExternalID: omit.From(letter.ID),
 		// ID
 		Recipient: omit.From(site.OwnerName),
 		UUID:      omit.From(mailer_uuid),
@@ -104,44 +103,33 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 	return nil
 }
 
-func sendMail(ctx context.Context, org_address_id string, public_id string, site *models.Site, address *models.Address) (*lob.Letter, error) {
-	ctx_lob := context.WithValue(ctx, lob.ContextBasicAuth, lob.BasicAuth{UserName: config.LobAPIKey})
-	config := lob.NewConfiguration()
-	client := lob.NewAPIClient(config)
-
-	from_addr, _, err := client.AddressesApi.Get(ctx_lob, org_address_id).Execute()
-	if err != nil {
-		return nil, fmt.Errorf("get from address '%s': %w", org_address_id)
-	}
-
-	var to_addr = *lob.NewAddressEditable()
+func sendMail(ctx context.Context, org_address_id string, public_id string, site *models.Site, address *models.Address, content []byte) (*lob.Letter, error) {
+	key := config.LobAPIKey
+	client := lob.NewLob(key)
 	line1 := address.Number + " " + address.Street
-	to_addr.SetAddressLine1(line1)
-	to_addr.SetAddressLine2("")
-	to_addr.SetAddressCity(address.Locality)
-	to_addr.SetAddressState(address.Region)
-	to_addr.SetAddressZip(address.PostalCode)
-	to_addr.SetAddressCountry(lob.COUNTRYEXTENDED_US)
-	addr_desc := fmt.Sprintf("site %d - %s", site.ID, site.OwnerName)
-	to_addr.SetDescription(addr_desc)
-	to_addr.SetName(site.OwnerName)
-
-	var use_type lob.LtrUseType = lob.LTRUSETYPE_OPERATIONAL
-
-	content_path := file.MailerPath(public_id)
-	var ltr = lob.NewLetterEditable(true, to_addr, from_addr, content_path, *lob.NewNullableLtrUseType(&use_type))
-	desc := fmt.Sprintf("Compliance request %s", public_id)
-	ltr.SetDescription(desc)
-	result, resp, err := client.LettersApi.Create(ctx_lob).LetterEditable(*ltr).Execute()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read lob response")
+	addr_req := lob.RequestAddressCreate{
+		AddressLine1: line1,
+		AddressCity:  address.Locality,
+		AddressState: address.Region,
+		AddressZip:   address.PostalCode,
+		Name:         site.OwnerName,
 	}
-	log.Debug().Str("status", resp.Status).Bytes("body", body).Msg("response from lob")
+	addr_to, err := client.AddressCreate(ctx, addr_req)
 	if err != nil {
-		return nil, fmt.Errorf("create letter: %w", err)
+		return nil, fmt.Errorf("create to addr: %w", err)
 	}
-	log.Info().Str("id", result.Id).Msg("Created Lob letter")
-	return result, nil
+
+	req := lob.RequestLetterCreate{
+		To:      addr_to.ID,
+		From:    org_address_id,
+		File:    bytes.NewReader(content),
+		Color:   true,
+		UseType: "operational",
+	}
+	letter, err := client.LetterCreate(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("letter create: %w", err)
+	}
+
+	return &letter, nil
 }

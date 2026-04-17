@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"log"
@@ -25,12 +26,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	if *file == "" {
+		log.Printf("you must specify a file with -file")
+		os.Exit(1)
+	}
+	content, err := os.ReadFile(*file)
+	if err != nil {
+		log.Printf("read file: %v", err)
+		os.Exit(2)
+	}
 	client := lob.NewLob(key)
 	ctx := context.TODO()
 	req := lob.RequestLetterCreate{
 		To:      *to,
 		From:    *from,
-		File:    *file,
+		File:    bytes.NewReader(content),
 		Color:   *color,
 		UseType: *use_type,
 	}
