@@ -90,6 +90,7 @@ func addWaitingJobs(ctx context.Context) error {
 				log.Error().Err(err).Msg("failed begin txn")
 				return
 			}
+			defer txn.Rollback(ctx)
 			err = handleJob(ctx, txn, job)
 			if err != nil {
 				log.Error().Err(err).Msg("failed handle job")
