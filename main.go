@@ -201,21 +201,23 @@ func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handl
 					remote_addr = forwarded_for
 				}
 				// log end request
-				log.Info().
-					//Str("type", "access").
-					Timestamp().
-					Fields(map[string]interface{}{
-						"remote_ip": remote_addr,
-						"url":       r.URL.Path,
-						//"proto":      r.Proto,
-						"method": r.Method,
-						//"user_agent": r.Header.Get("User-Agent"),
-						"status":     ww.Status(),
-						"latency_ms": float64(t2.Sub(t1).Nanoseconds()) / 1000000.0,
-						"bytes_in":   r.Header.Get("Content-Length"),
-						"bytes_out":  ww.BytesWritten(),
-					}).
-					Msg("incoming_request")
+				if os.Getenv("VERBOSE") != "" {
+					log.Info().
+						//Str("type", "access").
+						Timestamp().
+						Fields(map[string]interface{}{
+							"remote_ip": remote_addr,
+							"url":       r.URL.Path,
+							//"proto":      r.Proto,
+							"method": r.Method,
+							//"user_agent": r.Header.Get("User-Agent"),
+							"status":     ww.Status(),
+							"latency_ms": float64(t2.Sub(t1).Nanoseconds()) / 1000000.0,
+							"bytes_in":   r.Header.Get("Content-Length"),
+							"bytes_out":  ww.BytesWritten(),
+						}).
+						Msg("incoming_request")
+				}
 			}()
 
 			next.ServeHTTP(ww, r)
