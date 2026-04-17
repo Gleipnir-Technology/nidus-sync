@@ -85,22 +85,25 @@ func addWaitingJobs(ctx context.Context) error {
 	}
 	go func() {
 		for _, job := range jobs {
+			sublog := log.With().Int32("job", job.ID).Int32("row_id", job.RowID).Str("type", string(job.Type)).Logger()
+			sublog.Info().Msg("begin restarted background job")
 			txn, err := db.PGInstance.BobDB.Begin(ctx)
 			if err != nil {
-				log.Error().Err(err).Msg("failed begin txn")
+				sublog.Error().Err(err).Msg("failed begin txn")
 				return
 			}
 			defer txn.Rollback(ctx)
 			err = handleJob(ctx, txn, job)
 			if err != nil {
-				log.Error().Err(err).Msg("failed handle job")
+				sublog.Error().Err(err).Msg("failed handle job")
 				return
 			}
 			err = job.Delete(ctx, txn)
 			if err != nil {
-				log.Error().Err(err).Msg("failed delete job")
+				sublog.Error().Err(err).Msg("failed delete job")
 				return
 			}
+			sublog.Info().Msg("job complete")
 			txn.Commit(ctx)
 		}
 	}()
