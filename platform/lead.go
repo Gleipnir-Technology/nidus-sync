@@ -51,10 +51,16 @@ func leadCreate(ctx context.Context, txn bob.Executor, user User, signal_id int3
 func leadsBySiteID(ctx context.Context, site_ids []int32) (map[int32][]types.Lead, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
-			"id",
-			"site_id",
+			models.Leads.Columns.ID.As("id"),
+			models.Leads.Columns.SiteID.As("site_id"),
+			models.Leads.Columns.Type.As("type"),
+			models.ComplianceReportRequests.Columns.ID.As("compliance_report_request_id"),
 		),
-		sm.From("lead"),
+		sm.From(models.Leads.Name()),
+		sm.LeftJoin(models.ComplianceReportRequests.Name()).OnEQ(
+			models.Leads.Columns.ID,
+			models.ComplianceReportRequests.Columns.LeadID,
+		),
 		sm.Where(
 			models.Leads.Columns.SiteID.EQ(psql.Any(site_ids)),
 		),
