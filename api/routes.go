@@ -60,6 +60,7 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/signal", authenticatedHandlerJSON(signal.List)).Methods("GET")
 	site := resource.Site(router)
 	r.Handle("/site", authenticatedHandlerJSONSlice(site.List)).Methods("GET")
+	r.Handle("/site/{id}", authenticatedHandlerJSON(site.ByIDGet)).Methods("GET").Name("site.ByIDGet")
 	sync := resource.Sync(r)
 	r.Handle("/sync", authenticatedHandlerJSONSlice(sync.List)).Methods("GET")
 	r.Handle("/sudo/email", authenticatedHandlerJSONPost(postSudoEmail)).Methods("POST")

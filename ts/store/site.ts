@@ -13,7 +13,7 @@ export const useStoreSite = defineStore("site", () => {
 	// Subscription
 	SSEManager.subscribe((msg: SSEMessage) => {
 		if (msg.resource.startsWith("sync:site")) {
-			//fetchAll();
+			fetchAll();
 		}
 	});
 	// Actions

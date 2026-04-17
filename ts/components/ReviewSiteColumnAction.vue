@@ -4,23 +4,19 @@
 		<p>select a site to see actions</p>
 	</template>
 	<template v-if="selectedSite">
-		<button
-			class="btn btn-success action-btn"
+		<ButtonLoading
 			@click="emit('doRequestComplianceMailer', selectedSite?.id ?? 0)"
-			:disabled="!selectedSite || submitting"
-		>
-			<span v-if="!submitting">
-				<i class="bi bi-check-circle"></i> Send Compliance Mailer
-			</span>
-			<span v-else>
-				<span class="spinner-border spinner-border-sm" role="status"></span>
-				Submitting...
-			</span>
-		</button>
+			:disabled="!selectedSite"
+			icon="bi-check-circle"
+			:loading="submitting"
+			text="Send Compliance Mailer"
+			variant="success"
+		/>
 	</template>
 </template>
 <script setup lang="ts">
 import { Site } from "@/type/api";
+import ButtonLoading from "@/components/common/ButtonLoading.vue";
 
 interface Emits {
 	(e: "doRequestComplianceMailer", id: number): void;

@@ -22,6 +22,7 @@ type Site struct {
 	ResidentOwned  *bool             `db:"resident_owned" json:"resident_owned"`
 	Tags           map[string]string `db:"tags" json:"tags"`
 	Version        int32             `db:"version" json:"version"`
+	URI            string            `db:"-" json:"uri"`
 }
 
 func SiteFromModel(s *models.Site) Site {

@@ -3,6 +3,7 @@ package platform
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -10,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -90,6 +92,8 @@ func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32
 	if err != nil {
 		return 0, fmt.Errorf("create background compliance mailer job: %w", err)
 	}
+	event.Updated(event.TypeSite, user.Organization.ID, strconv.Itoa(int(site.ID)))
 	txn.Commit(ctx)
+
 	return req.ID, nil
 }

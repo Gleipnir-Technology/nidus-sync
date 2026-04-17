@@ -94,6 +94,7 @@ const (
 	TypeRMOWater
 	TypeSession
 	TypeSignal
+	TypeSite
 )
 
 func Created(t ResourceType, organization_id int32, uri_id string) {
@@ -154,6 +155,8 @@ func resourceString(t ResourceType) string {
 		return "sync:session"
 	case TypeSignal:
 		return "sync:signal"
+	case TypeSite:
+		return "sync:site"
 	default:
 		return "unknown"
 	}
@@ -180,6 +183,8 @@ func makeURI(t ResourceType, id string) string {
 		return config.MakeURLReport("/api/session")
 	case TypeSignal:
 		return config.MakeURLReport("/api/signal/%s", id)
+	case TypeSite:
+		return config.MakeURLReport("/api/site/%s", id)
 	default:
 		return config.MakeURLReport("/unknown")
 	}
