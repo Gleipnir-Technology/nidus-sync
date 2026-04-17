@@ -88,13 +88,23 @@ const mapMarkers = computed<Marker[]>(() => {
 	if (!(site && site.address.location)) {
 		return [];
 	}
-	const markers = {
-		color: "#FF0000",
-		draggable: false,
-		id: "address",
-		location: site.address.location,
-	};
-	return [markers];
+	let markers = [
+		{
+			color: "#FF0000",
+			draggable: false,
+			id: "address",
+			location: site.address.location,
+		},
+	];
+	for (const feature of site.features) {
+		markers.push({
+			color: "#00FF00",
+			draggable: false,
+			id: feature.id.toString(),
+			location: feature.location,
+		});
+	}
+	return markers;
 });
 async function doRequestComplianceMailer(id: number) {
 	submitting.value = true;

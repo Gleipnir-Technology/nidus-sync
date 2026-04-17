@@ -447,7 +447,7 @@ function panToMarkers(markers: Marker[]) {
 		const bounds = boundsMarkers(markers);
 		map.value.fitBounds(
 			bounds,
-			{ padding: 10, duration: 1000 },
+			{ padding: 100, duration: 1000 },
 			{ isInternalUpdate: true },
 		);
 		console.log("fitting map to bounds", bounds);
