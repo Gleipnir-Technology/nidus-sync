@@ -30,7 +30,7 @@ func getTile(w http.ResponseWriter, r *http.Request, user platform.User) {
 		http.Error(w, "can't parse x as an integer", http.StatusBadRequest)
 		return
 	}
-	err = platform.GetTile(r.Context(), w, user.Organization, uint(z), uint(y), uint(x))
+	err = platform.GetTile(r.Context(), w, user.Organization, true, uint(z), uint(y), uint(x))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to do tile")
 		http.Error(w, "failed to do tile", http.StatusInternalServerError)

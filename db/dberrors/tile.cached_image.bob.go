@@ -7,7 +7,7 @@ var TileCachedImageErrors = &tileCachedImageErrors{
 	ErrUniqueCachedImagePkey: &UniqueConstraintError{
 		schema:  "tile",
 		table:   "cached_image",
-		columns: []string{"arcgis_id", "x", "y", "z"},
+		columns: []string{"service_id", "x", "y", "z"},
 		s:       "cached_image_pkey",
 	},
 }

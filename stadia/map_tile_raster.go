@@ -9,20 +9,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type RequestTileRaster struct {
+type RequestTileRasterLatLng struct {
 	Latitude  float64
 	Longitude float64
 	//Style string
 	Zoom uint
 }
 
-func (s *StadiaMaps) TileRaster(ctx context.Context, req RequestTileRaster) ([]byte, error) {
+func (s *StadiaMaps) TileRaster(ctx context.Context, z, y, x uint) ([]byte, error) {
 	// https://docs.stadiamaps.com/raster/
 	//url := "https://{urlBase}/tiles/{style}/{z}/{x}/{y}{r}.png"
 	//url := "https://{urlBase}/data/imagery/{z}/{x}/{y}{r}.png"
 	url := "https://{urlBase}/tiles/alidade_satellite/{z}/{x}/{y}.jpg"
 
-	y, x := LatLngToTile(req.Zoom, req.Latitude, req.Longitude)
 	//var api_error Error
 	resp, err := s.client.R().
 		SetContext(ctx).
@@ -30,7 +29,7 @@ func (s *StadiaMaps) TileRaster(ctx context.Context, req RequestTileRaster) ([]b
 		//SetPathParam("r", "").
 		SetPathParam("x", strconv.Itoa(int(x))).
 		SetPathParam("y", strconv.Itoa(int(y))).
-		SetPathParam("z", strconv.Itoa(int(req.Zoom))).
+		SetPathParam("z", strconv.Itoa(int(z))).
 		SetPathParam("urlBase", s.urlBaseTiles).
 		SetQueryParam("api_key", s.APIKey).
 		Get(url)
@@ -44,6 +43,10 @@ func (s *StadiaMaps) TileRaster(ctx context.Context, req RequestTileRaster) ([]b
 	content_type := resp.Header().Get("Content-Type")
 	log.Debug().Str("content_type", content_type).Send()
 	return resp.Bytes(), nil
+}
+func (s *StadiaMaps) TileRasterLatLng(ctx context.Context, req RequestTileRasterLatLng) ([]byte, error) {
+	y, x := LatLngToTile(req.Zoom, req.Latitude, req.Longitude)
+	return s.TileRaster(ctx, req.Zoom, y, x)
 }
 
 // LatLngToTile converts GPS coordinates to ArcGIS tile coordinates

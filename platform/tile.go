@@ -22,18 +22,23 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
+	"github.com/Gleipnir-Technology/nidus-sync/stadia"
 	"github.com/rs/zerolog/log"
 )
 
 //go:embed empty-tile.png
 var emptyTileFS embed.FS
 
-func GetTile(ctx context.Context, w http.ResponseWriter, org Organization, z, y, x uint) error {
-	return getTile(ctx, w, org.model, z, y, x)
+func GetTile(ctx context.Context, w http.ResponseWriter, org Organization, use_placeholder bool, z, y, x uint) error {
+	return getTileFlyover(ctx, w, org.model, use_placeholder, z, y, x)
 }
-func GetTileLatLng(ctx context.Context, w http.ResponseWriter, org *models.Organization, level uint, lat, lng float64) error {
+func GetTileFlyoverLatLng(ctx context.Context, w http.ResponseWriter, org *models.Organization, use_placeholder bool, level uint, lat, lng float64) error {
 	y, x := LatLngToTile(level, lat, lng)
-	return getTile(ctx, w, org, level, y, x)
+	return getTileFlyover(ctx, w, org, use_placeholder, level, y, x)
+}
+func GetTileSatelliteLatLng(ctx context.Context, w http.ResponseWriter, level uint, lat, lng float64) error {
+	y, x := LatLngToTile(level, lat, lng)
+	return getTileSatellite(ctx, w, level, y, x)
 }
 
 func ImageAtPoint(ctx context.Context, org Organization, level uint, lat, lng float64) (*TileRaster, error) {
@@ -84,7 +89,11 @@ func WriteTileRandom(ctx context.Context, w http.ResponseWriter) error {
 		return fmt.Errorf("get tiles: %w", err)
 	}
 	tile_row := tile_rows[rand.Intn(len(tile_rows))]
-	tile_path := tilePath(tile_row.ArcgisID, uint(tile_row.Z), uint(tile_row.Y), uint(tile_row.X))
+	service, err := models.FindTileService(ctx, db.PGInstance.BobDB, tile_row.ServiceID)
+	if err != nil {
+		return fmt.Errorf("get service: %w", err)
+	}
+	tile_path := tilePath(service.Name, uint(tile_row.Z), uint(tile_row.Y), uint(tile_row.X))
 	var tile *TileRaster
 	if tile_row.IsEmpty {
 		tile = TileRasterPlaceholder()
@@ -97,56 +106,109 @@ func WriteTileRandom(ctx context.Context, w http.ResponseWriter) error {
 	log.Debug().Int32("z", tile_row.Z).Int32("y", tile_row.Y).Int32("x", tile_row.X).Bool("is empty", tile_row.IsEmpty).Msg("random tile")
 	return writeTile(w, tile)
 }
-func getTile(ctx context.Context, w http.ResponseWriter, org *models.Organization, z, y, x uint) error {
-	if org.ArcgisMapServiceID.IsNull() {
-		return fmt.Errorf("no map service ID set")
-	}
-	map_service_id := org.ArcgisMapServiceID.MustGet()
-	tile_path := tilePath(map_service_id, z, y, x)
-	tile_row, err := models.TileCachedImages.Query(
-		models.SelectWhere.TileCachedImages.ArcgisID.EQ(map_service_id),
-		models.SelectWhere.TileCachedImages.X.EQ(int32(x)),
-		models.SelectWhere.TileCachedImages.Y.EQ(int32(y)),
-		models.SelectWhere.TileCachedImages.Z.EQ(int32(z)),
-	).One(ctx, db.PGInstance.BobDB)
-	if err == nil {
-		var tile *TileRaster
-		if tile_row.IsEmpty {
-			tile = TileRasterPlaceholder()
-		} else {
-			tile, err = loadTileFromDisk(tile_path)
-			if err != nil {
-				return fmt.Errorf("load tile from disk: %w", err)
-			}
-		}
-		log.Debug().Uint("z", z).Uint("y", y).Uint("x", x).Bool("is empty", tile_row.IsEmpty).Msg("tile from cache")
-		return writeTile(w, tile)
-	}
-	if err.Error() != "sql: no rows in result set" {
-		return fmt.Errorf("query db: %w", err)
-	}
-	image, err := ImageAtTile(ctx, org, uint(z), uint(y), uint(x))
-	if err != nil {
-		return fmt.Errorf("image at tile: %w", err)
-	}
+func cacheImage(ctx context.Context, image *TileRaster, map_service *models.TileService, z, y, x uint) error {
+	var err error
 	if !image.IsPlaceholder {
+		tile_path := tilePath(map_service.Name, z, y, x)
 		err = saveTileToDisk(image, tile_path)
 		if err != nil {
 			return fmt.Errorf("save tile: %w", err)
 		}
 	}
 	_, err = models.TileCachedImages.Insert(&models.TileCachedImageSetter{
-		ArcgisID: omit.From(map_service_id),
-		X:        omit.From(int32(x)),
-		Y:        omit.From(int32(y)),
-		Z:        omit.From(int32(z)),
-		IsEmpty:  omit.From(image.IsPlaceholder),
+		ServiceID: omit.From(map_service.ID),
+		X:         omit.From(int32(x)),
+		Y:         omit.From(int32(y)),
+		Z:         omit.From(int32(z)),
+		IsEmpty:   omit.From(image.IsPlaceholder),
 	}).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return fmt.Errorf("save to db: %w", err)
 	}
-	log.Debug().Uint("z", z).Uint("y", y).Uint("x", x).Bool("placeholder", image.IsPlaceholder).Msg("caching tile")
+	log.Debug().Str("service", map_service.Name).Uint("z", z).Uint("y", y).Uint("x", x).Bool("placeholder", image.IsPlaceholder).Msg("caching tile")
+	return nil
+}
+func getTileCached(ctx context.Context, map_service *models.TileService, z, y, x uint) (*TileRaster, bool, error) {
+	tile_path := tilePath(map_service.Name, z, y, x)
+	tile_row, err := models.TileCachedImages.Query(
+		models.SelectWhere.TileCachedImages.ServiceID.EQ(map_service.ID),
+		models.SelectWhere.TileCachedImages.X.EQ(int32(x)),
+		models.SelectWhere.TileCachedImages.Y.EQ(int32(y)),
+		models.SelectWhere.TileCachedImages.Z.EQ(int32(z)),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("query db: %w", err)
+	}
+	if tile_row.IsEmpty {
+		return TileRasterPlaceholder(), true, nil
+	}
+	tile, err := loadTileFromDisk(tile_path)
+	if err != nil {
+		return nil, false, fmt.Errorf("load tile from disk: %w", err)
+	}
+	//log.Debug().Uint("z", z).Uint("y", y).Uint("x", x).Bool("is empty", tile_row.IsEmpty).Msg("tile from cache")
+	return tile, false, nil
+}
+func getTileFlyover(ctx context.Context, w http.ResponseWriter, org *models.Organization, use_placeholder bool, z, y, x uint) error {
+	if org.ArcgisMapServiceID.IsNull() {
+		return fmt.Errorf("no map service ID set")
+	}
+	map_service_id := org.ArcgisMapServiceID.MustGet()
+	map_service, err := models.TileServices.Query(
+		models.SelectWhere.TileServices.ArcgisID.EQ(map_service_id),
+	).One(ctx, db.PGInstance.BobDB)
+	cached_tile, is_placeholder, err := getTileCached(ctx, map_service, z, y, x)
+	if err != nil {
+		return fmt.Errorf("get cached tile: %w", err)
+	}
+	if is_placeholder && !use_placeholder {
+		return fmt.Errorf("only a placeholder is available at %d %d %d", z, y, x)
+	}
+	if cached_tile != nil {
+		return writeTile(w, cached_tile)
+	}
+	image, err := ImageAtTile(ctx, org, uint(z), uint(y), uint(x))
+	if err != nil {
+		return fmt.Errorf("image at tile: %w", err)
+	}
+	err = cacheImage(ctx, image, map_service, z, y, x)
+	if err != nil {
+		return fmt.Errorf("cache image: %w", err)
+	}
 	return writeTile(w, image)
+}
+func getTileSatellite(ctx context.Context, w http.ResponseWriter, z, y, x uint) error {
+	map_service_id := "stadia"
+	map_service, err := models.TileServices.Query(
+		models.SelectWhere.TileServices.Name.EQ(map_service_id),
+	).One(ctx, db.PGInstance.BobDB)
+	cached_tile, is_placeholder, err := getTileCached(ctx, map_service, z, y, x)
+	if err != nil {
+		return fmt.Errorf("get cached tile: %w", err)
+	}
+	if is_placeholder {
+		return fmt.Errorf("only a placeholder is available at %d %d %d", z, y, x)
+	}
+	if cached_tile != nil {
+		return writeTile(w, cached_tile)
+	}
+	client := stadia.NewStadiaMaps(config.StadiaMapsAPIKey)
+	data, err := client.TileRaster(ctx, z, y, x)
+	if err != nil {
+		return fmt.Errorf("stadia tile raster: %w", err)
+	}
+	tile := TileRaster{
+		Content:       data,
+		IsPlaceholder: false,
+	}
+	err = cacheImage(ctx, &tile, map_service, z, y, x)
+	if err != nil {
+		return fmt.Errorf("cache image: %w", err)
+	}
+	return writeTile(w, &tile)
 }
 func imageAtPoint(ctx context.Context, org *models.Organization, level uint, lat, lng float64) (*TileRaster, error) {
 	fssync, err := getFieldseeker(ctx, org)

@@ -36,12 +36,12 @@ func main() {
 
 	client := stadia.NewStadiaMaps(key)
 	ctx := context.Background()
-	req := stadia.RequestTileRaster{
+	req := stadia.RequestTileRasterLatLng{
 		Latitude:  *lat,
 		Longitude: *lng,
 		Zoom:      *zoom,
 	}
-	data, err := client.TileRaster(ctx, req)
+	data, err := client.TileRasterLatLng(ctx, req)
 	if err != nil {
 		log.Printf("err: %v\n", err)
 		os.Exit(2)

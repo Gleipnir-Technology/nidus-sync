@@ -22,11 +22,11 @@ import (
 
 // TileCachedImage is an object representing the database table.
 type TileCachedImage struct {
-	ArcgisID string `db:"arcgis_id,pk" `
-	X        int32  `db:"x,pk" `
-	Y        int32  `db:"y,pk" `
-	Z        int32  `db:"z,pk" `
-	IsEmpty  bool   `db:"is_empty" `
+	X         int32 `db:"x,pk" `
+	Y         int32 `db:"y,pk" `
+	Z         int32 `db:"z,pk" `
+	IsEmpty   bool  `db:"is_empty" `
+	ServiceID int32 `db:"service_id,pk" `
 
 	R tileCachedImageR `db:"-" `
 }
@@ -43,31 +43,31 @@ type TileCachedImagesQuery = *psql.ViewQuery[*TileCachedImage, TileCachedImageSl
 
 // tileCachedImageR is where relationships are stored.
 type tileCachedImageR struct {
-	ArcgisServiceMap *ArcgisServiceMap // tile.cached_image.cached_image_arcgis_id_fkey
+	Service *TileService // tile.cached_image.cached_image_service_id_fkey
 }
 
 func buildTileCachedImageColumns(alias string) tileCachedImageColumns {
 	return tileCachedImageColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"arcgis_id", "x", "y", "z", "is_empty",
+			"x", "y", "z", "is_empty", "service_id",
 		).WithParent("tile.cached_image"),
 		tableAlias: alias,
-		ArcgisID:   psql.Quote(alias, "arcgis_id"),
 		X:          psql.Quote(alias, "x"),
 		Y:          psql.Quote(alias, "y"),
 		Z:          psql.Quote(alias, "z"),
 		IsEmpty:    psql.Quote(alias, "is_empty"),
+		ServiceID:  psql.Quote(alias, "service_id"),
 	}
 }
 
 type tileCachedImageColumns struct {
 	expr.ColumnsExpr
 	tableAlias string
-	ArcgisID   psql.Expression
 	X          psql.Expression
 	Y          psql.Expression
 	Z          psql.Expression
 	IsEmpty    psql.Expression
+	ServiceID  psql.Expression
 }
 
 func (c tileCachedImageColumns) Alias() string {
@@ -82,18 +82,15 @@ func (tileCachedImageColumns) AliasedAs(alias string) tileCachedImageColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type TileCachedImageSetter struct {
-	ArcgisID omit.Val[string] `db:"arcgis_id,pk" `
-	X        omit.Val[int32]  `db:"x,pk" `
-	Y        omit.Val[int32]  `db:"y,pk" `
-	Z        omit.Val[int32]  `db:"z,pk" `
-	IsEmpty  omit.Val[bool]   `db:"is_empty" `
+	X         omit.Val[int32] `db:"x,pk" `
+	Y         omit.Val[int32] `db:"y,pk" `
+	Z         omit.Val[int32] `db:"z,pk" `
+	IsEmpty   omit.Val[bool]  `db:"is_empty" `
+	ServiceID omit.Val[int32] `db:"service_id,pk" `
 }
 
 func (s TileCachedImageSetter) SetColumns() []string {
 	vals := make([]string, 0, 5)
-	if s.ArcgisID.IsValue() {
-		vals = append(vals, "arcgis_id")
-	}
 	if s.X.IsValue() {
 		vals = append(vals, "x")
 	}
@@ -106,13 +103,13 @@ func (s TileCachedImageSetter) SetColumns() []string {
 	if s.IsEmpty.IsValue() {
 		vals = append(vals, "is_empty")
 	}
+	if s.ServiceID.IsValue() {
+		vals = append(vals, "service_id")
+	}
 	return vals
 }
 
 func (s TileCachedImageSetter) Overwrite(t *TileCachedImage) {
-	if s.ArcgisID.IsValue() {
-		t.ArcgisID = s.ArcgisID.MustGet()
-	}
 	if s.X.IsValue() {
 		t.X = s.X.MustGet()
 	}
@@ -125,6 +122,9 @@ func (s TileCachedImageSetter) Overwrite(t *TileCachedImage) {
 	if s.IsEmpty.IsValue() {
 		t.IsEmpty = s.IsEmpty.MustGet()
 	}
+	if s.ServiceID.IsValue() {
+		t.ServiceID = s.ServiceID.MustGet()
+	}
 }
 
 func (s *TileCachedImageSetter) Apply(q *dialect.InsertQuery) {
@@ -134,32 +134,32 @@ func (s *TileCachedImageSetter) Apply(q *dialect.InsertQuery) {
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		vals := make([]bob.Expression, 5)
-		if s.ArcgisID.IsValue() {
-			vals[0] = psql.Arg(s.ArcgisID.MustGet())
+		if s.X.IsValue() {
+			vals[0] = psql.Arg(s.X.MustGet())
 		} else {
 			vals[0] = psql.Raw("DEFAULT")
 		}
 
-		if s.X.IsValue() {
-			vals[1] = psql.Arg(s.X.MustGet())
+		if s.Y.IsValue() {
+			vals[1] = psql.Arg(s.Y.MustGet())
 		} else {
 			vals[1] = psql.Raw("DEFAULT")
 		}
 
-		if s.Y.IsValue() {
-			vals[2] = psql.Arg(s.Y.MustGet())
+		if s.Z.IsValue() {
+			vals[2] = psql.Arg(s.Z.MustGet())
 		} else {
 			vals[2] = psql.Raw("DEFAULT")
 		}
 
-		if s.Z.IsValue() {
-			vals[3] = psql.Arg(s.Z.MustGet())
+		if s.IsEmpty.IsValue() {
+			vals[3] = psql.Arg(s.IsEmpty.MustGet())
 		} else {
 			vals[3] = psql.Raw("DEFAULT")
 		}
 
-		if s.IsEmpty.IsValue() {
-			vals[4] = psql.Arg(s.IsEmpty.MustGet())
+		if s.ServiceID.IsValue() {
+			vals[4] = psql.Arg(s.ServiceID.MustGet())
 		} else {
 			vals[4] = psql.Raw("DEFAULT")
 		}
@@ -174,13 +174,6 @@ func (s TileCachedImageSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 
 func (s TileCachedImageSetter) Expressions(prefix ...string) []bob.Expression {
 	exprs := make([]bob.Expression, 0, 5)
-
-	if s.ArcgisID.IsValue() {
-		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
-			psql.Quote(append(prefix, "arcgis_id")...),
-			psql.Arg(s.ArcgisID),
-		}})
-	}
 
 	if s.X.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -210,15 +203,22 @@ func (s TileCachedImageSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if s.ServiceID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "service_id")...),
+			psql.Arg(s.ServiceID),
+		}})
+	}
+
 	return exprs
 }
 
 // FindTileCachedImage retrieves a single record by primary key
 // If cols is empty Find will return all columns.
-func FindTileCachedImage(ctx context.Context, exec bob.Executor, ArcgisIDPK string, XPK int32, YPK int32, ZPK int32, cols ...string) (*TileCachedImage, error) {
+func FindTileCachedImage(ctx context.Context, exec bob.Executor, ServiceIDPK int32, XPK int32, YPK int32, ZPK int32, cols ...string) (*TileCachedImage, error) {
 	if len(cols) == 0 {
 		return TileCachedImages.Query(
-			sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(ArcgisIDPK))),
+			sm.Where(TileCachedImages.Columns.ServiceID.EQ(psql.Arg(ServiceIDPK))),
 			sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(XPK))),
 			sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(YPK))),
 			sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(ZPK))),
@@ -226,7 +226,7 @@ func FindTileCachedImage(ctx context.Context, exec bob.Executor, ArcgisIDPK stri
 	}
 
 	return TileCachedImages.Query(
-		sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(ArcgisIDPK))),
+		sm.Where(TileCachedImages.Columns.ServiceID.EQ(psql.Arg(ServiceIDPK))),
 		sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(XPK))),
 		sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(YPK))),
 		sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(ZPK))),
@@ -235,9 +235,9 @@ func FindTileCachedImage(ctx context.Context, exec bob.Executor, ArcgisIDPK stri
 }
 
 // TileCachedImageExists checks the presence of a single record by primary key
-func TileCachedImageExists(ctx context.Context, exec bob.Executor, ArcgisIDPK string, XPK int32, YPK int32, ZPK int32) (bool, error) {
+func TileCachedImageExists(ctx context.Context, exec bob.Executor, ServiceIDPK int32, XPK int32, YPK int32, ZPK int32) (bool, error) {
 	return TileCachedImages.Query(
-		sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(ArcgisIDPK))),
+		sm.Where(TileCachedImages.Columns.ServiceID.EQ(psql.Arg(ServiceIDPK))),
 		sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(XPK))),
 		sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(YPK))),
 		sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(ZPK))),
@@ -265,7 +265,7 @@ func (o *TileCachedImage) AfterQueryHook(ctx context.Context, exec bob.Executor,
 // primaryKeyVals returns the primary key values of the TileCachedImage
 func (o *TileCachedImage) primaryKeyVals() bob.Expression {
 	return psql.ArgGroup(
-		o.ArcgisID,
+		o.ServiceID,
 		o.X,
 		o.Y,
 		o.Z,
@@ -273,7 +273,7 @@ func (o *TileCachedImage) primaryKeyVals() bob.Expression {
 }
 
 func (o *TileCachedImage) pkEQ() dialect.Expression {
-	return psql.Group(psql.Quote("tile.cached_image", "arcgis_id"), psql.Quote("tile.cached_image", "x"), psql.Quote("tile.cached_image", "y"), psql.Quote("tile.cached_image", "z")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("tile.cached_image", "service_id"), psql.Quote("tile.cached_image", "x"), psql.Quote("tile.cached_image", "y"), psql.Quote("tile.cached_image", "z")).EQ(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		return o.primaryKeyVals().WriteSQL(ctx, w, d, start)
 	}))
 }
@@ -300,7 +300,7 @@ func (o *TileCachedImage) Delete(ctx context.Context, exec bob.Executor) error {
 // Reload refreshes the TileCachedImage using the executor
 func (o *TileCachedImage) Reload(ctx context.Context, exec bob.Executor) error {
 	o2, err := TileCachedImages.Query(
-		sm.Where(TileCachedImages.Columns.ArcgisID.EQ(psql.Arg(o.ArcgisID))),
+		sm.Where(TileCachedImages.Columns.ServiceID.EQ(psql.Arg(o.ServiceID))),
 		sm.Where(TileCachedImages.Columns.X.EQ(psql.Arg(o.X))),
 		sm.Where(TileCachedImages.Columns.Y.EQ(psql.Arg(o.Y))),
 		sm.Where(TileCachedImages.Columns.Z.EQ(psql.Arg(o.Z))),
@@ -337,7 +337,7 @@ func (o TileCachedImageSlice) pkIN() dialect.Expression {
 		return psql.Raw("NULL")
 	}
 
-	return psql.Group(psql.Quote("tile.cached_image", "arcgis_id"), psql.Quote("tile.cached_image", "x"), psql.Quote("tile.cached_image", "y"), psql.Quote("tile.cached_image", "z")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
+	return psql.Group(psql.Quote("tile.cached_image", "service_id"), psql.Quote("tile.cached_image", "x"), psql.Quote("tile.cached_image", "y"), psql.Quote("tile.cached_image", "z")).In(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
 		pkPairs := make([]bob.Expression, len(o))
 		for i, row := range o {
 			pkPairs[i] = row.primaryKeyVals()
@@ -352,7 +352,7 @@ func (o TileCachedImageSlice) pkIN() dialect.Expression {
 func (o TileCachedImageSlice) copyMatchingRows(from ...*TileCachedImage) {
 	for i, old := range o {
 		for _, new := range from {
-			if new.ArcgisID != old.ArcgisID {
+			if new.ServiceID != old.ServiceID {
 				continue
 			}
 			if new.X != old.X {
@@ -462,84 +462,84 @@ func (o TileCachedImageSlice) ReloadAll(ctx context.Context, exec bob.Executor) 
 	return nil
 }
 
-// ArcgisServiceMap starts a query for related objects on arcgis.service_map
-func (o *TileCachedImage) ArcgisServiceMap(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceMapsQuery {
-	return ArcgisServiceMaps.Query(append(mods,
-		sm.Where(ArcgisServiceMaps.Columns.ArcgisID.EQ(psql.Arg(o.ArcgisID))),
+// Service starts a query for related objects on tile.service
+func (o *TileCachedImage) Service(mods ...bob.Mod[*dialect.SelectQuery]) TileServicesQuery {
+	return TileServices.Query(append(mods,
+		sm.Where(TileServices.Columns.ID.EQ(psql.Arg(o.ServiceID))),
 	)...)
 }
 
-func (os TileCachedImageSlice) ArcgisServiceMap(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceMapsQuery {
-	pkArcgisID := make(pgtypes.Array[string], 0, len(os))
+func (os TileCachedImageSlice) Service(mods ...bob.Mod[*dialect.SelectQuery]) TileServicesQuery {
+	pkServiceID := make(pgtypes.Array[int32], 0, len(os))
 	for _, o := range os {
 		if o == nil {
 			continue
 		}
-		pkArcgisID = append(pkArcgisID, o.ArcgisID)
+		pkServiceID = append(pkServiceID, o.ServiceID)
 	}
 	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkArcgisID), "text[]")),
+		psql.F("unnest", psql.Cast(psql.Arg(pkServiceID), "integer[]")),
 	))
 
-	return ArcgisServiceMaps.Query(append(mods,
-		sm.Where(psql.Group(ArcgisServiceMaps.Columns.ArcgisID).OP("IN", PKArgExpr)),
+	return TileServices.Query(append(mods,
+		sm.Where(psql.Group(TileServices.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
 }
 
-func attachTileCachedImageArcgisServiceMap0(ctx context.Context, exec bob.Executor, count int, tileCachedImage0 *TileCachedImage, arcgisServiceMap1 *ArcgisServiceMap) (*TileCachedImage, error) {
+func attachTileCachedImageService0(ctx context.Context, exec bob.Executor, count int, tileCachedImage0 *TileCachedImage, tileService1 *TileService) (*TileCachedImage, error) {
 	setter := &TileCachedImageSetter{
-		ArcgisID: omit.From(arcgisServiceMap1.ArcgisID),
+		ServiceID: omit.From(tileService1.ID),
 	}
 
 	err := tileCachedImage0.Update(ctx, exec, setter)
 	if err != nil {
-		return nil, fmt.Errorf("attachTileCachedImageArcgisServiceMap0: %w", err)
+		return nil, fmt.Errorf("attachTileCachedImageService0: %w", err)
 	}
 
 	return tileCachedImage0, nil
 }
 
-func (tileCachedImage0 *TileCachedImage) InsertArcgisServiceMap(ctx context.Context, exec bob.Executor, related *ArcgisServiceMapSetter) error {
+func (tileCachedImage0 *TileCachedImage) InsertService(ctx context.Context, exec bob.Executor, related *TileServiceSetter) error {
 	var err error
 
-	arcgisServiceMap1, err := ArcgisServiceMaps.Insert(related).One(ctx, exec)
+	tileService1, err := TileServices.Insert(related).One(ctx, exec)
 	if err != nil {
 		return fmt.Errorf("inserting related objects: %w", err)
 	}
 
-	_, err = attachTileCachedImageArcgisServiceMap0(ctx, exec, 1, tileCachedImage0, arcgisServiceMap1)
+	_, err = attachTileCachedImageService0(ctx, exec, 1, tileCachedImage0, tileService1)
 	if err != nil {
 		return err
 	}
 
-	tileCachedImage0.R.ArcgisServiceMap = arcgisServiceMap1
+	tileCachedImage0.R.Service = tileService1
 
-	arcgisServiceMap1.R.ArcgisCachedImages = append(arcgisServiceMap1.R.ArcgisCachedImages, tileCachedImage0)
+	tileService1.R.CachedImages = append(tileService1.R.CachedImages, tileCachedImage0)
 
 	return nil
 }
 
-func (tileCachedImage0 *TileCachedImage) AttachArcgisServiceMap(ctx context.Context, exec bob.Executor, arcgisServiceMap1 *ArcgisServiceMap) error {
+func (tileCachedImage0 *TileCachedImage) AttachService(ctx context.Context, exec bob.Executor, tileService1 *TileService) error {
 	var err error
 
-	_, err = attachTileCachedImageArcgisServiceMap0(ctx, exec, 1, tileCachedImage0, arcgisServiceMap1)
+	_, err = attachTileCachedImageService0(ctx, exec, 1, tileCachedImage0, tileService1)
 	if err != nil {
 		return err
 	}
 
-	tileCachedImage0.R.ArcgisServiceMap = arcgisServiceMap1
+	tileCachedImage0.R.Service = tileService1
 
-	arcgisServiceMap1.R.ArcgisCachedImages = append(arcgisServiceMap1.R.ArcgisCachedImages, tileCachedImage0)
+	tileService1.R.CachedImages = append(tileService1.R.CachedImages, tileCachedImage0)
 
 	return nil
 }
 
 type tileCachedImageWhere[Q psql.Filterable] struct {
-	ArcgisID psql.WhereMod[Q, string]
-	X        psql.WhereMod[Q, int32]
-	Y        psql.WhereMod[Q, int32]
-	Z        psql.WhereMod[Q, int32]
-	IsEmpty  psql.WhereMod[Q, bool]
+	X         psql.WhereMod[Q, int32]
+	Y         psql.WhereMod[Q, int32]
+	Z         psql.WhereMod[Q, int32]
+	IsEmpty   psql.WhereMod[Q, bool]
+	ServiceID psql.WhereMod[Q, int32]
 }
 
 func (tileCachedImageWhere[Q]) AliasedAs(alias string) tileCachedImageWhere[Q] {
@@ -548,11 +548,11 @@ func (tileCachedImageWhere[Q]) AliasedAs(alias string) tileCachedImageWhere[Q] {
 
 func buildTileCachedImageWhere[Q psql.Filterable](cols tileCachedImageColumns) tileCachedImageWhere[Q] {
 	return tileCachedImageWhere[Q]{
-		ArcgisID: psql.Where[Q, string](cols.ArcgisID),
-		X:        psql.Where[Q, int32](cols.X),
-		Y:        psql.Where[Q, int32](cols.Y),
-		Z:        psql.Where[Q, int32](cols.Z),
-		IsEmpty:  psql.Where[Q, bool](cols.IsEmpty),
+		X:         psql.Where[Q, int32](cols.X),
+		Y:         psql.Where[Q, int32](cols.Y),
+		Z:         psql.Where[Q, int32](cols.Z),
+		IsEmpty:   psql.Where[Q, bool](cols.IsEmpty),
+		ServiceID: psql.Where[Q, int32](cols.ServiceID),
 	}
 }
 
@@ -562,16 +562,16 @@ func (o *TileCachedImage) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "ArcgisServiceMap":
-		rel, ok := retrieved.(*ArcgisServiceMap)
+	case "Service":
+		rel, ok := retrieved.(*TileService)
 		if !ok {
 			return fmt.Errorf("tileCachedImage cannot load %T as %q", retrieved, name)
 		}
 
-		o.R.ArcgisServiceMap = rel
+		o.R.Service = rel
 
 		if rel != nil {
-			rel.R.ArcgisCachedImages = TileCachedImageSlice{o}
+			rel.R.CachedImages = TileCachedImageSlice{o}
 		}
 		return nil
 	default:
@@ -580,73 +580,73 @@ func (o *TileCachedImage) Preload(name string, retrieved any) error {
 }
 
 type tileCachedImagePreloader struct {
-	ArcgisServiceMap func(...psql.PreloadOption) psql.Preloader
+	Service func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildTileCachedImagePreloader() tileCachedImagePreloader {
 	return tileCachedImagePreloader{
-		ArcgisServiceMap: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*ArcgisServiceMap, ArcgisServiceMapSlice](psql.PreloadRel{
-				Name: "ArcgisServiceMap",
+		Service: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*TileService, TileServiceSlice](psql.PreloadRel{
+				Name: "Service",
 				Sides: []psql.PreloadSide{
 					{
 						From:        TileCachedImages,
-						To:          ArcgisServiceMaps,
-						FromColumns: []string{"arcgis_id"},
-						ToColumns:   []string{"arcgis_id"},
+						To:          TileServices,
+						FromColumns: []string{"service_id"},
+						ToColumns:   []string{"id"},
 					},
 				},
-			}, ArcgisServiceMaps.Columns.Names(), opts...)
+			}, TileServices.Columns.Names(), opts...)
 		},
 	}
 }
 
 type tileCachedImageThenLoader[Q orm.Loadable] struct {
-	ArcgisServiceMap func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Service func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildTileCachedImageThenLoader[Q orm.Loadable]() tileCachedImageThenLoader[Q] {
-	type ArcgisServiceMapLoadInterface interface {
-		LoadArcgisServiceMap(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	type ServiceLoadInterface interface {
+		LoadService(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 
 	return tileCachedImageThenLoader[Q]{
-		ArcgisServiceMap: thenLoadBuilder[Q](
-			"ArcgisServiceMap",
-			func(ctx context.Context, exec bob.Executor, retrieved ArcgisServiceMapLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadArcgisServiceMap(ctx, exec, mods...)
+		Service: thenLoadBuilder[Q](
+			"Service",
+			func(ctx context.Context, exec bob.Executor, retrieved ServiceLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadService(ctx, exec, mods...)
 			},
 		),
 	}
 }
 
-// LoadArcgisServiceMap loads the tileCachedImage's ArcgisServiceMap into the .R struct
-func (o *TileCachedImage) LoadArcgisServiceMap(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadService loads the tileCachedImage's Service into the .R struct
+func (o *TileCachedImage) LoadService(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
 		return nil
 	}
 
 	// Reset the relationship
-	o.R.ArcgisServiceMap = nil
+	o.R.Service = nil
 
-	related, err := o.ArcgisServiceMap(mods...).One(ctx, exec)
+	related, err := o.Service(mods...).One(ctx, exec)
 	if err != nil {
 		return err
 	}
 
-	related.R.ArcgisCachedImages = TileCachedImageSlice{o}
+	related.R.CachedImages = TileCachedImageSlice{o}
 
-	o.R.ArcgisServiceMap = related
+	o.R.Service = related
 	return nil
 }
 
-// LoadArcgisServiceMap loads the tileCachedImage's ArcgisServiceMap into the .R struct
-func (os TileCachedImageSlice) LoadArcgisServiceMap(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+// LoadService loads the tileCachedImage's Service into the .R struct
+func (os TileCachedImageSlice) LoadService(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if len(os) == 0 {
 		return nil
 	}
 
-	arcgisServiceMaps, err := os.ArcgisServiceMap(mods...).All(ctx, exec)
+	tileServices, err := os.Service(mods...).All(ctx, exec)
 	if err != nil {
 		return err
 	}
@@ -656,15 +656,15 @@ func (os TileCachedImageSlice) LoadArcgisServiceMap(ctx context.Context, exec bo
 			continue
 		}
 
-		for _, rel := range arcgisServiceMaps {
+		for _, rel := range tileServices {
 
-			if !(o.ArcgisID == rel.ArcgisID) {
+			if !(o.ServiceID == rel.ID) {
 				continue
 			}
 
-			rel.R.ArcgisCachedImages = append(rel.R.ArcgisCachedImages, o)
+			rel.R.CachedImages = append(rel.R.CachedImages, o)
 
-			o.R.ArcgisServiceMap = rel
+			o.R.Service = rel
 			break
 		}
 	}

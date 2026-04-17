@@ -431,6 +431,13 @@ func updateServiceData(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, u
 				if err != nil {
 					return fmt.Errorf("save map service: %w", err)
 				}
+				_, err = models.TileServices.Insert(&models.TileServiceSetter{
+					Name:     omit.From(sm.Name),
+					ArcgisID: omitnull.From(sm.ID),
+				}).One(ctx, txn)
+				if err != nil {
+					return fmt.Errorf("save tile service: %w", err)
+				}
 			} else {
 				return err
 			}

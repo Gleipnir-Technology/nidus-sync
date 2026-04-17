@@ -114,6 +114,7 @@ type preloaders struct {
 	Signal                             signalPreloader
 	Site                               sitePreloader
 	TileCachedImage                    tileCachedImagePreloader
+	TileService                        tileServicePreloader
 	User                               userPreloader
 }
 
@@ -216,6 +217,7 @@ func getPreloaders() preloaders {
 		Signal:                             buildSignalPreloader(),
 		Site:                               buildSitePreloader(),
 		TileCachedImage:                    buildTileCachedImagePreloader(),
+		TileService:                        buildTileServicePreloader(),
 		User:                               buildUserPreloader(),
 	}
 }
@@ -324,6 +326,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	Signal                             signalThenLoader[Q]
 	Site                               siteThenLoader[Q]
 	TileCachedImage                    tileCachedImageThenLoader[Q]
+	TileService                        tileServiceThenLoader[Q]
 	User                               userThenLoader[Q]
 }
 
@@ -426,6 +429,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		Signal:                             buildSignalThenLoader[Q](),
 		Site:                               buildSiteThenLoader[Q](),
 		TileCachedImage:                    buildTileCachedImageThenLoader[Q](),
+		TileService:                        buildTileServiceThenLoader[Q](),
 		User:                               buildUserThenLoader[Q](),
 	}
 }

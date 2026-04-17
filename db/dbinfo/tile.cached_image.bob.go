@@ -15,15 +15,6 @@ var TileCachedImages = Table[
 	Schema: "tile",
 	Name:   "cached_image",
 	Columns: tileCachedImageColumns{
-		ArcgisID: column{
-			Name:      "arcgis_id",
-			DBType:    "text",
-			Default:   "",
-			Comment:   "",
-			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		X: column{
 			Name:      "x",
 			DBType:    "integer",
@@ -60,6 +51,15 @@ var TileCachedImages = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		ServiceID: column{
+			Name:      "service_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: tileCachedImageIndexes{
 		CachedImagePkey: index{
@@ -67,7 +67,7 @@ var TileCachedImages = Table[
 			Name: "cached_image_pkey",
 			Columns: []indexColumn{
 				{
-					Name:         "arcgis_id",
+					Name:         "service_id",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -97,18 +97,18 @@ var TileCachedImages = Table[
 	},
 	PrimaryKey: &constraint{
 		Name:    "cached_image_pkey",
-		Columns: []string{"arcgis_id", "x", "y", "z"},
+		Columns: []string{"service_id", "x", "y", "z"},
 		Comment: "",
 	},
 	ForeignKeys: tileCachedImageForeignKeys{
-		TileCachedImageCachedImageArcgisIDFkey: foreignKey{
+		TileCachedImageCachedImageServiceIDFkey: foreignKey{
 			constraint: constraint{
-				Name:    "tile.cached_image.cached_image_arcgis_id_fkey",
-				Columns: []string{"arcgis_id"},
+				Name:    "tile.cached_image.cached_image_service_id_fkey",
+				Columns: []string{"service_id"},
 				Comment: "",
 			},
-			ForeignTable:   "arcgis.service_map",
-			ForeignColumns: []string{"arcgis_id"},
+			ForeignTable:   "tile.service",
+			ForeignColumns: []string{"id"},
 		},
 	},
 
@@ -116,16 +116,16 @@ var TileCachedImages = Table[
 }
 
 type tileCachedImageColumns struct {
-	ArcgisID column
-	X        column
-	Y        column
-	Z        column
-	IsEmpty  column
+	X         column
+	Y         column
+	Z         column
+	IsEmpty   column
+	ServiceID column
 }
 
 func (c tileCachedImageColumns) AsSlice() []column {
 	return []column{
-		c.ArcgisID, c.X, c.Y, c.Z, c.IsEmpty,
+		c.X, c.Y, c.Z, c.IsEmpty, c.ServiceID,
 	}
 }
 
@@ -140,12 +140,12 @@ func (i tileCachedImageIndexes) AsSlice() []index {
 }
 
 type tileCachedImageForeignKeys struct {
-	TileCachedImageCachedImageArcgisIDFkey foreignKey
+	TileCachedImageCachedImageServiceIDFkey foreignKey
 }
 
 func (f tileCachedImageForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.TileCachedImageCachedImageArcgisIDFkey,
+		f.TileCachedImageCachedImageServiceIDFkey,
 	}
 }
 

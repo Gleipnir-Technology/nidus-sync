@@ -242,7 +242,6 @@ func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User
 		where,
 	).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
-		log.Info().Err(err).Msg("getUser failed")
 		if err.Error() == "No such user" || err.Error() == "sql: no rows in result set" {
 			return nil, &NoUserError{}
 		} else if err.Error() == "context canceled" {

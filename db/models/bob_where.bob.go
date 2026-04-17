@@ -124,6 +124,7 @@ func Where[Q psql.Filterable]() struct {
 	SpatialRefSys                        spatialRefSyWhere[Q]
 	StadiaAPIRequests                    stadiaAPIRequestWhere[Q]
 	TileCachedImages                     tileCachedImageWhere[Q]
+	TileServices                         tileServiceWhere[Q]
 	Users                                userWhere[Q]
 } {
 	return struct {
@@ -234,6 +235,7 @@ func Where[Q psql.Filterable]() struct {
 		SpatialRefSys                        spatialRefSyWhere[Q]
 		StadiaAPIRequests                    stadiaAPIRequestWhere[Q]
 		TileCachedImages                     tileCachedImageWhere[Q]
+		TileServices                         tileServiceWhere[Q]
 		Users                                userWhere[Q]
 	}{
 		Addresses:                            buildAddressWhere[Q](Addresses.Columns),
@@ -343,6 +345,7 @@ func Where[Q psql.Filterable]() struct {
 		SpatialRefSys:                        buildSpatialRefSyWhere[Q](SpatialRefSys.Columns),
 		StadiaAPIRequests:                    buildStadiaAPIRequestWhere[Q](StadiaAPIRequests.Columns),
 		TileCachedImages:                     buildTileCachedImageWhere[Q](TileCachedImages.Columns),
+		TileServices:                         buildTileServiceWhere[Q](TileServices.Columns),
 		Users:                                buildUserWhere[Q](Users.Columns),
 	}
 }
