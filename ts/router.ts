@@ -30,6 +30,7 @@ import ReviewRoot from "@/view/review/Root.vue";
 import ReviewSite from "@/view/review/Site.vue";
 import Signin from "@/view/Signin.vue";
 import Signout from "@/view/Signout.vue";
+import Signup from "@/view/Signup.vue";
 import Sudo from "@/view/Sudo.vue";
 import { apiClient } from "@/client";
 
@@ -182,6 +183,11 @@ const routes: RouteRecordRaw[] = [
 		name: "Signout",
 		path: "/signout",
 	},
+	{
+		component: Signup,
+		name: "Signup",
+		path: "/signup",
+	},
 	// Catch-all route - must be last
 	{
 		path: "/:pathMatch(.*)*",
@@ -197,7 +203,7 @@ export const router = createRouter({
 
 // Global navigation guard
 router.beforeEach(async (to, from) => {
-	if (to.fullPath == "/signin") {
+	if (to.fullPath == "/signin" || to.fullPath == "/signup") {
 		return;
 	}
 	const storeSession = useSessionStore();

@@ -19,9 +19,24 @@
 	</div>
 </template>
 <script setup lang="ts">
+import { onMounted } from "vue";
+
+import Sidebar from "@/components/layout/Sidebar.vue";
+import MainContent from "@/components/layout/MainContent.vue";
+import { Session } from "@/type/api";
+import { router } from "@/router";
 import { useSessionStore } from "@/store/session";
 
 const session = useSessionStore();
-import Sidebar from "@/components/layout/Sidebar.vue";
-import MainContent from "@/components/layout/MainContent.vue";
+onMounted(() => {
+	session
+		.get()
+		.then((session: Session) => {
+			console.log("session loaded by Authenticated", session);
+		})
+		.catch((e) => {
+			console.log("root session not loaded", router);
+			router.push("/signin");
+		});
+});
 </script>
