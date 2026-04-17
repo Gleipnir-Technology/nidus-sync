@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/label-studio"
@@ -74,7 +73,7 @@ func createLabelStudioClient() (*labelstudio.Client, error) {
 func noteAudioGetLatest(ctx context.Context, uuid string) (*models.NoteAudio, error) {
 	return nil, nil
 }
-func jobLabelStudioAudioCreate(ctx context.Context, txn bob.Executor, row_id int32) error {
+func jobLabelStudioAudioCreate(ctx context.Context, row_id int32) error {
 	return fmt.Errorf("label studio integration has been disabled")
 	/*
 		customer := os.Getenv("CUSTOMER")

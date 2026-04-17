@@ -8,14 +8,14 @@ import (
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	//"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	"github.com/aarondl/opt/omit"
+	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 )
 
@@ -100,7 +100,12 @@ func sendTextCommandResponse(ctx context.Context, txn bob.Executor, dst types.E1
 	_, err := sendTextDirect(ctx, txn, enums.CommsTextoriginCommandResponse, dst.PhoneString(), content, false, false)
 	return err
 }
-func sendTextComplete(ctx context.Context, txn bob.Executor, job *models.CommsTextJob) error {
+func sendTextComplete(ctx context.Context, job *models.CommsTextJob) error {
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer txn.Rollback(ctx)
 	dst, err := ParsePhoneNumber(job.Destination)
 	if err != nil {
 		return fmt.Errorf("parse phone: %w", err)
@@ -171,6 +176,7 @@ func sendTextComplete(ctx context.Context, txn bob.Executor, job *models.CommsTe
 	} else {
 		log.Debug().Msg("no report info on text")
 	}
+	txn.Commit(ctx)
 	return nil
 }
 

@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql"
 	//"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -21,7 +20,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/mailer"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
-	"github.com/jackc/pgx/v5"
 	//"github.com/Gleipnir-Technology/nidus-sync/userfile"
 	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -87,54 +85,42 @@ func addWaitingJobs(ctx context.Context) error {
 		for _, job := range jobs {
 			sublog := log.With().Int32("job", job.ID).Int32("row_id", job.RowID).Str("type", string(job.Type)).Logger()
 			sublog.Info().Msg("begin restarted background job")
-			txn, err := db.PGInstance.BobDB.Begin(ctx)
-			if err != nil {
-				sublog.Error().Err(err).Msg("failed begin txn")
-				continue
-			}
-			defer txn.Rollback(ctx)
-			app_name := fmt.Sprintf("restarted job %d", job.ID)
-			txn.Exec(fmt.Sprintf("SET application_name = '%s'", app_name))
-			err = handleJob(ctx, txn, job)
+			err = handleJob(ctx, job)
 			if err != nil {
 				sublog.Error().Err(err).Msg("failed handle job")
 				continue
 			}
-			err = job.Delete(ctx, txn)
+			err = job.Delete(ctx, db.PGInstance.BobDB)
 			if err != nil {
 				sublog.Error().Err(err).Msg("failed delete job")
 				continue
 			}
 			sublog.Info().Msg("job complete")
-			txn.Commit(ctx)
 		}
 	}()
 	return nil
 }
-func handleJob(ctx context.Context, txn bob.Executor, job *models.Job) error {
+func handleJob(ctx context.Context, job *models.Job) error {
 	switch job.Type {
 	case enums.JobtypeAudioTranscode:
-		return processAudioFile(ctx, txn, job.RowID)
+		return processAudioFile(ctx, job.RowID)
 	case enums.JobtypeComplianceMailerSend:
-		return mailer.ComplianceSend(ctx, txn, job.RowID)
+		return mailer.ComplianceSend(ctx, job.RowID)
 	case enums.JobtypeCSVCommit:
-		return csv.JobCommit(ctx, txn, job.RowID)
+		return csv.JobCommit(ctx, job.RowID)
 	case enums.JobtypeCSVImport:
-		return csv.JobImport(ctx, txn, job.RowID)
+		return csv.JobImport(ctx, job.RowID)
 	case enums.JobtypeLabelStudioAudioCreate:
-		return handleJobLabelStudioAudioCreate(ctx, txn, job.RowID)
+		return jobLabelStudioAudioCreate(ctx, job.RowID)
 	case enums.JobtypeEmailSend:
-		return email.Job(ctx, txn, job.RowID)
+		return email.Job(ctx, job.RowID)
 	case enums.JobtypeTextRespond:
-		return text.JobRespond(ctx, txn, job.RowID)
+		return text.JobRespond(ctx, job.RowID)
 	case enums.JobtypeTextSend:
-		return text.JobSend(ctx, txn, job.RowID)
+		return text.JobSend(ctx, job.RowID)
 	default:
 		return fmt.Errorf("No handler for job type %s", string(job.Type))
 	}
-}
-func handleJobLabelStudioAudioCreate(ctx context.Context, txn bob.Executor, row_id int32) error {
-	return jobLabelStudioAudioCreate(ctx, txn, row_id)
 }
 func listenForJobs(ctx context.Context) {
 	for {
@@ -189,26 +175,16 @@ func listenAndDoOneJob(ctx context.Context) error {
 		}
 		sublog := log.With().Int32("job", job.ID).Int32("row_id", job.RowID).Str("type", string(job.Type)).Logger()
 
-		tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-		if err != nil {
-			return fmt.Errorf("Failed to start transaction: %w", err)
-		}
-		defer tx.Rollback(ctx)
-		ctx, cancel := context.WithCancel(ctx)
-		txn := bobpgx.NewTx(tx, cancel)
-		defer txn.Rollback(ctx)
-
-		err = handleJob(ctx, txn, job)
+		err = handleJob(ctx, job)
 		if err != nil {
 			sublog.Error().Err(err).Msg("failed to handle job")
 			return nil
 		}
-		err = job.Delete(ctx, txn)
+		err = job.Delete(ctx, db.PGInstance.BobDB)
 		if err != nil {
 			sublog.Error().Err(err).Msg("failed to delete job")
 			return fmt.Errorf("delete job: %w", err)
 		}
-		txn.Commit(ctx)
 		sublog.Debug().Msg("job complete")
 	}
 }

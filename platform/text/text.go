@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
@@ -67,7 +66,12 @@ func HandleTextMessage(ctx context.Context, source string, destination string, c
 	return err
 }
 
-func respondText(ctx context.Context, txn bob.Executor, log_id int32) error {
+func respondText(ctx context.Context, log_id int32) error {
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer txn.Rollback(ctx)
 	l, err := models.FindCommsTextLog(ctx, txn, log_id)
 	if err != nil {
 		return fmt.Errorf("find comms: %w", err)
@@ -96,7 +100,7 @@ func respondText(ctx context.Context, txn bob.Executor, log_id int32) error {
 			if err != nil {
 				return fmt.Errorf("send response: %w", err)
 			}
-			handleWaitingTextJobs(ctx, txn, *src)
+			handleWaitingTextJobs(ctx, *src)
 		// We don't handle 'stop' here because we allow them to say 'stop' at any time, regardless of
 		// phone status.
 		//case "stop":
@@ -150,10 +154,10 @@ func respondText(ctx context.Context, txn bob.Executor, log_id int32) error {
 		return nil
 	}
 	// Otherwise let the LLM handle the response
-	return respondTextLLM(ctx, txn, *src)
+	return respondTextLLM(ctx, *src)
 }
 
-func respondTextLLM(ctx context.Context, txn bob.Executor, src types.E164) error {
+func respondTextLLM(ctx context.Context, src types.E164) error {
 	previous_messages, err := loadPreviousMessagesForLLM(ctx, src)
 	if err != nil {
 		return fmt.Errorf("Failed to get previous messages: %w", err)
@@ -163,10 +167,16 @@ func respondTextLLM(ctx context.Context, txn bob.Executor, src types.E164) error
 	if err != nil {
 		return fmt.Errorf("Failed to generate next message: %w", err)
 	}
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("start txn: %w", err)
+	}
+	defer txn.Rollback(ctx)
 	_, err = sendTextDirect(ctx, txn, enums.CommsTextoriginLLM, src.PhoneString(), next_message.Content, true, false)
 	if err != nil {
 		return fmt.Errorf("Failed to send response text: %w", err)
 	}
+	txn.Commit(ctx)
 	return nil
 }
 

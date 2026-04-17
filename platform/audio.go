@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/background"
@@ -13,7 +12,7 @@ import (
 	//"github.com/rs/zerolog/log"
 )
 
-func processAudioFile(ctx context.Context, txn bob.Executor, audio_id int32) error {
+func processAudioFile(ctx context.Context, audio_id int32) error {
 	a, err := models.NoteAudios.Query(
 		models.SelectWhere.NoteAudios.ID.EQ(audio_id),
 	).One(ctx, db.PGInstance.BobDB)

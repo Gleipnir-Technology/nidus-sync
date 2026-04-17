@@ -33,20 +33,21 @@ import (
 type csvParserFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV) ([]T, error)
 type csvProcessorFunc[T any] = func(context.Context, bob.Tx, *models.FileuploadFile, *models.FileuploadCSV, []T) error
 
-func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
+func JobCommit(ctx context.Context, file_id int32) error {
 	log.Debug().Int32("file_id", file_id).Msg("begin job commit")
-	file, err := models.FindFileuploadFile(ctx, txn, file_id)
+	bxn := db.PGInstance.BobDB
+	file, err := models.FindFileuploadFile(ctx, bxn, file_id)
 	if err != nil {
 		return fmt.Errorf("Failed to get csv file %d from DB: %w", file_id, err)
 	}
-	org, err := models.FindOrganization(ctx, txn, file.OrganizationID)
+	org, err := models.FindOrganization(ctx, bxn, file.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("Failed to get org %d from DB: %w", file.OrganizationID, err)
 	}
 
 	rows, err := models.FileuploadPools.Query(
 		models.SelectWhere.FileuploadPools.CSVFile.EQ(file_id),
-	).All(ctx, txn)
+	).All(ctx, bxn)
 	if err != nil {
 		return fmt.Errorf("Failed to get all rows of file %d: %w", file_id, err)
 	}
@@ -60,6 +61,11 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 	if err != nil {
 		return fmt.Errorf("get address list: %w", err)
 	}
+	txn, err := bxn.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer txn.Rollback(ctx)
 	for _, row := range rows {
 		var a *types.Address
 		var parcel *models.Parcel
@@ -173,18 +179,20 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 		return fmt.Errorf("update file status to committed: %w", err)
 	}
 	event.Updated(event.TypeFileCSV, file.OrganizationID, strconv.Itoa(int(file.ID)))
+	defer txn.Commit(ctx)
 	return nil
 }
-func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
+func JobImport(ctx context.Context, file_id int32) error {
+	bxn := db.PGInstance.BobDB
 	file, err := models.FileuploadFiles.Query(
 		models.SelectWhere.FileuploadFiles.ID.EQ(file_id),
-	).One(ctx, txn)
+	).One(ctx, bxn)
 	if err != nil {
 		return fmt.Errorf("find file: %w", err)
 	}
 	csv, err := models.FileuploadCSVS.Query(
 		models.SelectWhere.FileuploadCSVS.FileID.EQ(file_id),
-	).One(ctx, txn)
+	).One(ctx, bxn)
 	if err != nil {
 		return fmt.Errorf("find csv: %w", err)
 	}
@@ -202,7 +210,7 @@ func JobImport(ctx context.Context, txn bob.Executor, file_id int32) error {
 			um.SetCol("status").ToArg("error"),
 			um.SetCol("error").ToArg(err.Error()),
 			um.Where(psql.Quote("id").EQ(psql.Arg(file_id))),
-		).Exec(ctx, db.PGInstance.BobDB)
+		).Exec(ctx, bxn)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to set upload to error status")
 		}

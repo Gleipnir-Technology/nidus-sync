@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/lob"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
@@ -17,8 +17,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
-	compliance_req, err := models.FindComplianceReportRequest(ctx, txn, row_id)
+func ComplianceSend(ctx context.Context, row_id int32) error {
+	bxn := db.PGInstance.BobDB
+	compliance_req, err := models.FindComplianceReportRequest(ctx, bxn, row_id)
 	if err != nil {
 		return fmt.Errorf("find compliance report: %w", err)
 	}
@@ -28,7 +29,7 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 		return fmt.Errorf("no lead for compliance req %d", compliance_req.ID)
 	}
 	lead_id := compliance_req.LeadID.MustGet()
-	lead, err := models.FindLead(ctx, txn, lead_id)
+	lead, err := models.FindLead(ctx, bxn, lead_id)
 	if err != nil {
 		return fmt.Errorf("find lead: %w", err)
 	}
@@ -37,17 +38,17 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 		return fmt.Errorf("no site for lead %d", lead.ID)
 	}
 	site_id := lead.SiteID.MustGet()
-	site, err := models.FindSite(ctx, txn, site_id)
+	site, err := models.FindSite(ctx, bxn, site_id)
 	if err != nil {
 		return fmt.Errorf("find site: %w", err)
 	}
 
-	address, err := models.FindAddress(ctx, txn, site.AddressID)
+	address, err := models.FindAddress(ctx, bxn, site.AddressID)
 	if err != nil {
 		return fmt.Errorf("find address: %w", err)
 	}
 
-	organization, err := models.FindOrganization(ctx, txn, site.OrganizationID)
+	organization, err := models.FindOrganization(ctx, bxn, site.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("find address: %w", err)
 	}
@@ -79,6 +80,11 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 	if err != nil {
 		return fmt.Errorf("generate uuid: %w", err)
 	}
+	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("start txn: %w", err)
+	}
+	defer txn.Rollback(nil)
 	mailer, err := models.CommsMailers.Insert(&models.CommsMailerSetter{
 		AddressID:  omit.From(address.ID),
 		Created:    omit.From(time.Now()),
@@ -100,6 +106,7 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 		return fmt.Errorf("create crrm: %w", err)
 	}
 	log.Info().Int32("id", crrm.ID).Msg("Created compliance report request mailer")
+	txn.Commit(ctx)
 	return nil
 }
 

@@ -110,12 +110,36 @@ type RequestLetterCreate struct {
 	UseType string
 }
 
+/*
+	{
+	    "error": {
+	        "message": "address_zip is required",
+	        "status_code": 422,
+	        "code": "invalid"
+	    }
+	}
+*/
+type Error struct {
+	Code       string `json:"code"`
+	Message    string `json:"message"`
+	StatusCode int    `json:"status_code"`
+}
+type ResponseError struct {
+	InnerError Error `json:"error"`
+}
+
+func (re ResponseError) Error() string {
+	return fmt.Sprintf("%d %s %s", re.InnerError.StatusCode, re.InnerError.Code, re.InnerError.Message)
+}
+
 func (l *Lob) AddressCreate(ctx context.Context, req RequestAddressCreate) (Address, error) {
 	var result Address
+	var error_response ResponseError
 	resp, err := l.client.R().
 		SetBody(req).
 		SetContext(ctx).
 		SetContentType("application/json").
+		SetError(&error_response).
 		SetResult(&result).
 		SetPathParam("urlBase", l.urlBaseApi).
 		Post("https://{urlBase}/v1/addresses")
@@ -123,20 +147,18 @@ func (l *Lob) AddressCreate(ctx context.Context, req RequestAddressCreate) (Addr
 		return result, fmt.Errorf("address list post: %w", err)
 	}
 	if !resp.IsSuccess() {
-		content, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return result, fmt.Errorf("not successful, and can't read response body")
-		}
-		return result, fmt.Errorf("not successful: %s", string(content))
+		return result, fmt.Errorf("not successful: %v", error_response)
 	}
 	return result, nil
 }
 func (l *Lob) AddressList(ctx context.Context) ([]Address, error) {
 	var result ResponseAddressList
+	var error_response ResponseError
 
 	resp, err := l.client.R().
 		//SetQueryParamsFromValues(query).
 		SetContext(ctx).
+		SetError(&error_response).
 		SetResult(&result).
 		SetPathParam("urlBase", l.urlBaseApi).
 		Get("https://{urlBase}/v1/addresses")
@@ -150,12 +172,15 @@ func (l *Lob) AddressList(ctx context.Context) ([]Address, error) {
 }
 
 func (l *Lob) LetterCreate(ctx context.Context, req RequestLetterCreate) (Letter, error) {
+	var error_response ResponseError
 	var result Letter
 	color_str := "false"
 	if req.Color {
 		color_str = "true"
 	}
 	resp, err := l.client.R().
+		SetContext(ctx).
+		SetError(&error_response).
 		SetMultipartField(
 			"file",
 			"content.pdf",
@@ -168,7 +193,6 @@ func (l *Lob) LetterCreate(ctx context.Context, req RequestLetterCreate) (Letter
 			"to":       req.To,
 			"use_type": req.UseType,
 		}).
-		SetContext(ctx).
 		SetResult(&result).
 		SetPathParam("urlBase", l.urlBaseApi).
 		Post("https://{urlBase}/v1/letters")
@@ -181,11 +205,13 @@ func (l *Lob) LetterCreate(ctx context.Context, req RequestLetterCreate) (Letter
 	return result, nil
 }
 func (l *Lob) LetterList(ctx context.Context) ([]Letter, error) {
+	var error_response ResponseError
 	var result ResponseLetterList
 
 	resp, err := l.client.R().
 		//SetQueryParamsFromValues(query).
 		SetContext(ctx).
+		SetError(&error_response).
 		SetResult(&result).
 		SetPathParam("urlBase", l.urlBaseApi).
 		Get("https://{urlBase}/v1/letters")

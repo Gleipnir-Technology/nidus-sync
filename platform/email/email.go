@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -116,8 +115,9 @@ func sendEmailBegin(ctx context.Context, source string, destination string, temp
 	}
 	return background.NewEmailSend(ctx, db.PGInstance.BobDB, *e)
 }
-func sendEmailComplete(ctx context.Context, txn bob.Executor, email_id int32) error {
-	email_log, err := models.FindCommsEmailLog(ctx, txn, email_id)
+func sendEmailComplete(ctx context.Context, email_id int32) error {
+	bxn := db.PGInstance.BobDB
+	email_log, err := models.FindCommsEmailLog(ctx, bxn, email_id)
 	if err != nil {
 		return fmt.Errorf("find email: %w", err)
 	}
