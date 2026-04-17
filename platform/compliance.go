@@ -106,6 +106,9 @@ func ComplianceReportRequestByLeadID(ctx context.Context, lead_ids []int32) (map
 		return nil, fmt.Errorf("query reports: %w", err)
 	}
 	results := make(map[int32][]*types.ComplianceReportRequest, len(lead_ids))
+	for _, lead_id := range lead_ids {
+		results[lead_id] = make([]*types.ComplianceReportRequest, 0)
+	}
 	for _, row := range rows {
 		crrs, ok := results[row.LeadID.MustGet()]
 		if !ok {
