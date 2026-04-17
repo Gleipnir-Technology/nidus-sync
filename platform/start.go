@@ -90,18 +90,18 @@ func addWaitingJobs(ctx context.Context) error {
 			txn, err := db.PGInstance.BobDB.Begin(ctx)
 			if err != nil {
 				sublog.Error().Err(err).Msg("failed begin txn")
-				return
+				continue
 			}
 			defer txn.Rollback(ctx)
 			err = handleJob(ctx, txn, job)
 			if err != nil {
 				sublog.Error().Err(err).Msg("failed handle job")
-				return
+				continue
 			}
 			err = job.Delete(ctx, txn)
 			if err != nil {
 				sublog.Error().Err(err).Msg("failed delete job")
-				return
+				continue
 			}
 			sublog.Info().Msg("job complete")
 			txn.Commit(ctx)
