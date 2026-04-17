@@ -160,6 +160,9 @@ func getTileFlyover(ctx context.Context, w http.ResponseWriter, org *models.Orga
 	map_service, err := models.TileServices.Query(
 		models.SelectWhere.TileServices.ArcgisID.EQ(map_service_id),
 	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("get map service: %w", err)
+	}
 	cached_tile, is_placeholder, err := getTileCached(ctx, map_service, z, y, x)
 	if err != nil {
 		return fmt.Errorf("get cached tile: %w", err)
@@ -185,6 +188,9 @@ func getTileSatellite(ctx context.Context, w http.ResponseWriter, z, y, x uint) 
 	map_service, err := models.TileServices.Query(
 		models.SelectWhere.TileServices.Name.EQ(map_service_id),
 	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return fmt.Errorf("get map service: %w", err)
+	}
 	cached_tile, is_placeholder, err := getTileCached(ctx, map_service, z, y, x)
 	if err != nil {
 		return fmt.Errorf("get cached tile: %w", err)
