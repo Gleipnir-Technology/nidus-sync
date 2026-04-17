@@ -12,6 +12,7 @@ import (
 
 func GeneratePDF(ctx context.Context, path string) ([]byte, error) {
 	// create context
+	chromedp.Env("CHROME_FLAGS=--no-sandbox --disable-gpu --disable-dev-shm-usage")
 	chrome_ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
