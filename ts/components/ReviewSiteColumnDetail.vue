@@ -47,6 +47,7 @@
 				</tr>
 				<tr>
 					<td>
+						Leads<br />
 						<table>
 							<tbody>
 								<tr v-for="(lead, index) in selectedSite?.leads">

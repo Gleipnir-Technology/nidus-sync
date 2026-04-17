@@ -53,15 +53,18 @@ body {
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import { useStoreSite } from "@/store/site";
-import { useSessionStore } from "@/store/session";
 import maplibregl from "maplibre-gl";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+
+import { useQueryParam } from "@/composable/use-query-param";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import ReviewSiteColumnAction from "@/components/ReviewSiteColumnAction.vue";
 import ReviewSiteColumnDetail from "@/components/ReviewSiteColumnDetail.vue";
 import ReviewSiteColumnList from "@/components/ReviewSiteColumnList.vue";
 import { formatAddress } from "@/format";
+import { useStoreSite } from "@/store/site";
+import { useSessionStore } from "@/store/session";
 import type { Changes } from "@/types";
 import { Bounds, Contact, Location, Site } from "@/type/api";
 import { Camera } from "@/type/map";
@@ -74,8 +77,10 @@ const props = withDefaults(defineProps<Props>(), {});
 
 const error = ref<string>("");
 const mapFlyoverCamera = ref<Camera>(new Camera());
+const router = useRouter();
 const storeSite = useStoreSite();
 const selectedSiteID = ref<number>(0);
+const siteParam = useQueryParam("site");
 const submitting = ref<boolean>(false);
 const selectedSite = computed((): Site | undefined => {
 	if (!selectedSiteID.value) {
@@ -143,6 +148,7 @@ function siteSelect(id: number): void {
 		return;
 	}
 	mapFlyoverCamera.value = new Camera(site.address.location, 20);
+	siteParam.setValue(id.toString());
 	console.log("selecting site", id, site);
 }
 
@@ -150,4 +156,14 @@ function siteSelect(id: number): void {
 onMounted(async () => {
 	storeSite.fetchAll();
 });
+watch(
+	siteParam.value,
+	(site_id) => {
+		if (site_id) {
+			const id = parseInt(site_id, 10);
+			siteSelect(id);
+		}
+	},
+	{ immediate: true },
+);
 </script>
