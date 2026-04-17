@@ -2,9 +2,10 @@
 	<!-- Dashboard Header -->
 	<div class="row mb-4">
 		<div class="col-md-6">
-			<h1>{{ dashboard.organization.name }} Dashboard</h1>
+			<h1>{{ session?.organization?.name }} Dashboard</h1>
 			<p class="text-muted">
-				Overview of mosquito control activities in your district
+				Hey {{ session?.self?.display_name }}, here's an overview of mosquito
+				control activities in your district
 			</p>
 		</div>
 		<div

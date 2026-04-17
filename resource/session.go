@@ -24,6 +24,7 @@ func Session(r *router) *sessionR {
 
 type organization struct {
 	ID          int32              `json:"id"`
+	Name        string             `json:"name"`
 	ServiceArea *types.ServiceArea `json:"service_area"`
 }
 
@@ -88,6 +89,7 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 		},
 		Organization: organization{
 			ID:          user.Organization.ID,
+			Name:        user.Organization.Name(),
 			ServiceArea: user.Organization.ServiceArea,
 		},
 		Self: *u,

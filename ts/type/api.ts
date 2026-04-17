@@ -655,6 +655,7 @@ export interface User {
 }
 export interface Organization {
 	id: number;
+	name: string;
 	service_area?: Bounds;
 }
 export interface UserNotificationCounts {
