@@ -55,7 +55,7 @@ func ComplianceSend(ctx context.Context, txn bob.Executor, row_id int32) error {
 		return fmt.Errorf("organization %d has no Lob Address ID", organization.ID)
 	}
 
-	path := fmt.Sprintf("/mailer/mode-3/%s", compliance_req.PublicID)
+	path := fmt.Sprintf("/mailer/mode-3/%s/preview", compliance_req.PublicID)
 	content, err := pdf.GeneratePDF(ctx, path)
 	if err != nil {
 		return fmt.Errorf("generate pdf: %w", err)
