@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
+	"github.com/rs/zerolog/log"
 )
 
 func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32) (int32, error) {

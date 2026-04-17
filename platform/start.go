@@ -93,6 +93,8 @@ func addWaitingJobs(ctx context.Context) error {
 				continue
 			}
 			defer txn.Rollback(ctx)
+			app_name := fmt.Sprintf("restarted job %d", job.ID)
+			txn.Exec(fmt.Sprintf("SET application_name = '%s'", app_name))
 			err = handleJob(ctx, txn, job)
 			if err != nil {
 				sublog.Error().Err(err).Msg("failed handle job")
