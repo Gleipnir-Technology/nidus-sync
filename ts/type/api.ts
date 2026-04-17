@@ -108,10 +108,9 @@ export interface Followup {
 	id: number;
 	title: string;
 }
-export interface Lead {
-	description: string;
+export interface ComplianceReportRequest {
 	id: number;
-	title: string;
+	public_id: string;
 }
 export class LogEntry {
 	constructor(
@@ -534,8 +533,10 @@ export interface Feature {
 	type: string;
 }
 export interface Lead {
+	compliance_report_requests: ComplianceReportRequest[];
 	id: number;
 	site_id: number;
+	type: string;
 }
 export interface Site {
 	address: Address;

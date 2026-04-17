@@ -187,8 +187,8 @@
 					:key="lead.id"
 					class="border rounded p-2 mb-2 signal-item"
 				>
-					<div class="small fw-semibold">{{ lead.title }}</div>
-					<div class="text-muted small">{{ lead.description }}</div>
+					<div class="small fw-semibold">{{ lead.type }}</div>
+					<div class="text-muted small">{{ lead.id }}</div>
 				</div>
 			</div>
 		</div>

@@ -46,7 +46,29 @@
 					</td>
 				</tr>
 				<tr>
-					<td>Leads: {{ selectedSite?.leads.length ?? "none" }}</td>
+					<td>
+						<table>
+							<tbody>
+								<tr v-for="(lead, index) in selectedSite?.leads">
+									<td>{{ lead.type }}</td>
+									<td>
+										<ul>
+											<li
+												v-for="(crr, index2) in lead.compliance_report_requests"
+											>
+												<a
+													:href="mailerLink(crr)"
+													target="_blank"
+													rel="noopener noreferrer"
+													>Compliance Report Request {{ crr.public_id }}</a
+												>
+											</li>
+										</ul>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
 				</tr>
 			</tbody>
 		</table>
@@ -74,7 +96,7 @@ import MapLocator from "@/components/MapLocator.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 import { formatAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
-import { Site } from "@/type/api";
+import { ComplianceReportRequest, Site } from "@/type/api";
 import { Camera } from "@/type/map";
 import type { Marker } from "@/types";
 
@@ -91,6 +113,9 @@ const mapCamera = ref<Camera>(new Camera());
 const props = defineProps<Props>();
 const session = useSessionStore();
 
+function mailerLink(crr: ComplianceReportRequest): string {
+	return `/mailer/mode-3/${crr.public_id}/preview`;
+}
 watch(
 	() => props.mapFlyoverCamera,
 	(newMapFlyoverCamera: Camera) => {

@@ -15,7 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32) (int32, error) {
@@ -111,11 +111,13 @@ func ComplianceReportRequestByLeadID(ctx context.Context, lead_ids []int32) (map
 		results[lead_id] = make([]*types.ComplianceReportRequest, 0)
 	}
 	for _, row := range rows {
-		crrs, ok := results[row.LeadID.MustGet()]
+		lead_id := row.LeadID.MustGet()
+		crrs, ok := results[lead_id]
 		if !ok {
 			return nil, fmt.Errorf("impossible")
 		}
 		crrs = append(crrs, types.ComplianceReportRequestFromModel(row))
+		results[lead_id] = crrs
 	}
 	return results, nil
 }
