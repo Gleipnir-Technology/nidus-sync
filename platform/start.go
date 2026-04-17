@@ -183,27 +183,26 @@ func listenAndDoOneJob(ctx context.Context) error {
 		}
 		sublog := log.With().Int32("job", job.ID).Int32("row_id", job.RowID).Str("type", string(job.Type)).Logger()
 
-		//tx, err := c.BeginTx(ctx, pgx.TxOptions{})
 		tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 		if err != nil {
 			return fmt.Errorf("Failed to start transaction: %w", err)
 		}
+		defer tx.Rollback(ctx)
 		ctx, cancel := context.WithCancel(ctx)
 		txn := bobpgx.NewTx(tx, cancel)
+		defer txn.Rollback(ctx)
 
 		err = handleJob(ctx, txn, job)
 		if err != nil {
 			sublog.Error().Err(err).Msg("failed to handle job")
-			txn.Rollback(ctx)
 			return nil
 		}
 		err = job.Delete(ctx, txn)
 		if err != nil {
 			sublog.Error().Err(err).Msg("failed to delete job")
-			txn.Rollback(ctx)
 			return fmt.Errorf("delete job: %w", err)
 		}
 		txn.Commit(ctx)
-		//sublog.Debug().Msg("job complete")
+		sublog.Debug().Msg("job complete")
 	}
 }
