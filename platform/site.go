@@ -81,6 +81,7 @@ func SiteList(ctx context.Context, user User, limit int) ([]*types.Site, error) 
 	query := siteQuery()
 	query.Apply(
 		sm.Where(psql.Quote("site", "organization_id").EQ(psql.Arg(user.Organization.ID))),
+		sm.OrderBy(models.Sites.Columns.Created),
 		sm.Limit(limit),
 	)
 	return siteQueryToRows(ctx, query)
