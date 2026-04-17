@@ -22,7 +22,7 @@ func Site(r *router) *siteR {
 }
 
 func (res *siteR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) ([]*types.Site, *nhttp.ErrorWithStatus) {
-	limit := 20
+	limit := 1000
 	if query.Limit != nil {
 		limit = *query.Limit
 	}
