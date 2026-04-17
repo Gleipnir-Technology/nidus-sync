@@ -123,7 +123,11 @@ func (l *Lob) AddressCreate(ctx context.Context, req RequestAddressCreate) (Addr
 		return result, fmt.Errorf("address list post: %w", err)
 	}
 	if !resp.IsSuccess() {
-		return result, fmt.Errorf("not successful")
+		content, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return result, fmt.Errorf("not successful, and can't read response body")
+		}
+		return result, fmt.Errorf("not successful: %s", string(content))
 	}
 	return result, nil
 }
