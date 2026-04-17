@@ -203,7 +203,7 @@ export const router = createRouter({
 
 // Global navigation guard
 router.beforeEach(async (to, from) => {
-	if (to.fullPath == "/signin" || to.fullPath == "/signup") {
+	if (to.fullPath.startsWith("/signin") || to.fullPath == "/signup") {
 		return;
 	}
 	const storeSession = useSessionStore();
