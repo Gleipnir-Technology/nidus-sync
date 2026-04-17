@@ -28,7 +28,13 @@
 	>
 		<div class="d-flex">
 			<div>
-				<i class="bi bi-house"></i>
+				<i
+					class="bi"
+					:class="{
+						'bi-house-fill': site.leads.length > 0,
+						'bi-house': site.leads.length == 0,
+					}"
+				></i>
 			</div>
 			<strong>{{ formatAddress(site.address) }}</strong>
 		</div>
