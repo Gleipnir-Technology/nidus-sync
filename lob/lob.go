@@ -59,6 +59,31 @@ type ResponseAddressList struct {
 	CountTotal int       `json:"total_count"`
 }
 
+type RequestAddressCreate struct {
+	AddressLine1 string `json:"address_line1"`
+	AddressCity  string `json:"address_city"`
+	AddressState string `json:"address_state"`
+	AddressZip   string `json:"address_zip"`
+	Name         string `json:"name"`
+}
+
+func (l *Lob) AddressCreate(ctx context.Context, req RequestAddressCreate) (Address, error) {
+	var result Address
+	resp, err := l.client.R().
+		SetBody(req).
+		SetContext(ctx).
+		SetContentType("application/json").
+		SetResult(&result).
+		SetPathParam("urlBase", l.urlBaseApi).
+		Post("https://{urlBase}/v1/addresses")
+	if err != nil {
+		return result, fmt.Errorf("address list post: %w", err)
+	}
+	if !resp.IsSuccess() {
+		return result, fmt.Errorf("not successful")
+	}
+	return result, nil
+}
 func (l *Lob) AddressList(ctx context.Context) ([]Address, error) {
 	var result ResponseAddressList
 
