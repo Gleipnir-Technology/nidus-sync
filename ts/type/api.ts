@@ -528,12 +528,23 @@ export interface Parcel {
 	description: string;
 	id: number;
 }
+export interface Feature {
+	id: number;
+	location: Location;
+	type: string;
+}
+export interface Lead {
+	id: number;
+	site_id: number;
+}
 export interface Site {
 	address: Address;
 	created: string;
 	creator_id: number;
+	features: Feature[];
 	file_id: number;
 	id: number;
+	leads: Lead[];
 	notes: string;
 	organization_id: number;
 	owner?: Contact;

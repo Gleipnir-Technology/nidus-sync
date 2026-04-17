@@ -35,6 +35,19 @@
 					<td><b>Parcel Description</b></td>
 					<td>{{ selectedSite?.parcel?.description }}</td>
 				</tr>
+				<tr>
+					<td>
+						Features<br />
+						<ul>
+							<li v-for="(feature, index) in selectedSite?.features">
+								{{ feature.type }}
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<td>Leads: {{ selectedSite?.leads.length ?? "none" }}</td>
+				</tr>
 			</tbody>
 		</table>
 	</div>

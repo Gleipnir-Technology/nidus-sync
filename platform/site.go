@@ -117,6 +117,18 @@ func SiteList(ctx context.Context, user User, limit int) ([]*types.Site, error) 
 		}
 		result.Features = features
 	}
+	leads_by_site_id, err := leadsBySiteID(ctx, site_ids)
+	if err != nil {
+		return nil, fmt.Errorf("query leads for sites: %w", err)
+	}
+	for _, result := range results {
+		leads, ok := leads_by_site_id[result.ID]
+		if !ok {
+			return nil, fmt.Errorf("impossible")
+		}
+		result.Leads = leads
+	}
+
 	return results, nil
 }
 func SitesByID(ctx context.Context, ids []int32) (map[int32]*models.Site, error) {

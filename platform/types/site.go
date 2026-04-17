@@ -13,6 +13,7 @@ type Site struct {
 	Features       []Feature         `db:"-" json:"features"`
 	FileID         int32             `db:"file_id" json:"file_id"`
 	ID             int32             `db:"id" json:"id"`
+	Leads          []Lead            `db:"-" json:"leads"`
 	Notes          string            `db:"notes" json:"notes"`
 	OrganizationID int32             `db:"organization_id" json:"organization_id"`
 	Owner          Contact           `db:"owner" json:"owner"`
