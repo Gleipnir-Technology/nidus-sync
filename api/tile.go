@@ -6,7 +6,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/gorilla/mux"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 func getTile(w http.ResponseWriter, r *http.Request, user platform.User) {
@@ -32,7 +32,6 @@ func getTile(w http.ResponseWriter, r *http.Request, user platform.User) {
 	}
 	err = platform.GetTile(r.Context(), w, user.Organization, true, uint(z), uint(y), uint(x))
 	if err != nil {
-		log.Error().Err(err).Msg("failed to do tile")
 		http.Error(w, "failed to do tile", http.StatusInternalServerError)
 		return
 	}
