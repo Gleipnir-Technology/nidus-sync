@@ -75,15 +75,8 @@ func JobCommit(ctx context.Context, txn bob.Executor, file_id int32) error {
 				return fmt.Errorf("get parcel: %w", err)
 			}
 		} else {
-			a = &types.Address{
-				Country:    "usa",
-				Locality:   row.AddressLocality,
-				Number:     row.AddressNumber,
-				PostalCode: row.AddressPostalCode,
-				Region:     row.AddressRegion,
-				Street:     row.AddressStreet,
-				Unit:       "",
-			}
+			log.Warn().Int32("row_id", row.ID).Msg("does not havea matching address, and therefore can't become a site")
+			continue
 		}
 		var site *models.Site
 		site, err = models.Sites.Query(
