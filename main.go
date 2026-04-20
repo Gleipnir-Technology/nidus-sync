@@ -157,6 +157,7 @@ func main() {
 	}()
 
 	chan_envelope := make(chan platform.Envelope, 10)
+	api.SetVersion(Version)
 	platform.SetEventChannel(chan_envelope)
 	api.SetEventChannel(chan_envelope)
 

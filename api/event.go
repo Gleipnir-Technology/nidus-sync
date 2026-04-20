@@ -61,6 +61,12 @@ func SetEventChannel(chan_envelopes <-chan platform.Envelope) {
 		}
 	}()
 }
+
+var version string = "unknown"
+
+func SetVersion(v string) {
+	version = v
+}
 func send[T any](w http.ResponseWriter, msg T) error {
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
@@ -96,7 +102,7 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 	log.Debug().Int32("org", u.Organization.ID).Int("user", u.ID).Str("id", uid.String()).Msg("connected SSE client")
 
 	// Send an initial connected event
-	fmt.Fprintf(w, "event: connected\ndata: {\"status\": \"connected\", \"time\": \"%s\"}\n\n", time.Now().Format(time.RFC3339))
+	fmt.Fprintf(w, "event: connected\ndata: {\"status\": \"connected\", \"version\": \"%s\", \"time\": \"%s\"}\n\n", version, time.Now().Format(time.RFC3339))
 	w.(http.Flusher).Flush()
 
 	// Keep the connection open with a ticker sending periodic events
