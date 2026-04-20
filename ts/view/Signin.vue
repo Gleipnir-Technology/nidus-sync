@@ -75,6 +75,10 @@
 						<p>Don't have an account? <a href="/signup">Sign up</a></p>
 						<a href="forgot-password.html">Forgot password?</a>
 					</div>
+
+					<div class="mt-3 text-center" v-if="error">
+						<div class="alert alert-danger">{{ error }}</div>
+					</div>
 				</div>
 
 				<!-- Right side: Product Information -->
@@ -110,6 +114,7 @@ import { apiClient } from "@/client";
 import ButtonLoading from "@/components/common/ButtonLoading.vue";
 import { router } from "@/router";
 
+const error = ref<string>("");
 const loading = ref<boolean>(false);
 const password = ref<string>("");
 const username = ref<string>("");
@@ -123,6 +128,7 @@ async function doLogin() {
 		router.push("/");
 	} catch (e) {
 		console.log("login failed", e);
+		error.value = `Login failed: ${e}`;
 	} finally {
 		loading.value = false;
 	}
