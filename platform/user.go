@@ -13,7 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/debug"
+	//"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/aarondl/opt/omit"
 	//"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
@@ -247,7 +247,7 @@ func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User
 		} else if err.Error() == "context canceled" {
 			return nil, err
 		} else {
-			debug.LogErrorTypeInfo(err)
+			//debug.LogErrorTypeInfo(err)
 			log.Error().Err(err).Msg("Unrecognized error. This should be updated in the findUser code")
 			return nil, err
 		}
