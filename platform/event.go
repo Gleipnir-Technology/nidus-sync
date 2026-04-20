@@ -12,6 +12,9 @@ type Event = event.Event
 
 const EventTypeHeartbeat = event.EventTypeHeartbeat
 
+func EventShutdown() {
+	event.Shutdown()
+}
 func SetEventChannel(chan_events chan<- Envelope) {
 	event.SetEventChannel(chan_events)
 }

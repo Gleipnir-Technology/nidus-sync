@@ -54,8 +54,6 @@ func main() {
 		log.Error().Err(err).Msg("Failed to start sentry connection")
 		os.Exit(2)
 	}
-	defer sentry.Flush(2 * time.Second)
-
 	sentryWriter, err := sentryzerolog.New(sentryzerolog.Config{
 		ClientOptions: sentry.ClientOptions{
 			Dsn: config.SentryDSN,
@@ -79,6 +77,14 @@ func main() {
 	} else {
 		log.Logger = log.Logger.Level(zerolog.InfoLevel)
 	}
+
+	// Defer cleanup in reverse order - these will execute LAST (LIFO)
+	defer func() {
+		log.Info().Msg("Final cleanup")
+		os.Stderr.Sync()
+		sentryWriter.Close()
+		sentry.Flush(2 * time.Second)
+	}()
 
 	err = db.InitializeDatabase(context.TODO(), config.PGDSN)
 	if err != nil {
@@ -147,6 +153,7 @@ func main() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
 		}
+		log.Debug().Msg("Exiting listen-and-serve goroutine")
 	}()
 
 	chan_envelope := make(chan platform.Envelope, 10)
@@ -157,8 +164,11 @@ func main() {
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 	<-signalCh
-
 	log.Info().Msg("Received shutdown signal, shutting down...")
+	// Ensure logs are flushed
+	os.Stderr.Sync()
+
+	platform.EventShutdown()
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
@@ -171,6 +181,7 @@ func main() {
 	platform.WaitForExit()
 
 	log.Info().Msg("Shutdown complete")
+	os.Stderr.Sync()
 }
 func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

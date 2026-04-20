@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"os"
 
@@ -9,6 +10,11 @@ import (
 )
 
 func main() {
+	company := flag.String("company", "", "Filter by addresses belonging to a particular company")
+
+	flag.Parse()
+	log.Printf("%s", company)
+
 	key := os.Getenv("LOB_API_KEY")
 	if key == "" {
 		log.Println("LOB_API_KEY is empty")

@@ -41,6 +41,7 @@ const (
 	EventTypeCreated EventType = iota
 	EventTypeDeleted
 	EventTypeHeartbeat
+	EventTypeShutdown
 	EventTypeSudo
 	EventTypeUnknown
 	EventTypeUpdated
@@ -54,6 +55,8 @@ func (et EventType) String() string {
 		return "deleted"
 	case EventTypeHeartbeat:
 		return "heartbeat"
+	case EventTypeShutdown:
+		return "shutdown"
 	case EventTypeSudo:
 		return "sudo"
 	case EventTypeUnknown:
@@ -71,6 +74,8 @@ func EventTypeFromString(s string) EventType {
 		return EventTypeDeleted
 	case "heartbeat":
 		return EventTypeHeartbeat
+	case "shutdown":
+		return EventTypeShutdown
 	case "sudo":
 		return EventTypeSudo
 	case "updated":
@@ -106,6 +111,17 @@ func Created(t ResourceType, organization_id int32, uri_id string) {
 			URI:      makeURI(t, uri_id),
 		},
 		OrganizationID: organization_id,
+	})
+}
+func Shutdown() {
+	go Send(Envelope{
+		Event: Event{
+			Resource: "system",
+			Time:     time.Now(),
+			Type:     EventTypeShutdown,
+			URI:      config.MakeURLNidus("/"),
+		},
+		OrganizationID: 0,
 	})
 }
 func Updated(t ResourceType, organization_id int32, uri_id string) {

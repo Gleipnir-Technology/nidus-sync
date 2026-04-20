@@ -11,7 +11,7 @@
 # force production environment, but with debug logging
  export $(cat /var/run/secrets/nidus-dev-sync-env | xargs) && \
 	export $(cat .env | xargs) && \
-	./nidus-sync -prod 2>&1 | tee nidus-sync.log
+	./nidus-sync -prod
 #
 # Use nix build output, force production environment
 #export $(cat /var/run/secrets/nidus-dev-sync-env | xargs) && ./result/bin/nidus-sync -prod 2>&1 | tee nidus-sync.log
