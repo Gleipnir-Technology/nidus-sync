@@ -1,6 +1,21 @@
 { pkgs ? import <nixpkgs> { }, proj ? pkgs.proj }:
 
 pkgs.buildGoModule rec {
+  # Try to get git info, fallback to version if .git doesn't exist
+  # Note: This runs at eval time, so it captures the version when you build
+  gitRevision = 
+    if builtins.pathExists ./.git 
+    then pkgs.lib.commitIdFromGitRepo ./.git 
+    else "unknown";
+  gitDescribe = builtins.readFile (pkgs.runCommand "git-describe" {} ''
+    ${pkgs.git}/bin/git -C ${./.} describe --always --dirty --tags 2>/dev/null > $out || echo "${version}" > $out
+  '');
+  ldflags = [
+    "-s"
+    "-w"
+    "-X main.Version=${version}"
+    "-X main.Commit=${gitRevision}"
+  ];
   meta = {
     description = "Nidus Sync";
     homepage = "https://github.com/Gleipnir-Technology/nidus-sync";
