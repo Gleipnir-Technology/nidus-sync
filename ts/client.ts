@@ -1,11 +1,8 @@
 // src/api/axios.ts
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
-import router from "@/router";
 
 class ApiClient {
 	private client: AxiosInstance;
-	private _hasSession: boolean = false;
-	private _isAuthenticated: boolean = false;
 
 	constructor() {
 		this.client = axios.create({
@@ -33,7 +30,6 @@ class ApiClient {
 			(response) => response,
 			(error) => {
 				if (error.response?.status === 401) {
-					this._isAuthenticated = false;
 					// Could emit event or redirect here
 				}
 				return Promise.reject(error);
