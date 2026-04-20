@@ -42,7 +42,7 @@ func main() {
 		log.Warn().Msg("Forcing production mode for testing templates")
 		config.Environment = "PRODUCTION"
 	}
-	log.Info().Str("environment", config.Environment).Bool("is-prod", config.IsProductionEnvironment()).Msg("Starting")
+	log.Info().Str("environment", config.Environment).Bool("is-prod", config.IsProductionEnvironment()).Str("version", Version).Str("commit", Commit).Msg("Starting")
 	err = sentry.Init(sentry.ClientOptions{
 		Debug:            false, //!config.IsProductionEnvironment(),
 		Dsn:              config.SentryDSN,
