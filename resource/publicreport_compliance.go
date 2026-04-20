@@ -33,6 +33,22 @@ type compliance struct {
 	URI      string `json:"uri"`
 }
 
+type publicreportComplianceForm struct {
+	AccessInstructions omit.Val[string]                     `schema:"access_instructions" json:"access_instructions"`
+	Address            omit.Val[types.Address]              `schema:"address" json:"address"`
+	AvailabilityNotes  omit.Val[string]                     `schema:"availability_notes"  json:"availability_notes"`
+	ClientID           uuid.UUID                            `schema:"client_id" json:"client_id"`
+	Comments           omit.Val[string]                     `schema:"comments" json:"comments"`
+	District           omit.Val[string]                     `schema:"district" json:"district"`
+	GateCode           omit.Val[string]                     `schema:"gate_code" json:"gate_code"`
+	HasDog             omitnull.Val[bool]                   `schema:"has_dog" json:"has_dog"`
+	Location           omit.Val[types.Location]             `schema:"location" json:"location"`
+	PermissionType     omit.Val[enums.Permissionaccesstype] `schema:"permission_type" json:"permission_type"`
+	Reporter           omit.Val[types.Contact]              `schema:"reporter" json:"reporter"`
+	ReportPhoneCanSMS  omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
+	WantsScheduled     omitnull.Val[bool]                   `schema:"wants_scheduled" json:"wants_scheduled"`
+}
+
 func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
@@ -48,8 +64,15 @@ func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryPa
 	return report, nil
 }
 func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*compliance, *nhttp.ErrorWithStatus) {
+	if n.District.IsUnset() {
+		return nil, nhttp.NewBadRequest("You must provide a district_id")
+	}
+	district_id, err := res.router.IDFromURI("district.ByIDGet", n.District.MustGet())
+	if err != nil || district_id == nil {
+		return nil, nhttp.NewBadRequest("parse district ID: %w", err)
+	}
 	user_agent := r.Header.Get("User-Agent")
-	err := platform.EnsureClient(ctx, n.ClientID, user_agent)
+	err = platform.EnsureClient(ctx, n.ClientID, user_agent)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to ensure client: %w", err)
 	}
@@ -65,7 +88,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
 		Location: omitnull.FromPtr[string](nil),
 		MapZoom:  omit.From(float32(0.0)),
-		//OrganizationID:    omitnull.FromPtr(organization_id),
+		//OrganizationID:      omit.From[int32](int32(*district_id)),
 		//PublicID:          omit.From(public_id),
 		ReporterEmail:       omit.From(""),
 		ReporterName:        omit.From(""),
@@ -84,7 +107,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		//ReportID            omit.Val[int32]
 		WantsScheduled: omitnull.FromPtr[bool](nil),
 	}
-	report, err := platform.PublicReportComplianceCreate(ctx, setter_report, setter_compliance)
+	report, err := platform.PublicReportComplianceCreate(ctx, setter_report, setter_compliance, int32(*district_id))
 	if err != nil {
 		return nil, nhttp.NewError("create compliance report: %w", err)
 	}
@@ -102,22 +125,6 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		URI:      uri,
 	}, nil
 }
-
-type publicreportComplianceForm struct {
-	AccessInstructions omit.Val[string]                     `schema:"access_instructions" json:"access_instructions"`
-	Address            omit.Val[types.Address]              `schema:"address" json:"address"`
-	AvailabilityNotes  omit.Val[string]                     `schema:"availability_notes"  json:"availability_notes"`
-	ClientID           uuid.UUID                            `schema:"client_id" json:"client_id"`
-	Comments           omit.Val[string]                     `schema:"comments" json:"comments"`
-	GateCode           omit.Val[string]                     `schema:"gate_code" json:"gate_code"`
-	HasDog             omitnull.Val[bool]                   `schema:"has_dog" json:"has_dog"`
-	Location           omit.Val[types.Location]             `schema:"location" json:"location"`
-	PermissionType     omit.Val[enums.Permissionaccesstype] `schema:"permission_type" json:"permission_type"`
-	Reporter           omit.Val[types.Contact]              `schema:"reporter" json:"reporter"`
-	ReportPhoneCanSMS  omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
-	WantsScheduled     omitnull.Val[bool]                   `schema:"wants_scheduled" json:"wants_scheduled"`
-}
-
 func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]

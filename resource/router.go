@@ -19,6 +19,34 @@ func NewRouter(r *mux.Router) *router {
 		router: r,
 	}
 }
+func (r *router) IDFromURI(route string, uri string) (*int, error) {
+	var match mux.RouteMatch
+	req, _ := http.NewRequest("GET", uri, nil)
+	if !r.router.Match(req, &match) {
+		return nil, fmt.Errorf("URI does not match any known route: %s", uri)
+	}
+
+	route_name := match.Route.GetName()
+	if route_name != route {
+		return nil, fmt.Errorf("URI is not for the correct resource '%s', but for '%s'", route, route_name)
+	}
+	vars := match.Vars
+	id_str, ok := vars["id"]
+	if !ok {
+		entry := log.Debug()
+		for k, v := range vars {
+			entry = entry.Str(k, v)
+		}
+		entry.Msg("current URI values")
+		return nil, fmt.Errorf("No id found in URI %s", uri)
+	}
+	id, err := strconv.Atoi(id_str)
+	if err != nil {
+		return nil, fmt.Errorf("parse id: %w", err)
+	}
+	return &id, nil
+
+}
 func (r *router) UUIDFromURI(route string, uri string) (*uuid.UUID, error) {
 	var match mux.RouteMatch
 	req, _ := http.NewRequest("GET", uri, nil)

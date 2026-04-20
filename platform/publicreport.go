@@ -183,8 +183,8 @@ func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id st
 func PublicReportsForOrganization(ctx context.Context, org_id int32) ([]*types.PublicReport, error) {
 	return publicreport.ReportsForOrganization(ctx, org_id)
 }
-func PublicReportComplianceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_compliance models.PublicreportComplianceSetter) (*models.PublicreportReport, error) {
-	return publicReportCreate(ctx, setter_report, nil, nil, nil, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+func PublicReportComplianceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_compliance models.PublicreportComplianceSetter, org_id int32) (*models.PublicreportReport, error) {
+	return publicReportCreate(ctx, setter_report, nil, nil, nil, org_id, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_compliance.ReportID = omit.From(report_id)
 		_, err := models.PublicreportCompliances.Insert(&setter_compliance).One(ctx, txn)
 		if err != nil {
@@ -226,7 +226,7 @@ func PublicReportImageCreate(ctx context.Context, public_id string, images []Ima
 	return nil
 }
 func PublicReportNuisanceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_nuisance models.PublicreportNuisanceSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return publicReportCreate(ctx, setter_report, &location, &address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+	return publicReportCreate(ctx, setter_report, &location, &address, images, 0, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_nuisance.ReportID = omit.From(report_id)
 		_, err := models.PublicreportNuisances.Insert(&setter_nuisance).One(ctx, txn)
 		if err != nil {
@@ -237,7 +237,7 @@ func PublicReportNuisanceCreate(ctx context.Context, setter_report models.Public
 }
 
 func PublicReportWaterCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_water models.PublicreportWaterSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return publicReportCreate(ctx, setter_report, &location, &address, images, func(ctx context.Context, txn bob.Executor, report_id int32) error {
+	return publicReportCreate(ctx, setter_report, &location, &address, images, 0, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_water.ReportID = omit.From(report_id)
 		_, err := models.PublicreportWaters.Insert(&setter_water).One(ctx, txn)
 		if err != nil {
@@ -258,7 +258,7 @@ func PublicReportTypeByID(ctx context.Context, public_id string) (string, error)
 
 type funcSetReportDetail = func(context.Context, bob.Executor, int32) error
 
-func publicReportCreate(ctx context.Context, setter_report models.PublicreportReportSetter, location *types.Location, address *Address, images []ImageUpload, detail_setter funcSetReportDetail) (result *models.PublicreportReport, err error) {
+func publicReportCreate(ctx context.Context, setter_report models.PublicreportReportSetter, location *types.Location, address *Address, images []ImageUpload, organization_id int32, detail_setter funcSetReportDetail) (result *models.PublicreportReport, err error) {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
@@ -284,17 +284,16 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	if err != nil {
 		return nil, fmt.Errorf("Failed to save image uploads: %w", err)
 	}
-	var organization_id *int32
-	organization_id, err = matchDistrict(ctx, location, images)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to match district")
+	if organization_id == 0 {
+		organization_id, err = matchDistrict(ctx, location, images)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to match district")
+		}
 	}
+	setter_report.OrganizationID = omit.From(organization_id)
 
 	if addr != nil {
 		setter_report.AddressID = omitnull.From(addr.ID)
-	}
-	if organization_id != nil {
-		setter_report.OrganizationID = omit.FromPtr(organization_id)
 	}
 	result, err = models.PublicreportReports.Insert(&setter_report).One(ctx, txn)
 	if err != nil {
@@ -340,13 +339,11 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 
 	txn.Commit(ctx)
 
-	if organization_id != nil {
-		event.Created(
-			event.TypeRMOPublicReport,
-			*organization_id,
-			result.PublicID,
-		)
-	}
+	event.Created(
+		event.TypeRMOPublicReport,
+		organization_id,
+		result.PublicID,
+	)
 	return result, nil
 }
 func publicReportFromID(ctx context.Context, public_id string) (*models.PublicreportReport, error) {

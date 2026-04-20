@@ -47,7 +47,7 @@ func SetEventChannel(chan_envelopes <-chan platform.Envelope) {
 	go func() {
 		for envelope := range chan_envelopes {
 			for conn, _ := range connectionsSSE {
-				if conn.organizationID == envelope.OrganizationID {
+				if conn.organizationID == envelope.OrganizationID || conn.organizationID == 0 {
 					log.Debug().Int("type", int(envelope.Event.Type)).Int32("env-org", envelope.OrganizationID).Msg("pushed event to client")
 					conn.chanEvent <- envelope.Event
 				} else if conn.userID == envelope.UserID {

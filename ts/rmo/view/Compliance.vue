@@ -20,12 +20,12 @@ body > .container-fluid {
 }
 </style>
 <template>
-	<template v-if="district">
-		<router-view v-slot="{ Component }">
-			<LoadingOverlay
-				:is-loading="isLoading"
-				loading-text="Loading previous data"
-			>
+	<router-view v-slot="{ Component }">
+		<LoadingOverlay
+			:is-loading="isLoading"
+			loading-text="Loading previous data"
+		>
+			<template v-if="!isLoading">
 				<component
 					:is="Component"
 					:district="district"
@@ -36,12 +36,9 @@ body > .container-fluid {
 					@doSubmit="doSubmit"
 					v-model="report"
 				/>
-			</LoadingOverlay>
-		</router-view>
-	</template>
-	<template v-else>
-		<p>loading {{ slug }}...</p>
-	</template>
+			</template>
+		</LoadingOverlay>
+	</router-view>
 	<!-- Reference Number -->
 	<div class="reference-number" v-if="report && report.public_id">
 		<small>
@@ -79,28 +76,19 @@ const isLoading = ref<boolean>(true);
 const isUploading = ref<boolean>(false);
 const props = defineProps<Props>();
 const report = ref<PublicReportCompliance>(new PublicReportCompliance());
-const district = computedAsync(async (): Promise<District | undefined> => {
-	const districts = await districtStore.list();
-	return districts.find((district: District) => district.slug == props.slug);
-});
+const district = ref<District | undefined>(undefined);
 const storeLocal = useStoreLocal();
 const storeLocation = useStoreLocation();
-async function createReport(client_id: string, loc?: GeolocationPosition) {
+async function createReport(client_id: string, district_uri: string) {
 	let content = {
 		client_id: client_id,
+		district: district_uri,
 		location: {
 			accuracy: 0,
 			latitude: 0,
 			longitude: 0,
 		},
 	};
-	if (loc) {
-		content.location = {
-			accuracy: loc.coords.accuracy,
-			latitude: loc.coords.latitude,
-			longitude: loc.coords.longitude,
-		};
-	}
 	const resp = await fetch("/api/rmo/compliance", {
 		body: JSON.stringify(content),
 		headers: {
@@ -174,10 +162,8 @@ function doSubmit() {
 	storeLocal.delExistingComplianceReportURI();
 }
 async function fetchExistingReport(report_uri: string) {
-	isLoading.value = true;
 	const resp = await fetch(report_uri);
 	if (!resp.ok) {
-		isLoading.value = false;
 		const content = await resp.text();
 		console.error(
 			"Failed to fetch existing report",
@@ -190,7 +176,6 @@ async function fetchExistingReport(report_uri: string) {
 	const body = (await resp.json()) as PublicReportComplianceOptions;
 	Object.assign(report.value, new PublicReportCompliance(body));
 	console.log("fetched existing report", report.value);
-	isLoading.value = false;
 }
 async function updateReport(updates: ComplianceUpdate) {
 	if (!report.value.uri) {
@@ -209,6 +194,13 @@ async function updateReport(updates: ComplianceUpdate) {
 		console.error("Failed to update compliance", resp.status, content);
 		return;
 	}
+}
+async function updateLocation() {
+	const loc = await storeLocation.get();
+	report.value.location = loc.coords;
+	updateReport({
+		location: report.value.location,
+	});
 }
 async function uploadImages(images: Image[]) {
 	if (images.length == 0) return;
@@ -243,21 +235,34 @@ onMounted(() => {
 	const client_id = storeLocal.getClientID();
 	const report_uri = storeLocal.getExistingComplianceReportURI();
 	if (report_uri) {
-		fetchExistingReport(report_uri);
-	} else {
-		isLoading.value = false;
-		createReport(client_id);
+		fetchExistingReport(report_uri).then(() => {
+			updateLocation();
+		});
 	}
-	storeLocation
-		.get()
-		.then((loc: GeolocationPosition) => {
-			report.value.location = loc.coords;
-			updateReport({
-				location: report.value.location,
-			});
+	const districts = districtStore
+		.list()
+		.then((districts: District[]) => {
+			const d = districts.find(
+				(district: District) => district.slug == props.slug,
+			);
+			if (!d) {
+				console.error(
+					"Failed to find district with slug",
+					districts,
+					props.slug,
+				);
+				return;
+			}
+			district.value = d;
+			if (!report_uri) {
+				createReport(client_id, d.uri);
+			}
+			isLoading.value = false;
+			updateLocation();
 		})
 		.catch((e) => {
-			console.log("failed to get location", e);
+			console.error("Failed to list districts", e);
+			isLoading.value = false;
 		});
 });
 </script>
