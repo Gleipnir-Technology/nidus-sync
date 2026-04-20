@@ -7,6 +7,7 @@ import ComplianceConcern from "@/rmo/content/compliance/Concern.vue";
 import ComplianceContact from "@/rmo/content/compliance/Contact.vue";
 import ComplianceEvidence from "@/rmo/content/compliance/Evidence.vue";
 import ComplianceIntro from "@/rmo/content/compliance/Intro.vue";
+import ComplianceMailer from "@/rmo/view/ComplianceMailer.vue";
 import CompliancePermission from "@/rmo/content/compliance/Permission.vue";
 import ComplianceProcess from "@/rmo/content/compliance/Process.vue";
 import ComplianceSubmit from "@/rmo/content/compliance/Submit.vue";
@@ -106,6 +107,59 @@ const routes: RouteRecordRaw[] = [
 		path: "/district/:slug/water",
 		name: "WaterDistrict",
 		component: WaterDistrict,
+		props: true,
+	},
+	{
+		children: [
+			{
+				component: ComplianceIntro,
+				name: "ComplianceIntro",
+				path: "",
+			},
+			{
+				component: ComplianceAddress,
+				name: "ComplianceAddress",
+				path: "address",
+			},
+			{
+				component: ComplianceComplete,
+				name: "ComplianceComplete",
+				path: "complete",
+			},
+			{
+				component: ComplianceConcern,
+				name: "ComplianceConcern",
+				path: "concern",
+			},
+			{
+				component: ComplianceContact,
+				name: "ComplianceContact",
+				path: "contact",
+			},
+			{
+				component: ComplianceEvidence,
+				name: "ComplianceEvidence",
+				path: "evidence",
+			},
+			{
+				component: CompliancePermission,
+				name: "CompliancePermission",
+				path: "permission",
+			},
+			{
+				component: ComplianceProcess,
+				name: "ComplianceProcess",
+				path: "process",
+			},
+			{
+				component: ComplianceSubmit,
+				name: "ComplianceSubmit",
+				path: "submit",
+			},
+		],
+		path: "/mailer/:public_id",
+		name: "ComplianceMailer",
+		component: ComplianceMailer,
 		props: true,
 	},
 	{
