@@ -127,6 +127,10 @@ func listenForJobs(ctx context.Context) {
 		//es.SendQueuedEmails(ctx) // send any emails queued prior to listening for notificiations
 		err := listenAndDoOneJob(ctx)
 		if err != nil {
+			if err.Error() == "context canceled" {
+				log.Debug().Msg("Exiting listenForJobs")
+				return
+			}
 			log.Error().Err(err).Msg("Crashed listenAndDoOneJob")
 		}
 
