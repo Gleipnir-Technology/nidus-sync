@@ -43,6 +43,7 @@ type publicreportComplianceForm struct {
 	GateCode           omit.Val[string]                     `schema:"gate_code" json:"gate_code"`
 	HasDog             omitnull.Val[bool]                   `schema:"has_dog" json:"has_dog"`
 	Location           omit.Val[types.Location]             `schema:"location" json:"location"`
+	MailerID           omit.Val[string]                     `schema:"mailer_id" json:"mailer_id"`
 	PermissionType     omit.Val[enums.Permissionaccesstype] `schema:"permission_type" json:"permission_type"`
 	Reporter           omit.Val[types.Contact]              `schema:"reporter" json:"reporter"`
 	ReportPhoneCanSMS  omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
@@ -89,7 +90,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		Location: omitnull.FromPtr[string](nil),
 		MapZoom:  omit.From(float32(0.0)),
 		//OrganizationID:      omit.From[int32](int32(*district_id)),
-		//PublicID:          omit.From(public_id),
+		PublicID:            n.MailerID,
 		ReporterEmail:       omit.From(""),
 		ReporterName:        omit.From(""),
 		ReporterPhone:       omit.From(""),

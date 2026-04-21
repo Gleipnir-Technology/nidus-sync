@@ -1,11 +1,16 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { PublicReport, type PublicReportDTO } from "@/type/api";
+
+import { apiClient } from "@/client";
+import {
+	PublicReport,
+	type PublicReportCreateRequest,
+	type PublicReportDTO,
+} from "@/type/api";
 
 export const useStorePublicReport = defineStore("publicreport", () => {
 	// State
 	const _byID = ref<Map<string, PublicReport>>(new Map());
-	const error = ref(null);
 	const loading = ref(false);
 	//const ongoingFetch = ref<Promise<PublicReport[]> | null>(null);
 
@@ -15,7 +20,6 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 	// Actions
 	async function byID(id: string): Promise<PublicReport | undefined> {
 		loading.value = true;
-		error.value = null;
 		try {
 			const url = `/api/publicreport/${id}`;
 			const response = await fetch(url);
@@ -32,10 +36,29 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 			throw err;
 		}
 	}
-
+	async function byURI(uri: string): Promise<PublicReport | undefined> {
+		const id = uri.split("/").pop() || "";
+		if (!id) {
+			throw new Error(`${uri} is not a recognized public report URI`);
+		}
+		return byID(id);
+	}
+	async function create(
+		data: PublicReportCreateRequest,
+	): Promise<PublicReport> {
+		const resp = (await apiClient.JSONPost(
+			"/api/rmo/compliance",
+			data,
+		)) as PublicReportDTO;
+		const result = PublicReport.fromJSON(resp);
+		_byID.value.set(result.public_id, result);
+		return result;
+	}
 	return {
 		// Actions
 		add,
 		byID,
+		byURI,
+		create,
 	};
 });

@@ -19,7 +19,7 @@ import { computedAsync } from "@vueuse/core";
 import type { Image } from "@/components/ImageUpload.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStoreLocal } from "@/store/local";
-import { useStoreLocation } from "@/store/location";
+import { useStorePublicReport } from "@/store/publicreport";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import {
@@ -29,10 +29,10 @@ import {
 	PublicReportCompliance,
 	PublicReportComplianceOptions,
 } from "@/type/api";
-import { Contact, Address, Location, PermissionType } from "@/type/api";
+import { Contact, Address, PermissionType } from "@/type/api";
 
 interface Props {
-	public_id: string;
+	slug: string;
 }
 
 const districtStore = useStoreDistrict();
@@ -40,34 +40,31 @@ const districtStore = useStoreDistrict();
 const props = defineProps<Props>();
 const router = useRouter();
 const storeLocal = useStoreLocal();
-async function createReport(
-	client_id: string,
-): Promise<PublicReportCompliance> {
-	let content = {
-		client_id: client_id,
-		mailer_id: props.public_id,
-	};
-	const resp = await fetch("/api/rmo/compliance", {
-		body: JSON.stringify(content),
-		headers: {
-			"Content-Type": "application/json",
-		},
-		method: "POST",
-	});
-	const body = (await resp.json()) as PublicReportComplianceOptions;
-	return new PublicReportCompliance(body);
-}
+const storePublicReport = useStorePublicReport();
 async function doMounted() {
 	const client_id = storeLocal.getClientID();
 	const report_uri = storeLocal.getExistingComplianceReportURI();
-	if (report_uri && report_uri.endsWith(props.public_id)) {
-		console.log("Loading previous report", report_uri);
-	} else {
-		const report = await createReport(client_id);
-		storeLocal.setExistingComplianceReportURI(report.uri);
-		console.log("Created new compliance report", report);
+	if (report_uri) {
+		const report = await storePublicReport.byURI(report_uri);
+		if (report && report.public_id) {
+			router.replace(`/compliance/${report.public_id}`);
+			return;
+		}
 	}
-	router.replace(`/compliance/${props.public_id}`);
+	const districts = await districtStore.list();
+	const district = districts.find(
+		(district: District) => district.slug == props.slug,
+	);
+	if (!district) {
+		console.error("failed to find matching district", props.slug, districts);
+		return;
+	}
+	const report = await storePublicReport.create({
+		client_id: client_id,
+		district: district.uri,
+	});
+	storeLocal.setExistingComplianceReportURI(report.uri);
+	router.replace(`/compliance/${report.public_id}`);
 }
 onMounted(() => {
 	doMounted();

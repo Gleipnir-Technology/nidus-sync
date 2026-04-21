@@ -265,11 +265,13 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	}
 	defer txn.Rollback(ctx)
 
-	public_id, err := GenerateReportID()
-	if err != nil {
-		return nil, fmt.Errorf("create public ID: %w", err)
+	if setter_report.PublicID.IsUnset() {
+		public_id, err := GenerateReportID()
+		if err != nil {
+			return nil, fmt.Errorf("create public ID: %w", err)
+		}
+		setter_report.PublicID = omit.From(public_id)
 	}
-	setter_report.PublicID = omit.From(public_id)
 
 	var addr *models.Address
 	if address != nil && address.GID != "" {
@@ -305,7 +307,7 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 			publicReportUpdateLocation(ctx, txn, result.ID, l)
 		}
 	}
-	log.Info().Str("public_id", public_id).Int32("id", result.ID).Msg("Created base report")
+	log.Info().Str("public_id", setter_report.PublicID.GetOr("")).Int32("id", result.ID).Msg("Created base report")
 
 	if len(saved_images) > 0 {
 		setters := make([]*models.PublicreportReportImageSetter, 0)
