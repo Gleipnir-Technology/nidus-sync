@@ -136,9 +136,10 @@ func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan st
 
 		select {
 		case <-ctx.Done():
-			log.Info().Msg("Exiting refresh worker...")
+			log.Debug().Msg("Exiting arcgis refresh worker...")
 			cancel()
 			wg.Wait()
+			log.Debug().Msg("arcgis refresh worker exited.")
 			return
 		case <-newOauthCh:
 			log.Info().Msg("Updating oauth background work")

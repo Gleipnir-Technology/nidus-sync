@@ -61,6 +61,7 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 
 				// Reconnect after delay
 				setTimeout(() => {
+					console.log("SSE reconnecting");
 					connectionPromise = null;
 					connect(url);
 				}, 5000);
@@ -80,6 +81,7 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 			eventSource = null;
 			isConnected = false;
 			connectionPromise = null;
+			console.log("SSE disconnected");
 		}
 	}
 

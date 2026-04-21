@@ -58,11 +58,13 @@ func StartAll(ctx context.Context) error {
 	go func() {
 		defer waitGroup.Done()
 		refreshFieldseekerData(ctx, newOAuthTokenChannel)
+		log.Debug().Msg("Exiting Fieldseeker refresh goroutine")
 	}()
 	waitGroup.Add(1)
 	go func() {
 		defer waitGroup.Done()
 		listenForJobs(ctx)
+		log.Debug().Msg("Exiting job listener goroutine")
 	}()
 
 	err = addWaitingJobs(ctx)
@@ -136,6 +138,7 @@ func listenForJobs(ctx context.Context) {
 
 		select {
 		case <-ctx.Done():
+			log.Debug().Msg("Exiting listenForJobs")
 			return
 		default:
 			// If listenAndSendOneConn returned and ctx has not been cancelled that means there was a fatal database error.
