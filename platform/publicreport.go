@@ -57,7 +57,23 @@ func PublicreportByID(ctx context.Context, report_id string) (*types.PublicRepor
 	return publicreport.ByID(ctx, report_id)
 }
 func PublicreportByIDCompliance(ctx context.Context, report_id string) (*types.PublicReportCompliance, error) {
-	return publicreport.ByIDCompliance(ctx, report_id)
+	result, err := publicreport.ByIDCompliance(ctx, report_id)
+	if err != nil {
+		return nil, fmt.Errorf("byidcompliance: %w", err)
+	}
+	// Check for evidence if this is a mailer-based compliance request
+	crr, err := ComplianceReportRequestFromPublicID(ctx, result.PublicID)
+	if err != nil {
+		return nil, fmt.Errorf("compliance report request by public id: %w", err)
+	}
+	if crr != nil {
+		result.Evidence = []*types.EvidenceComplianceReportRequest{
+			&types.EvidenceComplianceReportRequest{
+				ComplianceReportRequestPublicID: crr.PublicID,
+			},
+		}
+	}
+	return result, nil
 }
 func PublicreportByIDNuisance(ctx context.Context, report_id string) (*types.PublicReportNuisance, error) {
 	return publicreport.ByIDNuisance(ctx, report_id)

@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
@@ -18,18 +19,18 @@ import (
 func compliance(ctx context.Context, public_id string, report *types.PublicReport) (*types.PublicReportCompliance, error) {
 	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
-			"access_instructions",
-			"availability_notes",
-			"comments",
-			"gate_code",
-			"has_dog",
-			"permission_type",
-			"report_id",
-			"report_phone_can_text",
-			"wants_scheduled",
+			models.PublicreportCompliances.Columns.AccessInstructions,
+			models.PublicreportCompliances.Columns.AvailabilityNotes,
+			models.PublicreportCompliances.Columns.Comments,
+			models.PublicreportCompliances.Columns.GateCode,
+			models.PublicreportCompliances.Columns.HasDog,
+			models.PublicreportCompliances.Columns.PermissionType,
+			models.PublicreportCompliances.Columns.ReportID,
+			models.PublicreportCompliances.Columns.ReportPhoneCanText,
+			models.PublicreportCompliances.Columns.WantsScheduled,
 		),
-		sm.From("publicreport.compliance"),
-		sm.Where(psql.Quote("report_id").EQ(
+		sm.From(models.PublicreportCompliances.Name()),
+		sm.Where(models.PublicreportCompliances.Columns.ReportID.EQ(
 			psql.Arg(report.ID),
 		)),
 	), scan.StructMapper[types.PublicReportCompliance]())
@@ -37,6 +38,7 @@ func compliance(ctx context.Context, public_id string, report *types.PublicRepor
 		return nil, fmt.Errorf("query compliance: %w", err)
 	}
 	copyReportContent(report, &row.PublicReport)
+
 	return &row, nil
 
 }

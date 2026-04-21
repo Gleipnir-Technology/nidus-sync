@@ -55,9 +55,7 @@ func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryPa
 	if err != nil {
 		return nil, nhttp.NewError("get report: %w", err)
 	}
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
-	return report, nil
+	return res.complianceHydrate(report)
 }
 func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	if n.District.IsUnset() {
@@ -112,9 +110,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	if err != nil {
 		return nil, nhttp.NewError("get report after creation: %w", err)
 	}
-	populateDistrictURI(&result.PublicReport, res.router)
-	populateReportURI(&result.PublicReport, res.router)
-	return result, nil
+	return res.complianceHydrate(result)
 }
 func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
@@ -187,6 +183,14 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 	report, err = platform.PublicreportByIDCompliance(ctx, public_id)
 	if err != nil {
 		return nil, nhttp.NewError("get report after update: %w", err)
+	}
+	return res.complianceHydrate(report)
+}
+func (res *complianceR) complianceHydrate(report *types.PublicReportCompliance) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
+	for _, e := range report.Evidence {
+		e.PopulateURL(res.router.router)
 	}
 	return report, nil
 }

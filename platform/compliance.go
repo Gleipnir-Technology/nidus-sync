@@ -121,3 +121,15 @@ func ComplianceReportRequestByLeadID(ctx context.Context, lead_ids []int32) (map
 	}
 	return results, nil
 }
+func ComplianceReportRequestFromPublicID(ctx context.Context, public_id string) (*types.ComplianceReportRequest, error) {
+	row, err := models.ComplianceReportRequests.Query(
+		sm.Where(models.ComplianceReportRequests.Columns.PublicID.EQ(psql.Arg(public_id))),
+	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("query CRR: %w", err)
+	}
+	return types.ComplianceReportRequestFromModel(row), nil
+}

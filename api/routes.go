@@ -25,7 +25,7 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/communication", authenticatedHandlerJSON(communication.List)).Methods("GET")
 	compliance_request := resource.ComplianceRequest(router)
 	r.Handle("/compliance-request/mailer", authenticatedHandlerJSONPost(compliance_request.CreateMailer)).Methods("POST")
-	r.HandleFunc("/compliance-request/image/pool/{public_id}", compliance_request.ImagePoolGet).Methods("GET")
+	r.HandleFunc("/compliance-request/image/pool/{public_id}", compliance_request.ImagePoolGet).Methods("GET").Name("compliance-request.image.pool.ByIDGet")
 	//r.HandleFunc("/compliance-request/image/pool/{public_id}", getComplianceRequestImagePool).Methods("GET")
 	r.Handle("/configuration/integration/arcgis", authenticatedHandlerJSONPost(postConfigurationIntegrationArcgis)).Methods("POST")
 	r.Handle("/events", auth.NewEnsureAuth(streamEvents)).Methods("GET")
