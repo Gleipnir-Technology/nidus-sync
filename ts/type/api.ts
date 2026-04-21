@@ -659,6 +659,54 @@ export interface User {
 	uri: string;
 	username: string;
 }
+type MailerStatus = "created" | "printed" | "mailed" | "completed";
+export interface MailerDTO {
+	address: Address;
+	compliance_report_request_id?: string;
+	created: string;
+	id: string;
+	recipient: string;
+	status: MailerStatus;
+	site_id: string;
+	uri: string;
+}
+export interface MailerOptions {
+	address: Address;
+	compliance_report_request_id?: string;
+	created: Date;
+	id: string;
+	recipient: string;
+	site_id: string;
+	status: MailerStatus;
+	uri: string;
+}
+export class Mailer {
+	address: Address;
+	compliance_report_request_id?: string;
+	created: Date;
+	id: string;
+	recipient: string;
+	site_id: string;
+	status: MailerStatus;
+	uri: string;
+	constructor(options: MailerOptions) {
+		this.address = options.address;
+		this.compliance_report_request_id = options.compliance_report_request_id;
+		this.created = options.created;
+		this.id = options.id;
+		this.recipient = options.recipient;
+		this.site_id = options.site_id;
+		this.status = options.status;
+		this.uri = options.uri;
+	}
+	static fromJSON(json: MailerDTO): Mailer {
+		return new Mailer({
+			...json,
+			created: new Date(json.created),
+		});
+	}
+}
+
 export interface Organization {
 	id: number;
 	name: string;
@@ -791,6 +839,7 @@ interface URLsAPI {
 	avatar: string;
 	communication: string;
 	impersonation: string;
+	mailer: string;
 	publicreport_message: string;
 	review_task: string;
 	service_request: string;

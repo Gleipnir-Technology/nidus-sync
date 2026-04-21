@@ -50,6 +50,7 @@ type sessionURLAPI struct {
 	Avatar              string `json:"avatar"`
 	Communication       string `json:"communication"`
 	Impersonation       string `json:"impersonation"`
+	Mailer              string `json:"mailer"`
 	PublicreportMessage string `json:"publicreport_message"`
 	ReviewTask          string `json:"review_task"`
 	ServiceRequest      string `json:"service_request"`
@@ -98,6 +99,7 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 				Avatar:              config.MakeURLNidus("/api/avatar"),
 				Communication:       urls.API.Communication,
 				Impersonation:       config.MakeURLNidus("/api/impersonation"),
+				Mailer:              config.MakeURLNidus("/api/mailer"),
 				PublicreportMessage: urls.API.Publicreport.Message,
 				ReviewTask:          config.MakeURLNidus("/api/review-task"),
 				ServiceRequest:      config.MakeURLNidus("/api/service-request"),

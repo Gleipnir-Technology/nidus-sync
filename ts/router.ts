@@ -25,6 +25,7 @@ import NotFound from "@/view/NotFound.vue";
 import OAuthRefreshArcgis from "@/view/OAuthRefreshArcgis.vue";
 import Operations from "@/view/Operations.vue";
 import Planning from "@/view/Planning.vue";
+import ReviewMailer from "@/view/review/Mailer.vue";
 import ReviewPool from "@/view/review/Pool.vue";
 import ReviewRoot from "@/view/review/Root.vue";
 import ReviewSite from "@/view/review/Site.vue";
@@ -152,6 +153,11 @@ const routes: RouteRecordRaw[] = [
 				path: "/_/review",
 				name: "Review",
 				component: ReviewRoot,
+			},
+			{
+				path: "/_/review/mailer",
+				name: "Mailer Review",
+				component: ReviewMailer,
 			},
 			{
 				path: "/_/review/pool",
