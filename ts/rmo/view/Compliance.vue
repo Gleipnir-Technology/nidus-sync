@@ -21,10 +21,7 @@ body > .container-fluid {
 </style>
 <template>
 	<router-view v-slot="{ Component }">
-		<LoadingOverlay
-			:is-loading="isLoading"
-			loading-text="Loading previous data"
-		>
+		<LoadingOverlay :is-loading="isLoading" loading-text="Loading report">
 			<template v-if="!isLoading">
 				<component
 					:is="Component"
@@ -55,6 +52,7 @@ import type { Image } from "@/components/ImageUpload.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
+import { useStorePublicReport } from "@/store/publicreport";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import {
@@ -67,18 +65,18 @@ import {
 import { Contact, Address, Location, PermissionType } from "@/type/api";
 
 interface Props {
-	slug: string;
+	public_id: string;
 }
-
-const districtStore = useStoreDistrict();
 
 const isLoading = ref<boolean>(true);
 const isUploading = ref<boolean>(false);
 const props = defineProps<Props>();
-const report = ref<PublicReportCompliance>(new PublicReportCompliance());
+const report = ref<PublicReportCompliance | undefined>(undefined);
 const district = ref<District | undefined>(undefined);
+const storeDistrict = useStoreDistrict();
 const storeLocal = useStoreLocal();
 const storeLocation = useStoreLocation();
+const storePublicReport = useStorePublicReport();
 async function createReport(client_id: string, district_uri: string) {
 	let content = {
 		client_id: client_id,
@@ -142,6 +140,13 @@ function doContact() {
 		reporter: report.value.reporter,
 	});
 }
+async function doMounted() {
+	const r = await storePublicReport.byID(props.public_id);
+	report.value = r as PublicReportCompliance;
+	const d = await storeDistrict.byURI(r.district);
+	district.value = d;
+	isLoading.value = false;
+}
 function doPermission() {
 	if (!report.value) {
 		console.log("can't do permission, null report");
@@ -161,24 +166,8 @@ function doSubmit() {
 	console.log("submit", report.value);
 	storeLocal.delExistingComplianceReportURI();
 }
-async function fetchExistingReport(report_uri: string) {
-	const resp = await fetch(report_uri);
-	if (!resp.ok) {
-		const content = await resp.text();
-		console.error(
-			"Failed to fetch existing report",
-			report_uri,
-			resp.status,
-			content,
-		);
-		return;
-	}
-	const body = (await resp.json()) as PublicReportComplianceOptions;
-	Object.assign(report.value, new PublicReportCompliance(body));
-	console.log("fetched existing report", report.value);
-}
 async function updateReport(updates: ComplianceUpdate) {
-	if (!report.value.uri) {
+	if (!(report.value && report.value.uri)) {
 		console.log("Refusing to update report without URI");
 		return;
 	}
@@ -196,6 +185,7 @@ async function updateReport(updates: ComplianceUpdate) {
 	}
 }
 async function updateLocation() {
+	if (!report.value) return;
 	const loc = await storeLocation.get();
 	report.value.location = loc.coords;
 	updateReport({
@@ -204,6 +194,8 @@ async function updateLocation() {
 }
 async function uploadImages(images: Image[]) {
 	if (images.length == 0) return;
+	if (!report.value) return;
+
 	isUploading.value = true;
 	const formData = new FormData();
 	images.map(async (image, index) => {
@@ -229,40 +221,10 @@ async function uploadImages(images: Image[]) {
 	isUploading.value = false;
 	// after everything is done update the report so that we see the correct number of images
 	// on the report summary
-	await fetchExistingReport(report.value.uri);
+	const r = await storePublicReport.fetchByURI(report.value.uri);
+	Object.assign(report.value, r);
 }
 onMounted(() => {
-	const client_id = storeLocal.getClientID();
-	const report_uri = storeLocal.getExistingComplianceReportURI();
-	if (report_uri) {
-		fetchExistingReport(report_uri).then(() => {
-			updateLocation();
-		});
-	}
-	const districts = districtStore
-		.list()
-		.then((districts: District[]) => {
-			const d = districts.find(
-				(district: District) => district.slug == props.slug,
-			);
-			if (!d) {
-				console.error(
-					"Failed to find district with slug",
-					districts,
-					props.slug,
-				);
-				return;
-			}
-			district.value = d;
-			if (!report_uri) {
-				createReport(client_id, d.uri);
-			}
-			isLoading.value = false;
-			updateLocation();
-		})
-		.catch((e) => {
-			console.error("Failed to list districts", e);
-			isLoading.value = false;
-		});
+	doMounted();
 });
 </script>
