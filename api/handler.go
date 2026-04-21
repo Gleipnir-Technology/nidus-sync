@@ -115,7 +115,11 @@ func authenticatedHandlerJSONSlice[T any](f handlerFunctionGetSliceAuthenticated
 			respondErrorStatus(w, e)
 			return
 		}
-		body, err = json.Marshal(resp)
+		if resp == nil {
+			body, err = json.Marshal([]struct{}{})
+		} else {
+			body, err = json.Marshal(resp)
+		}
 		if err != nil {
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
