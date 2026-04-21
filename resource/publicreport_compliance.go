@@ -27,11 +27,6 @@ func PublicReportCompliance(r *router) *complianceR {
 type complianceR struct {
 	router *router
 }
-type compliance struct {
-	District string `json:"district"`
-	PublicID string `json:"public_id"`
-	URI      string `json:"uri"`
-}
 
 type publicreportComplianceForm struct {
 	AccessInstructions omit.Val[string]                     `schema:"access_instructions" json:"access_instructions"`
@@ -64,7 +59,7 @@ func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryPa
 	populateReportURI(&report.PublicReport, res.router)
 	return report, nil
 }
-func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*compliance, *nhttp.ErrorWithStatus) {
+func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	if n.District.IsUnset() {
 		return nil, nhttp.NewBadRequest("You must provide a district_id")
 	}
@@ -112,19 +107,14 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	if err != nil {
 		return nil, nhttp.NewError("create compliance report: %w", err)
 	}
-	uri, err := res.router.IDStrToURI("publicreport.compliance.ByIDGet", report.PublicID)
+	// Return a fully-fleshed-out report object, even though it's a bit more expensive
+	result, err := platform.PublicreportByIDCompliance(ctx, report.PublicID)
 	if err != nil {
-		return nil, nhttp.NewError("generate uri: %w", err)
+		return nil, nhttp.NewError("get report after creation: %w", err)
 	}
-	district_uri, err := res.router.IDToURI("district.ByIDGet", int(report.OrganizationID))
-	if err != nil {
-		return nil, nhttp.NewError("generate district uri: %w", err)
-	}
-	return &compliance{
-		District: district_uri,
-		PublicID: report.PublicID,
-		URI:      uri,
-	}, nil
+	populateDistrictURI(&result.PublicReport, res.router)
+	populateReportURI(&result.PublicReport, res.router)
+	return result, nil
 }
 func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
