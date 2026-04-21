@@ -29,7 +29,7 @@ func compliance(ctx context.Context, public_id string, report *types.PublicRepor
 			models.PublicreportCompliances.Columns.ReportPhoneCanText,
 			models.PublicreportCompliances.Columns.WantsScheduled,
 		),
-		sm.From(models.PublicreportCompliances.Name()),
+		sm.From("publicreport.compliance"),
 		sm.Where(models.PublicreportCompliances.Columns.ReportID.EQ(
 			psql.Arg(report.ID),
 		)),
@@ -38,7 +38,6 @@ func compliance(ctx context.Context, public_id string, report *types.PublicRepor
 		return nil, fmt.Errorf("query compliance: %w", err)
 	}
 	copyReportContent(report, &row.PublicReport)
-
 	return &row, nil
 
 }
