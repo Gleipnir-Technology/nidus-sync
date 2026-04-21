@@ -80,6 +80,7 @@ func Where[Q psql.Filterable]() struct {
 	H3Aggregations                       h3AggregationWhere[Q]
 	Jobs                                 jobWhere[Q]
 	Leads                                leadWhere[Q]
+	LobEvents                            lobEventWhere[Q]
 	LogImpersonations                    logImpersonationWhere[Q]
 	NoteAudios                           noteAudioWhere[Q]
 	NoteAudioBreadcrumbs                 noteAudioBreadcrumbWhere[Q]
@@ -191,6 +192,7 @@ func Where[Q psql.Filterable]() struct {
 		H3Aggregations                       h3AggregationWhere[Q]
 		Jobs                                 jobWhere[Q]
 		Leads                                leadWhere[Q]
+		LobEvents                            lobEventWhere[Q]
 		LogImpersonations                    logImpersonationWhere[Q]
 		NoteAudios                           noteAudioWhere[Q]
 		NoteAudioBreadcrumbs                 noteAudioBreadcrumbWhere[Q]
@@ -301,6 +303,7 @@ func Where[Q psql.Filterable]() struct {
 		H3Aggregations:                       buildH3AggregationWhere[Q](H3Aggregations.Columns),
 		Jobs:                                 buildJobWhere[Q](Jobs.Columns),
 		Leads:                                buildLeadWhere[Q](Leads.Columns),
+		LobEvents:                            buildLobEventWhere[Q](LobEvents.Columns),
 		LogImpersonations:                    buildLogImpersonationWhere[Q](LogImpersonations.Columns),
 		NoteAudios:                           buildNoteAudioWhere[Q](NoteAudios.Columns),
 		NoteAudioBreadcrumbs:                 buildNoteAudioBreadcrumbWhere[Q](NoteAudioBreadcrumbs.Columns),

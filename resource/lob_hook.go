@@ -9,9 +9,11 @@ import (
 
 	/*
 		"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-		"github.com/Gleipnir-Technology/nidus-sync/db/models"
 		"github.com/Gleipnir-Technology/nidus-sync/html"
 	*/
+	bobtypes "github.com/Gleipnir-Technology/bob/types"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -92,12 +94,13 @@ type LobEventType struct {
 	Object         string `json:"object"`
 }
 type LobEvent struct {
-	Body        LobEventBody `json:"body"`
-	DateCreated time.Time    `json:"date_created"`
-	ID          string       `json:"id"`
-	Object      string       `json:"object"`
-	ReferenceID string       `json:"reference_id"`
-	EventType   LobEventType `json:"event_type"`
+	//Body        LobEventBody `json:"body"`
+	Body        json.RawMessage `json:"body"`
+	DateCreated time.Time       `json:"date_created"`
+	ID          string          `json:"id"`
+	Object      string          `json:"object"`
+	ReferenceID string          `json:"reference_id"`
+	EventType   LobEventType    `json:"event_type"`
 }
 
 func (res *lobHookR) Event(ctx context.Context, w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
@@ -110,7 +113,22 @@ func (res *lobHookR) Event(ctx context.Context, w http.ResponseWriter, r *http.R
 	if err != nil {
 		return nhttp.NewBadRequest("unmarshal json: %w", err)
 	}
-	log.Info().Str("method", r.Method).Str("content", string(body)).Str("id", event.ID).Msg("got lob event")
+
+	var inner_body bobtypes.JSON[json.RawMessage]
+	err = inner_body.UnmarshalJSON(event.Body)
+	if err != nil {
+		return nhttp.NewError("unmarshal inner body: %w", err)
+	}
+	_, err = models.LobEvents.Insert(&models.LobEventSetter{
+		Created: omit.From(event.DateCreated),
+		Body:    omit.From(inner_body),
+		ID:      omit.From(event.ID),
+		Type:    omit.From(event.EventType.ID),
+	}).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		return nhttp.NewError("save event: %w", err)
+	}
+	log.Info().Str("event.id", event.ID).Msg("saved lob event")
 	http.Error(w, "", http.StatusNoContent)
 	return nil
 }

@@ -22,6 +22,7 @@ psql:
     - "comms"
     - "fieldseeker"
     - "fileupload"
+    - "lob"
     - "public"
     - "publicreport"
     - "stadia"
