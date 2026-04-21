@@ -13,9 +13,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type NoCredentialsError struct{}
+type InactiveUser struct{}
 
-func (e NoCredentialsError) Error() string { return "No credentials were present in the request" }
+func (e InactiveUser) Error() string { return "That user is not active" }
 
 type InvalidCredentials struct{}
 
@@ -24,6 +24,10 @@ func (e InvalidCredentials) Error() string { return "No username with that passw
 type InvalidUsername struct{}
 
 func (e InvalidUsername) Error() string { return "That username doesn't exist" }
+
+type NoCredentialsError struct{}
+
+func (e NoCredentialsError) Error() string { return "No credentials were present in the request" }
 
 type AuthenticatedHandler func(http.ResponseWriter, *http.Request, platform.User)
 type EnsureAuth struct {
@@ -81,7 +85,14 @@ func GetAuthenticatedUser(r *http.Request) (*platform.User, error) {
 		}
 		username := sessionManager.GetString(ctx, "username")
 		if user_id > 0 && username != "" {
-			return platform.UserByID(ctx, int32(user_id))
+			user, err := platform.UserByID(ctx, int32(user_id))
+			if err != nil {
+				return nil, fmt.Errorf("user by ID: %w", err)
+			}
+			if !user.IsActive {
+				return nil, fmt.Errorf("user is inactive")
+			}
+			return user, nil
 		}
 	}
 	// If we can't get the user from the session try to get from auth headers
@@ -205,6 +216,9 @@ func validateUser(ctx context.Context, username string, password string) (*platf
 	if user == nil {
 		log.Info().Str("username", username).Str("password", redact(password)).Msg("Invalid username")
 		return nil, InvalidUsername{}
+	}
+	if !user.IsActive {
+		return nil, InactiveUser{}
 	}
 	if !validatePassword(password, user.PasswordHash) {
 		log.Info().Str("username", username).Str("password", redact(password)).Str("hash", passwordHash).Msg("Invalid password for user")

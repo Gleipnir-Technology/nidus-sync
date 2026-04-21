@@ -30,6 +30,7 @@ type User struct {
 	DisplayName      string
 	ID               int
 	Initials         string
+	IsActive         bool
 	IsDronePilot     bool
 	IsWarrant        bool
 	Organization     Organization
@@ -62,6 +63,7 @@ func newUser(ctx context.Context, org Organization, user *models.User) User {
 		DisplayName:      user.DisplayName,
 		ID:               int(user.ID),
 		Initials:         extractInitials(user.DisplayName),
+		IsActive:         user.IsActive,
 		IsDronePilot:     user.IsDronePilot,
 		IsWarrant:        user.IsWarrant,
 		Organization:     org,
@@ -273,6 +275,7 @@ func toUser(user *models.User) User {
 	return User{
 		DisplayName:      user.DisplayName,
 		ID:               int(user.ID),
+		IsActive:         user.IsActive,
 		Initials:         extractInitials(user.DisplayName),
 		Organization:     Organization{},
 		PasswordHash:     user.PasswordHash,
