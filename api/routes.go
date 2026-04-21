@@ -38,6 +38,9 @@ func AddRoutes(r *mux.Router) {
 	lead := resource.Lead(r)
 	r.Handle("/leads", authenticatedHandlerJSON(lead.List)).Methods("GET")
 	r.Handle("/leads", authenticatedHandlerJSONPost(lead.Create)).Methods("POST")
+	lob_hook := resource.LobHook(router)
+	r.Handle("/lob/event", handlerBasic(lob_hook.Event)).Methods("POST")
+
 	mailer := resource.Mailer(router)
 	r.Handle("/mailer", authenticatedHandlerJSONSlice(mailer.List)).Methods("GET")
 	r.Handle("/mailer/{id}", authenticatedHandlerJSONPost(mailer.ByIDGet)).Methods("GET").Name("mailer.ByIDGet")
