@@ -7,13 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	/*"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
+	/*
+		"github.com/aarondl/opt/omitnull"
+		"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+		"github.com/Gleipnir-Technology/nidus-sync/db/models"
+		"github.com/Gleipnir-Technology/nidus-sync/html"
 	*/
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/aarondl/opt/omit"
 	/*
 		"github.com/Gleipnir-Technology/nidus-sync/platform"
 		"github.com/Gleipnir-Technology/nidus-sync/platform/types"
@@ -50,18 +51,20 @@ type lobHookR struct {
 	"object": "redacted"
 */
 type LobEventBody struct {
-	Description    string          `json:"description"`
-	Name           string          `json:"name"`
-	AddressLine1   string          `json:"address_line1"`
-	AddressLine2   string          `json:"address_line2"`
-	AddressCity    string          `json:"address_city"`
-	AddressState   string          `json:"address_state"`
-	AddressZip     string          `json:"address_zip"`
-	AddressCountry string          `json:"address_country"`
-	Metadata       json.RawMessage `json:"metadata"`
-	DateCreated    time.Time       `json:"date_created"`
-	DateModified   time.Time       `json:"date_modified"`
-	Object         string          `json:"object"`
+	AddressLine1   omit.Val[string]          `json:"address_line1"`
+	AddressLine2   omit.Val[string]          `json:"address_line2"`
+	AddressCity    omit.Val[string]          `json:"address_city"`
+	AddressState   omit.Val[string]          `json:"address_state"`
+	AddressZip     omit.Val[string]          `json:"address_zip"`
+	AddressCountry omit.Val[string]          `json:"address_country"`
+	Description    omit.Val[string]          `json:"description"`
+	ID             omit.Val[string]          `json:"id"`
+	Metadata       omit.Val[json.RawMessage] `json:"metadata"`
+	DateCreated    omit.Val[time.Time]       `json:"date_created"`
+	DateModified   omit.Val[time.Time]       `json:"date_modified"`
+	Name           omit.Val[string]          `json:"name"`
+	Object         omit.Val[string]          `json:"object"`
+	Status         omit.Val[string]          `json:"status"`
 }
 type LobEventType struct {
 	ID             string `json:"id"`
