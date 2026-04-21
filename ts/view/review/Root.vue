@@ -6,6 +6,17 @@ a.card-link {
 <template>
 	<div class="row">
 		<div class="col-md-4">
+			<RouterLink class="card-link" to="/_/review/mailer">
+				<div class="card" style="width: 100%">
+					<img alt="mailer" class="card-img-top" src="/static/img/mailer.jpg" />
+					<div class="card-body">
+						<h1>Mailers</h1>
+						<p>Letters that have been sent to the public</p>
+					</div>
+				</div>
+			</RouterLink>
+		</div>
+		<div class="col-md-4">
 			<RouterLink class="card-link" to="/_/review/pool">
 				<div class="card" style="width: 100%">
 					<img
