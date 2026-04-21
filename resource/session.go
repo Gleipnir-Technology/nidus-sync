@@ -30,10 +30,16 @@ type organization struct {
 
 type session struct {
 	Impersonating      *string                   `json:"impersonating"`
+	Frontend           sessionFrontend           `json:"frontend"`
 	NotificationCounts sessionNotificationCounts `json:"notification_counts"`
 	Organization       organization              `json:"organization"`
 	Self               user                      `json:"self"`
 	URLs               sessionURL                `json:"urls"`
+}
+type sessionFrontend struct {
+	Environment string `json:"environment"`
+	SentryDSN   string `json:"sentry_dsn"`
+	Version     string `json:"version"`
 }
 type sessionNotificationCounts struct {
 	Communications uint `json:"communication"`
@@ -83,6 +89,11 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 	}
 	return &session{
 		Impersonating: impersonating,
+		Frontend: sessionFrontend{
+			Environment: config.Environment,
+			SentryDSN:   config.SentryDSNFrontend,
+			Version:     version,
+		},
 		NotificationCounts: sessionNotificationCounts{
 			Communications: counts.Communications,
 			Home:           counts.Home,
@@ -113,4 +124,10 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 			Tile:   config.MakeURLNidus("/api/tile/{z}/{y}/{x}"),
 		},
 	}, nil
+}
+
+var version string = "unknown"
+
+func SetVersion(v string) {
+	version = v
 }

@@ -33,6 +33,7 @@ var (
 	PhoneNumberSupport         phonenumbers.PhoneNumber
 	PhoneNumberSupportStr      string
 	SentryDSN                  string
+	SentryDSNFrontend          string
 	StadiaMapsAPIKey           string
 	TextProvider               string
 	TwilioAuthToken            string
@@ -167,6 +168,10 @@ func Parse() (err error) {
 	SentryDSN = os.Getenv("SENTRY_DSN")
 	if SentryDSN == "" {
 		return fmt.Errorf("You must specify a non-empty SENTRY_DSN")
+	}
+	SentryDSNFrontend = os.Getenv("SENTRY_DSN_FRONTEND")
+	if SentryDSNFrontend == "" {
+		return fmt.Errorf("You must specify a non-empty SENTRY_DSN_FRONTEND")
 	}
 	StadiaMapsAPIKey = os.Getenv("STADIA_MAPS_API_KEY")
 	if StadiaMapsAPIKey == "" {
