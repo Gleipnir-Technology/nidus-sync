@@ -11,6 +11,7 @@ func AddRoutes(r *mux.Router) {
 	router := resource.NewRouter(r)
 	//r.Use(render.SetContentType(render.ContentTypeJSON))
 	// Unauthenticated endpoints
+	r.HandleFunc("/", handlerJSON(getRoot))
 	r.HandleFunc("/signin", handlerJSONPost(postSignin))
 	r.Handle("/signout", authenticatedHandlerBasic(postSignout))
 	r.HandleFunc("/signup", handlerJSONPost(postSignup))

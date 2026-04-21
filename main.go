@@ -19,6 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/middleware"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/resource"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/getsentry/sentry-go"

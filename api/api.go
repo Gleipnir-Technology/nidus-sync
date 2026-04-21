@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,9 +9,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	"github.com/Gleipnir-Technology/nidus-sync/resource"
 	//"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -266,4 +270,18 @@ func parseTime(x string) (*time.Time, error) {
 	}
 	created := time.UnixMilli(created_epoch)
 	return &created, nil
+}
+
+type about struct {
+	Environment string `json:"environment"`
+	SentryDSN   string `json:"sentry_dsn"`
+	Version     string `json:"version"`
+}
+
+func getRoot(ctx context.Context, r *http.Request, q resource.QueryParams) (*about, *nhttp.ErrorWithStatus) {
+	return &about{
+		Environment: config.Environment,
+		SentryDSN:   config.SentryDSNFrontend,
+		Version:     version,
+	}, nil
 }
