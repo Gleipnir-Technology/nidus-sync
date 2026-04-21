@@ -34,7 +34,8 @@ export const useStoreMailer = defineStore("publicreport", () => {
 		const params = new URLSearchParams();
 		params.append("sort", "-created");
 		const url = `${session.urls.api.mailer}?${params}`;
-		const mailers = (await apiClient.JSONGet(url)) as Mailer[];
+		const mailer_dtos = (await apiClient.JSONGet(url)) as MailerDTO[];
+		const mailers = mailer_dtos.map((m: MailerDTO) => Mailer.fromJSON(m));
 		_all.value = mailers;
 		for (const m of mailers) {
 			_byID.value.set(m.id, m);

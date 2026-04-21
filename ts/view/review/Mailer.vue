@@ -34,7 +34,7 @@
 								</thead>
 								<tbody>
 									<tr v-for="mailer in mailers" :key="mailer.id">
-										<td>{{ formatDate(mailer.createdAt) }}</td>
+										<td>{{ formatDate(mailer.created) }}</td>
 										<td>
 											<span
 												class="badge"
@@ -44,13 +44,18 @@
 											</span>
 										</td>
 										<td>
-											<a :href="`/sites/${mailer.siteId}`">
-												{{ mailer.siteAddress }}
-											</a>
+											<RouterLink
+												:to="{
+													name: 'Site Review',
+													query: { site: mailer.site_id },
+												}"
+											>
+												{{ formatAddressShort(mailer.address) }}
+											</RouterLink>
 										</td>
 										<td>
 											<a
-												:href="mailer.pdfUrl"
+												:href="mailer.pdfUrl()"
 												target="_blank"
 												class="btn btn-sm btn-outline-primary"
 											>
@@ -63,7 +68,7 @@
 						</div>
 
 						<div
-							v-if="mailers.length === 0"
+							v-if="mailers && mailers.length === 0"
 							class="text-center py-5 text-muted"
 						>
 							<p>No mailers found</p>
@@ -76,74 +81,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
+import { computedAsync } from "@vueuse/core";
 
+import { formatDate, formatAddressShort } from "@/format";
 import { useStoreMailer } from "@/store/mailer";
-
-type MailerStatus = "created" | "printed" | "mailed" | "completed";
-
-interface Mailer {
-	id: string;
-	createdAt: Date;
-	status: MailerStatus;
-	pdfUrl: string;
-	siteId: string;
-	siteAddress: string;
-}
-
-// Mock data
-const mailers = ref<Mailer[]>([
-	{
-		id: "1",
-		createdAt: new Date("2024-01-15T10:30:00"),
-		status: "completed",
-		pdfUrl: "/pdfs/mailer-1.pdf",
-		siteId: "101",
-		siteAddress: "123 Main St, Springfield, IL 62701",
-	},
-	{
-		id: "2",
-		createdAt: new Date("2024-01-16T14:20:00"),
-		status: "mailed",
-		pdfUrl: "/pdfs/mailer-2.pdf",
-		siteId: "102",
-		siteAddress: "456 Oak Ave, Chicago, IL 60601",
-	},
-	{
-		id: "3",
-		createdAt: new Date("2024-01-17T09:15:00"),
-		status: "printed",
-		pdfUrl: "/pdfs/mailer-3.pdf",
-		siteId: "103",
-		siteAddress: "789 Pine Rd, Naperville, IL 60540",
-	},
-	{
-		id: "4",
-		createdAt: new Date("2024-01-18T11:45:00"),
-		status: "created",
-		pdfUrl: "/pdfs/mailer-4.pdf",
-		siteId: "104",
-		siteAddress: "321 Elm St, Peoria, IL 61602",
-	},
-	{
-		id: "5",
-		createdAt: new Date("2024-01-18T16:00:00"),
-		status: "mailed",
-		pdfUrl: "/pdfs/mailer-5.pdf",
-		siteId: "105",
-		siteAddress: "654 Maple Dr, Rockford, IL 61101",
-	},
-]);
-
-const formatDate = (date: Date): string => {
-	return new Intl.DateTimeFormat("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-	}).format(date);
-};
+import { Mailer, MailerStatus } from "@/type/api";
 
 const formatStatus = (status: MailerStatus): string => {
 	return status.charAt(0).toUpperCase() + status.slice(1);
@@ -159,7 +102,7 @@ const getStatusBadgeClass = (status: MailerStatus): string => {
 	return classes[status];
 };
 const storeMailer = useStoreMailer();
-onMounted(() => {
-	storeMailer.list();
+const mailers = computedAsync(async (): Promise<Mailer[]> => {
+	return await storeMailer.list();
 });
 </script>

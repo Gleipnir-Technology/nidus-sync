@@ -9,6 +9,10 @@ export function formatAddress(address?: Address): string {
 	}
 	return `${address.number.trim()} ${address.street.trim()}, ${address.locality}`;
 }
+export function formatAddressShort(a: Address | undefined): string {
+	if (!a) return "unknown";
+	return `${a.number} ${a.street}, ${a.locality}`;
+}
 export function formatBigNumber(n: number): string {
 	// Convert the number to a string
 	const numStr = n.toString();
@@ -101,8 +105,4 @@ export function formatTimeRelative(t: Date): string {
 			return `in ${Math.floor(-1 * minutes)} minutes`;
 		}
 	}
-}
-export function shortAddress(a: Address | undefined): string {
-	if (!a) return "unknown";
-	return `${a.number} ${a.street}, ${a.locality}`;
 }

@@ -66,7 +66,6 @@ import MapMultipoint from "@/components/MapMultipoint.vue";
 import MapProxiedArcgisTile from "@/components/MapProxiedArcgisTile.vue";
 import PlanningColumnDetailEntry from "@/components/PlanningColumnDetailEntry.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
-import { shortAddress } from "@/format";
 import { useSessionStore } from "@/store/session";
 import { MapClickEvent, Marker } from "@/types";
 import type { Location, Signal } from "@/type/api";

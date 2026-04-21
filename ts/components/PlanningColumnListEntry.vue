@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { shortAddress } from "@/format";
+import { formatAddressShort } from "@/format";
 import { Signal } from "@/type/api";
 
 interface Props {
@@ -42,7 +42,7 @@ function icon(signal: Signal): string {
 }
 function location(signal: Signal): string {
 	if (signal.address != null) {
-		return shortAddress(signal.address);
+		return formatAddressShort(signal.address);
 	} else {
 		return `${signal.location.latitude}, ${signal.location.longitude}`;
 	}

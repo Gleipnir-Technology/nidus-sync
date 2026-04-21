@@ -659,7 +659,7 @@ export interface User {
 	uri: string;
 	username: string;
 }
-type MailerStatus = "created" | "printed" | "mailed" | "completed";
+export type MailerStatus = "created" | "printed" | "mailed" | "completed";
 export interface MailerDTO {
 	address: Address;
 	compliance_report_request_id?: string;
@@ -698,6 +698,9 @@ export class Mailer {
 		this.site_id = options.site_id;
 		this.status = options.status;
 		this.uri = options.uri;
+	}
+	pdfUrl(): string {
+		return `/mailer/mode-3/${this.compliance_report_request_id}/preview`;
 	}
 	static fromJSON(json: MailerDTO): Mailer {
 		return new Mailer({
