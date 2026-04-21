@@ -38,6 +38,7 @@ export const useSessionStore = defineStore("session", () => {
 		try {
 			const data: Session = await apiClient.JSONGet("/api/session");
 			isAuthenticated.value = true;
+			console.log("set authenticated", isAuthenticated.value);
 			impersonating.value = data.impersonating || null;
 			notification_counts.value = data.notification_counts;
 			organization.value = data.organization;
@@ -76,6 +77,7 @@ export const useSessionStore = defineStore("session", () => {
 	}
 	async function signout(): Promise<void> {
 		isAuthenticated.value = false;
+		console.log("set authenticated", isAuthenticated.value);
 		apiClient.JSONPost("/api/signout", {});
 	}
 	return {
