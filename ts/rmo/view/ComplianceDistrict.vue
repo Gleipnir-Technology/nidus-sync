@@ -59,12 +59,13 @@ async function doMounted() {
 		console.error("failed to find matching district", props.slug, districts);
 		return;
 	}
-	const report = await storePublicReport.create({
+	const report = await storePublicReport.createCompliance({
 		client_id: client_id,
 		district: district.uri,
 	});
 	storeLocal.setExistingComplianceReportURI(report.uri);
 	router.replace(`/compliance/${report.public_id}`);
+	console.log("Created new compliance report", report);
 }
 onMounted(() => {
 	doMounted();

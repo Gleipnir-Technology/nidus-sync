@@ -20,6 +20,7 @@ import type { Image } from "@/components/ImageUpload.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
+import { useStorePublicReport } from "@/store/publicreport";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import {
@@ -40,30 +41,17 @@ const districtStore = useStoreDistrict();
 const props = defineProps<Props>();
 const router = useRouter();
 const storeLocal = useStoreLocal();
-async function createReport(
-	client_id: string,
-): Promise<PublicReportCompliance> {
-	let content = {
-		client_id: client_id,
-		mailer_id: props.public_id,
-	};
-	const resp = await fetch("/api/rmo/compliance", {
-		body: JSON.stringify(content),
-		headers: {
-			"Content-Type": "application/json",
-		},
-		method: "POST",
-	});
-	const body = (await resp.json()) as PublicReportComplianceOptions;
-	return new PublicReportCompliance(body);
-}
+const storePublicReport = useStorePublicReport();
 async function doMounted() {
 	const client_id = storeLocal.getClientID();
 	const report_uri = storeLocal.getExistingComplianceReportURI();
 	if (report_uri && report_uri.endsWith(props.public_id)) {
 		console.log("Loading previous report", report_uri);
 	} else {
-		const report = await createReport(client_id);
+		const report = await storePublicReport.createCompliance({
+			client_id: client_id,
+			mailer_id: props.public_id,
+		});
 		storeLocal.setExistingComplianceReportURI(report.uri);
 		console.log("Created new compliance report", report);
 	}

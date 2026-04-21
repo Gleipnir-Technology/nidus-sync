@@ -4,7 +4,7 @@ import { ref } from "vue";
 import { apiClient } from "@/client";
 import {
 	PublicReport,
-	type PublicReportCreateRequest,
+	type PublicReportComplianceCreateRequest,
 	type PublicReportDTO,
 } from "@/type/api";
 
@@ -43,8 +43,8 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		}
 		return byID(id);
 	}
-	async function create(
-		data: PublicReportCreateRequest,
+	async function createCompliance(
+		data: PublicReportComplianceCreateRequest,
 	): Promise<PublicReport> {
 		const resp = (await apiClient.JSONPost(
 			"/api/rmo/compliance",
@@ -59,6 +59,6 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		add,
 		byID,
 		byURI,
-		create,
+		createCompliance,
 	};
 });

@@ -174,7 +174,7 @@ export interface PublicReportDTO {
 	//water?: Water;
 	uri: string;
 }
-export interface PublicReportCreateRequest {
+export interface PublicReportComplianceCreateRequest {
 	client_id: string;
 	district?: string;
 	mailer_id?: string;
