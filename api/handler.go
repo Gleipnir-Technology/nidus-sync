@@ -342,12 +342,24 @@ func handlerFormPost[RequestType any, ResponseType any](f handlerFunctionPostFor
 	}
 }
 func parseRequest[RequestType any](r *http.Request) (*RequestType, *nhttp.ErrorWithStatus) {
+	var err error
 	var req RequestType
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, nhttp.NewError("Failed to read body: %w", err)
+	content_type := r.Header.Get("Content-Type")
+	if content_type == "application/json" {
+		body, e := io.ReadAll(r.Body)
+		if e != nil {
+			return nil, nhttp.NewError("Failed to read body: %w", err)
+		}
+		err = json.Unmarshal(body, &req)
+	} else if content_type == "application/x-www-form-urlencoded" {
+		e := r.ParseForm()
+		if err != nil {
+			return nil, nhttp.NewBadRequest("parsing form: %w", e)
+		}
+		err = decoder.Decode(&req, r.PostForm)
+	} else {
+		return nil, nhttp.NewBadRequest("unrecognized content type '%s'", content_type)
 	}
-	err = json.Unmarshal(body, &req)
 	if err != nil {
 		return nil, nhttp.NewErrorStatus(http.StatusBadRequest, "Failed to decode request: %w", err)
 	}

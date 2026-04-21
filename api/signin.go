@@ -12,8 +12,8 @@ import (
 )
 
 type reqSignin struct {
-	Password string `json:"password"`
-	Username string `json:"username"`
+	Password string `schema:"password"`
+	Username string `schema:"username"`
 }
 
 func postSignin(ctx context.Context, r *http.Request, req reqSignin) (string, *nhttp.ErrorWithStatus) {
