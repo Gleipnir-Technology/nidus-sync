@@ -194,7 +194,7 @@ onMounted(async () => {
 	console.log("syncs", syncs);
 });
 function doClickMap(cell: string) {
-	router.push("/cell/" + cell);
+	router.push("/_/cell/" + cell);
 }
 function mapBounds(): Bounds | undefined {
 	if (session.organization?.service_area) {

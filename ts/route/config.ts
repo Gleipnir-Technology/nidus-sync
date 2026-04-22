@@ -4,6 +4,7 @@ import type { RouteRecordRaw } from "vue-router";
 import { useSessionStore } from "@/store/session";
 import Home from "@/view/Home.vue";
 import Authenticated from "@/view/Authenticated.vue";
+import Cell from "@/view/Cell.vue";
 import Communication from "@/view/Communication.vue";
 import ConfigurationIntegration from "@/view/configuration/Integration.vue";
 import ConfigurationIntegrationArcgis from "@/view/configuration/IntegrationArcgis.vue";
@@ -45,6 +46,12 @@ const routes: RouteRecordRaw[] = [
 	},
 	{
 		children: [
+			{
+				component: Cell,
+				name: "Cell",
+				path: "/_/cell/:cell",
+				props: true,
+			},
 			{
 				path: "/_/communication",
 				name: "Communication",
