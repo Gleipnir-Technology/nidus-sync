@@ -33,7 +33,6 @@
 						<p class="text-muted">Please enter your credentials</p>
 					</div>
 
-					<input type="hidden" name="next" value="none" />
 					<div class="mb-3">
 						<label for="username" class="form-label">Username</label>
 						<input
@@ -112,10 +111,12 @@
 import { ref } from "vue";
 import { apiClient } from "@/client";
 import ButtonLoading from "@/components/common/ButtonLoading.vue";
+import { useQueryParam } from "@/composable/use-query-param";
 import { router } from "@/route/config";
 
 const error = ref<string>("");
 const loading = ref<boolean>(false);
+const paramNext = useQueryParam("next");
 const password = ref<string>("");
 const username = ref<string>("");
 async function doLogin() {
@@ -125,7 +126,11 @@ async function doLogin() {
 			password: password.value,
 			username: username.value,
 		});
-		router.push("/");
+		if (paramNext.value.value) {
+			router.push(paramNext.value.value);
+		} else {
+			router.push("/");
+		}
 	} catch (e) {
 		console.log("login failed", e);
 		error.value = `Login failed: ${e}`;

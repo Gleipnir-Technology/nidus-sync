@@ -80,7 +80,7 @@ const mapFlyoverCamera = ref<Camera>(new Camera());
 const router = useRouter();
 const storeSite = useStoreSite();
 const selectedSiteID = ref<number>(0);
-const siteParam = useQueryParam("site");
+const paramSite = useQueryParam("site");
 const submitting = ref<boolean>(false);
 const selectedSite = computed((): Site | undefined => {
 	if (!selectedSiteID.value) {
@@ -148,7 +148,7 @@ function siteSelect(id: number): void {
 		return;
 	}
 	mapFlyoverCamera.value = new Camera(site.address.location, 20);
-	siteParam.setValue(id.toString());
+	paramSite.setValue(id.toString());
 	console.log("selecting site", id, site);
 }
 
@@ -157,7 +157,7 @@ onMounted(async () => {
 	storeSite.fetchAll();
 });
 watch(
-	siteParam.value,
+	paramSite.value,
 	(site_id) => {
 		if (site_id) {
 			const id = parseInt(site_id, 10);

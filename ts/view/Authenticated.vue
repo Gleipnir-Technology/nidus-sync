@@ -25,6 +25,7 @@ import Sidebar from "@/components/layout/Sidebar.vue";
 import MainContent from "@/components/layout/MainContent.vue";
 import { Session } from "@/type/api";
 import { router } from "@/route/config";
+import { useRoutes } from "@/route/use";
 import { useSessionStore } from "@/store/session";
 
 const session = useSessionStore();
@@ -35,8 +36,11 @@ onMounted(() => {
 			console.log("session loaded by Authenticated", session);
 		})
 		.catch((e) => {
-			console.log("root session not loaded", router);
-			router.push("/signin");
+			console.log(
+				"root session not loaded, user is not authenticated",
+				router.currentRoute.value.fullPath,
+			);
+			router.push(`/signin?next=${router.currentRoute.value.fullPath}`);
 		});
 });
 </script>
