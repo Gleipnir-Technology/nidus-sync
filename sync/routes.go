@@ -16,17 +16,6 @@ func Router(r *mux.Router) {
 	r.HandleFunc("/mailer/mode-1/preview", getMailer1Preview)
 	r.HandleFunc("/mailer/mode-2/preview", getMailer2Preview)
 	r.HandleFunc("/mailer/mode-3/{code}/preview", getMailer3Preview)
-	r.HandleFunc("/district", getDistrict)
-
-	// Mock endpoints
-	r.HandleFunc("/mock", renderMockList)
-	addMock(r, "/mock/report", "sync/mock/report.html")
-	addMock(r, "/mock/report/{code}", "sync/mock/report-detail.html")
-	addMock(r, "/mock/report/{code}/confirm", "sync/mock/report-confirmation.html")
-	addMock(r, "/mock/report/{code}/contribute", "sync/mock/report-contribute.html")
-	addMock(r, "/mock/report/{code}/evidence", "sync/mock/report-evidence.html")
-	addMock(r, "/mock/report/{code}/schedule", "sync/mock/report-schedule.html")
-	addMock(r, "/mock/report/{code}/update", "sync/mock/report-update.html")
 
 	// Utility endpoints
 	r.HandleFunc("/privacy", getPrivacy)

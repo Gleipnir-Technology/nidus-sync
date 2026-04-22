@@ -30,11 +30,6 @@ type contentLayoutTest struct {
 type ContentDistrict struct {
 }
 
-func getDistrict(w http.ResponseWriter, r *http.Request) {
-	context := ContentDistrict{}
-	html.RenderOrError(w, "sync/district.html", &context)
-}
-
 func getLayoutTest(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentLayoutTest], *nhttp.ErrorWithStatus) {
 	return html.NewResponse("sync/layout-test.html", contentLayoutTest{}), nil
 }
