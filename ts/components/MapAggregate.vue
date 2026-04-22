@@ -34,7 +34,7 @@ import { Marker } from "@/types";
 import type { Bounds } from "@/type/api";
 
 interface Emits {
-	(e: "cell-click", cell: number): void;
+	(e: "cell-click", cell: string): void;
 }
 interface Props {
 	bounds?: Bounds;

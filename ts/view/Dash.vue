@@ -123,8 +123,9 @@
 		<div class="col-12">
 			<MapAggregate
 				:bounds="mapBounds()"
+				@cell-click="doClickMap"
 				:markers="[]"
-				:organizationId="session.organization?.id ?? 0"
+				:organizationId="session.organization?.id ?? 1"
 				:tegola="session.urls?.tegola ?? ''"
 			/>
 		</div>
@@ -159,6 +160,7 @@
 import { onMounted, reactive } from "vue";
 import MapAggregate from "@/components/MapAggregate.vue";
 import { formatBigNumber, formatTimeRelative } from "@/format";
+import { router } from "@/route/config";
 import { useSessionStore } from "@/store/session";
 import { useStoreServiceRequest } from "@/store/service_request";
 import { useStoreSync } from "@/store/sync";
@@ -191,6 +193,9 @@ onMounted(async () => {
 	const syncs = await storeSync.fetchAll();
 	console.log("syncs", syncs);
 });
+function doClickMap(cell: string) {
+	router.push("/cell/" + cell);
+}
 function mapBounds(): Bounds | undefined {
 	if (session.organization?.service_area) {
 		return session.organization?.service_area;
