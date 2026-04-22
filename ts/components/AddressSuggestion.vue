@@ -75,7 +75,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
+
+import { formatAddress } from "@/format";
 import { Address, GeocodeSuggestion } from "@/type/api";
 
 // Props
@@ -185,4 +187,14 @@ async function selectSuggestion(suggestion: GeocodeSuggestion) {
 		console.error("Error fetching place details:", error);
 	}
 }
+onMounted(() => {
+	// We may get an address from the API which doesn't have a raw value because it wasn't
+	// ever typed or it matched an address from a vendor's database. In that case, populate it,
+	// so we see something nice
+	if (props.modelValue.raw == "" && props.modelValue.gid != "") {
+		const raw = formatAddress(props.modelValue);
+		searchText.value = raw;
+		console.log("Set raw address", raw, props.modelValue);
+	}
+});
 </script>
