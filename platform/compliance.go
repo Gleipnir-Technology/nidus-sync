@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
@@ -16,6 +17,7 @@ import (
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	//"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/scan"
 )
 
 func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32) (int32, error) {
@@ -132,4 +134,24 @@ func ComplianceReportRequestFromPublicID(ctx context.Context, public_id string) 
 		return nil, fmt.Errorf("query CRR: %w", err)
 	}
 	return types.ComplianceReportRequestFromModel(row), nil
+}
+func OrganizationIDForComplianceReportRequest(ctx context.Context, public_id string) (int32, error) {
+	type _Row struct {
+		ID int32 `db:"organization_id"`
+	}
+	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			models.Sites.Columns.OrganizationID,
+		),
+		sm.From(models.ComplianceReportRequests.NameAs()),
+		sm.InnerJoin(models.Leads.NameAs()).On(
+			models.ComplianceReportRequests.Columns.LeadID.EQ(models.Leads.Columns.ID)),
+		sm.InnerJoin(models.Sites.NameAs()).On(
+			models.Leads.Columns.SiteID.EQ(models.Sites.Columns.ID)),
+		sm.Where(models.ComplianceReportRequests.Columns.PublicID.EQ(psql.Arg(public_id))),
+	), scan.StructMapper[_Row]())
+	if err != nil {
+		return 0, fmt.Errorf("query compliance report request")
+	}
+	return row.ID, nil
 }

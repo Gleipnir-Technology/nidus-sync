@@ -29,7 +29,8 @@ func compliance(ctx context.Context, public_id string, report *types.PublicRepor
 			models.PublicreportCompliances.Columns.ReportPhoneCanText,
 			models.PublicreportCompliances.Columns.WantsScheduled,
 		),
-		sm.From(psql.Quote("publicreport", "compliance")).As("publicreport.compliance"),
+		//sm.From(psql.Quote("publicreport", "compliance")).As("publicreport.compliance"),
+		sm.From(models.PublicreportCompliances.NameAs()),
 		sm.Where(models.PublicreportCompliances.Columns.ReportID.EQ(
 			psql.Arg(report.ID),
 		)),
