@@ -233,7 +233,7 @@ function initializeMap() {
 	if (props.useSatellite) {
 		style = "https://tiles.stadiamaps.com/styles/alidade_satellite.json";
 	}
-	const _map = new maplibregl.Map({
+	let map_options: maplibregl.MapOptions = {
 		container: mapContainer.value,
 		style: style,
 		// Disable interactions by default
@@ -241,40 +241,57 @@ function initializeMap() {
 		dragPan: false,
 		scrollZoom: false,
 		touchZoomRotate: false,
-	});
+	};
 	if (props.markers.length > 0) {
-		console.log("initial map fitting initial markers", props.markers);
-		_map.fitBounds(boundsMarkers(props.markers));
+		if (props.markers.length == 1) {
+			const m = props.markers[0];
+			map_options.center = [m.location.longitude, m.location.latitude];
+			map_options.zoom = 15;
+			console.log(
+				"initial map fitting single marker:",
+				m,
+				"location:",
+				m.location,
+				"zoom:",
+				15,
+			);
+		} else {
+			const bounds = boundsMarkers(props.markers);
+			console.log(
+				"initial map fitting initial markers:",
+				props.markers,
+				"bounds:",
+				bounds,
+			);
+			map_options.bounds = bounds;
+		}
 	} else if (
 		props.initialCamera &&
 		(props.initialCamera.location.latitude ||
 			props.initialCamera.location.longitude)
 	) {
 		console.log("initial map jump to initial camera", props.initialCamera);
-		_map.jumpTo({
-			center: [
-				props.initialCamera.location.longitude,
-				props.initialCamera.location.latitude,
-			],
-			zoom: props.initialCamera.zoom,
-		});
+		map_options.center = [
+			props.initialCamera.location.longitude,
+			props.initialCamera.location.latitude,
+		];
+		map_options.zoom = props.initialCamera.zoom;
 	} else if (
 		props.modelValue.location.latitude != 0 ||
 		props.modelValue.location.longitude != 0
 	) {
 		console.log("initial map jump to initial model", props.modelValue);
-		_map.jumpTo({
-			center: [
-				props.modelValue.location.longitude,
-				props.modelValue.location.latitude,
-			],
-			zoom: props.modelValue.zoom,
-		});
+		map_options.center = [
+			props.modelValue.location.longitude,
+			props.modelValue.location.latitude,
+		];
+		map_options.zoom = props.modelValue.zoom;
 	} else {
 		const bounds = boundsDefault();
 		console.log("initial map fitting default bounds", bounds);
-		_map.fitBounds(bounds);
+		map_options.bounds = bounds;
 	}
+	const _map = new maplibregl.Map(map_options);
 	_map.addControl(new maplibregl.NavigationControl(), "top-left");
 	map.value = _map;
 	_map.on("click", (e: maplibregl.MapLayerMouseEvent) => {
@@ -398,7 +415,7 @@ const updateMarkers = () => {
 
 // Frame all markers in view
 function frameMarkers() {
-	if (!map.value || props.markers.length === 0) return;
+	if (!map.value || props.markers.length === 0 || !isLoaded.value) return;
 
 	if (props.markers.length === 1) {
 		// Single marker: pan to it
@@ -406,10 +423,11 @@ function frameMarkers() {
 		// for the framing.
 		const zoom = props.modelValue.zoom > 1 ? props.modelValue.zoom : 15;
 		console.log(
-			"framing single marker",
-			isLoaded.value,
+			"framing single marker. location:",
 			props.markers[0].location,
+			"model zoom: ",
 			props.modelValue.zoom,
+			"calculated zoom: ",
 			zoom,
 		);
 
@@ -469,7 +487,7 @@ function panToLocation(location: Location, zoom: number) {
 watch(
 	() => props.modelValue,
 	(newCamera) => {
-		if (map.value && newCamera) {
+		if (map.value && isLoaded.value && newCamera) {
 			console.log("panning based on model change", newCamera);
 			map.value.panTo(
 				{
