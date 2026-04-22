@@ -7,15 +7,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Evidence interface {
+type Concern interface {
 	PopulateURL(*mux.Router) error
 }
-type EvidenceComplianceReportRequest struct {
-	ComplianceReportRequestPublicID string
-	URL                             string
+type ConcernComplianceReportRequest struct {
+	ComplianceReportRequestPublicID string `json:"compliance_report_request_public_id"`
+	URL                             string `json:"url"`
 }
 
-func (e *EvidenceComplianceReportRequest) PopulateURL(r *mux.Router) error {
+func (e *ConcernComplianceReportRequest) PopulateURL(r *mux.Router) error {
 	route_name := "compliance-request.image.pool.ByIDGet"
 	handler := r.Get(route_name)
 	if handler == nil {
@@ -27,6 +27,6 @@ func (e *EvidenceComplianceReportRequest) PopulateURL(r *mux.Router) error {
 	}
 	uri.Scheme = "https"
 	e.URL = uri.String()
-	log.Debug().Str("url", e.URL).Msg("populated evidence URL")
+	log.Debug().Str("url", e.URL).Msg("populated concern URL")
 	return nil
 }

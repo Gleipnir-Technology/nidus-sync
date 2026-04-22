@@ -6,6 +6,7 @@ import {
 	PublicReport,
 	type PublicReportComplianceCreateRequest,
 	type PublicReportDTO,
+	type PublicReportUpdate,
 } from "@/type/api";
 
 export const useStorePublicReport = defineStore("publicreport", () => {
@@ -64,6 +65,13 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 			throw err;
 		}
 	}
+	async function update(
+		uri: string,
+		updates: PublicReportUpdate,
+	): Promise<PublicReport> {
+		const resp = (await apiClient.JSONPut(uri, updates)) as PublicReportDTO;
+		return PublicReport.fromJSON(resp);
+	}
 	return {
 		// Actions
 		add,
@@ -72,5 +80,6 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		createCompliance,
 		fetchByID,
 		fetchByURI,
+		update,
 	};
 });

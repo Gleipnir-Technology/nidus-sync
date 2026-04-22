@@ -65,8 +65,10 @@ const routes = useRoutes();
 function doContinue() {
 	emit("update:modelValue", props.modelValue);
 	emit("doAddress");
-	// re-add when we have the concern data to show
-	// router.push("./concern");
-	router.push(routes.ComplianceEvidence(props.publicID));
+	if (props.modelValue.concerns.length > 0) {
+		router.push(routes.ComplianceConcern(props.publicID));
+	} else {
+		router.push(routes.ComplianceEvidence(props.publicID));
+	}
 }
 </script>

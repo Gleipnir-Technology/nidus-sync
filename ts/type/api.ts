@@ -158,21 +158,34 @@ export interface ComplianceUpdate {
 	//uri: string;
 	wants_scheduled?: boolean;
 }
+export interface Concern {
+	type: string;
+	url: string;
+}
 export interface PublicReportDTO {
 	address: Address;
-	//compliance?: PublicReportCompliance;
 	created: string;
 	district: string;
 	images: Image[];
 	location: Location;
 	log: LogEntryDTO[];
-	//nuisance?: Nuisance;
 	public_id: string;
 	reporter: Contact;
 	status: string;
 	type: string;
-	//water?: Water;
 	uri: string;
+}
+export interface PublicReportUpdate {
+	address?: Address;
+	created?: string;
+	district?: string;
+	images?: Image[];
+	location?: Location;
+	public_id?: string;
+	reporter?: Contact;
+	status?: string;
+	type?: string;
+	uri?: string;
 }
 export interface PublicReportComplianceCreateRequest {
 	client_id: string;
@@ -236,6 +249,7 @@ export interface PublicReportComplianceDTO extends PublicReportDTO {
 	access_instructions: string;
 	availability_notes: string;
 	comments: string;
+	concerns: Concern[];
 	gate_code: string;
 	has_dog: boolean;
 	permission_type: PermissionType;
@@ -245,15 +259,26 @@ export interface PublicReportComplianceOptions extends PublicReportOptions {
 	access_instructions: string;
 	availability_notes: string;
 	comments: string;
+	concerns: Concern[];
 	gate_code: string;
 	has_dog: boolean;
 	permission_type: PermissionType;
 	wants_scheduled: boolean;
 }
+export interface PublicReportComplianceUpdate extends PublicReportUpdate {
+	access_instructions?: string;
+	availability_notes?: string;
+	comments?: string;
+	gate_code?: string;
+	has_dog?: boolean;
+	permission_type?: PermissionType;
+	wants_scheduled?: boolean;
+}
 export class PublicReportCompliance extends PublicReport {
 	access_instructions: string;
 	availability_notes: string;
 	comments: string;
+	concerns: Concern[];
 	gate_code: string;
 	has_dog: boolean;
 	permission_type: PermissionType;
@@ -263,6 +288,7 @@ export class PublicReportCompliance extends PublicReport {
 		this.access_instructions = options?.access_instructions ?? "";
 		this.availability_notes = options?.availability_notes ?? "";
 		this.comments = options?.comments ?? "";
+		this.concerns = options?.concerns ?? [];
 		this.gate_code = options?.gate_code ?? "";
 		this.has_dog = options?.has_dog ?? false;
 		this.permission_type = toPermissionType(

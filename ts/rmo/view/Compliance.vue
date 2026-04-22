@@ -172,18 +172,7 @@ async function updateReport(updates: ComplianceUpdate) {
 		console.log("Refusing to update report without URI");
 		return;
 	}
-	const resp = await fetch(report.value.uri, {
-		method: "PUT",
-		body: JSON.stringify(updates),
-		headers: {
-			"Content-Type": "application/json",
-		},
-	});
-	if (!resp.ok) {
-		const content = await resp.text();
-		console.error("Failed to update compliance", resp.status, content);
-		return;
-	}
+	storePublicReport.update(report.value.uri, updates);
 }
 async function updateLocation() {
 	if (!report.value) return;

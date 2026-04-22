@@ -209,7 +209,7 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 func (res *complianceR) complianceHydrate(report *types.PublicReportCompliance) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	populateDistrictURI(&report.PublicReport, res.router)
 	populateReportURI(&report.PublicReport, res.router)
-	for _, e := range report.Evidence {
+	for _, e := range report.Concerns {
 		e.PopulateURL(res.router.router)
 	}
 	return report, nil

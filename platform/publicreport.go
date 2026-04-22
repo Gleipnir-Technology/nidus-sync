@@ -67,8 +67,8 @@ func PublicreportByIDCompliance(ctx context.Context, report_id string) (*types.P
 		return nil, fmt.Errorf("compliance report request by public id: %w", err)
 	}
 	if crr != nil {
-		result.Evidence = []*types.EvidenceComplianceReportRequest{
-			&types.EvidenceComplianceReportRequest{
+		result.Concerns = []*types.ConcernComplianceReportRequest{
+			&types.ConcernComplianceReportRequest{
 				ComplianceReportRequestPublicID: crr.PublicID,
 			},
 		}

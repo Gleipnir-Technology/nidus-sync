@@ -147,10 +147,7 @@
 
 			<!-- Navigation Buttons -->
 			<div class="d-flex gap-2 mt-4">
-				<RouterLink
-					class="btn btn-outline-secondary"
-					:to="routes.ComplianceAddress(publicID)"
-				>
+				<RouterLink class="btn btn-outline-secondary" :to="toBack()">
 					Back
 				</RouterLink>
 				<button class="btn btn-primary flex-grow-1" @click="doContinue">
@@ -187,5 +184,12 @@ function doContinue() {
 	emit("update:modelValue", props.modelValue);
 	emit("doEvidence", images.value);
 	router.push(routes.CompliancePermission(props.publicID));
+}
+function toBack() {
+	if (props.modelValue.concerns.length > 0) {
+		return routes.ComplianceConcern(props.publicID);
+	} else {
+		return routes.ComplianceAddress(props.publicID);
+	}
 }
 </script>

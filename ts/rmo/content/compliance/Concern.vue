@@ -1,7 +1,5 @@
 <style scoped>
-.observation-image {
-	width: 100%;
-	height: 200px;
+.concern-image {
 	background-color: #e9ecef;
 	border: 1px solid #dee2e6;
 	border-radius: 8px;
@@ -15,12 +13,12 @@
 	overflow: hidden;
 }
 
-.observation-image:hover {
+.concern-image:hover {
 	border-color: #0d6efd;
 	box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
 }
 
-.observation-image .overlay {
+.concern-image .overlay {
 	position: absolute;
 	bottom: 0;
 	left: 0;
@@ -53,84 +51,26 @@
 			</h2>
 
 			<p class="text-muted mb-4">
-				Our inspector documented the following conditions during their visit.
-				Tap any image to view details.
+				The following images show areas we are concerned about related to your
+				property. Tap any image to view details.
 			</p>
 
 			<!-- Observation Images -->
 			<div class="mb-4">
-				<label class="form-label fw-semibold mb-3">Inspection Photos</label>
+				<label class="form-label fw-semibold mb-3">Site Photos</label>
 
 				<div class="row g-3 mb-3">
-					<div class="col-6">
-						<div
-							class="observation-image"
-							data-bs-toggle="modal"
-							data-bs-target="#imageModal1"
-						>
-							<span class="text-center">
-								<i class="bi bi-camera" style="font-size: 2rem"></i>
-								<br />Photo 1
-							</span>
-							<div class="overlay">Tap to view</div>
+					<div class="card">
+						<div class="card-body">
+							<img
+								class="concern-image"
+								@click="openImageViewer(index)"
+								:key="index"
+								:src="concern.url"
+								v-for="(concern, index) in modelValue.concerns"
+							/>
 						</div>
 					</div>
-					<div class="col-6">
-						<div
-							class="observation-image"
-							data-bs-toggle="modal"
-							data-bs-target="#imageModal2"
-						>
-							<span class="text-center">
-								<i class="bi bi-camera" style="font-size: 2rem"></i>
-								<br />Photo 2
-							</span>
-							<div class="overlay">Tap to view</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="row g-3">
-					<div class="col-6">
-						<div
-							class="observation-image"
-							data-bs-toggle="modal"
-							data-bs-target="#imageModal3"
-						>
-							<span class="text-center">
-								<i class="bi bi-camera" style="font-size: 2rem"></i>
-								<br />Photo 3
-							</span>
-							<div class="overlay">Tap to view</div>
-						</div>
-					</div>
-					<div class="col-6">
-						<div
-							class="observation-image"
-							data-bs-toggle="modal"
-							data-bs-target="#imageModal4"
-						>
-							<span class="text-center">
-								<i class="bi bi-camera" style="font-size: 2rem"></i>
-								<br />Photo 4
-							</span>
-							<div class="overlay">Tap to view</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Inspector Comments -->
-			<div class="mb-4">
-				<label class="form-label fw-semibold mb-3">Inspector Comments</label>
-				<div class="inspector-notes">
-					<div class="mb-2">
-						<small class="text-muted">
-							<i class="bi bi-person-badge"></i>
-							Inspector #1 | 2 days ago
-						</small>
-					</div>
-					<p class="mb-0">some fake comments here</p>
 				</div>
 			</div>
 
@@ -145,22 +85,74 @@
 
 			<!-- Navigation Buttons -->
 			<div class="d-flex gap-2 mt-4">
-				<RouterLink to="./address" class="btn btn-outline-secondary">
+				<RouterLink
+					class="btn btn-outline-secondary"
+					:to="routes.ComplianceAddress(props.publicID)"
+				>
 					Back
 				</RouterLink>
-				<RouterLink to="evidence" class="btn btn-primary flex-grow-1">
+				<button class="btn btn-primary flex-grow-1" @click="doContinue">
 					Continue
-				</RouterLink>
+				</button>
 			</div>
 		</main>
 	</div>
+	<ImageViewerModal
+		@close="showImageModal = false"
+		:image="currentImage"
+		:show="showImageModal"
+	/>
 </template>
 <script setup lang="ts">
-import type { District } from "@/type/api";
+import { computed, onMounted, ref } from "vue";
+
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
+import ImageViewerModal, { Image } from "@/rmo/components/ImageViewerModal.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import { router } from "@/rmo/route/config";
+import { useRoutes } from "@/rmo/route/use";
+import type { District, PublicReportCompliance } from "@/type/api";
+
+interface Emits {
+	(e: "doConcern"): void;
+	(e: "update:modelValue", value: PublicReportCompliance): void;
+}
 interface Props {
 	district: District;
+	modelValue: PublicReportCompliance;
+	publicID: string;
 }
+const currentImageIndex = ref<number>(0);
+const emit = defineEmits<Emits>();
+const isLoading = ref<boolean>(true);
 const props = defineProps<Props>();
+const routes = useRoutes();
+const showImageModal = ref(false);
+
+const currentImage = computed((): Image | undefined => {
+	const i = props.modelValue.concerns[currentImageIndex.value] ?? null;
+	if (!i) {
+		return undefined;
+	}
+	return {
+		src: i.url,
+	};
+});
+function doContinue() {
+	emit("update:modelValue", props.modelValue);
+	emit("doConcern");
+	router.push(routes.ComplianceEvidence(props.publicID));
+}
+async function doMounted() {
+	if (props.modelValue.concerns.length == 0) {
+		router.push(routes.ComplianceEvidence(props.publicID));
+	}
+}
+function openImageViewer(index: number) {
+	currentImageIndex.value = index;
+	showImageModal.value = true;
+}
+onMounted(() => {
+	doMounted();
+});
 </script>
