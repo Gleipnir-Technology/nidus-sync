@@ -20,7 +20,10 @@
 			</div>
 
 			<div class="d-grid mt-4">
-				<RouterLink class="btn btn-primary btn-lg" to="./compliance/address">
+				<RouterLink
+					class="btn btn-primary btn-lg"
+					:to="routes.ComplianceAddress(props.publicID)"
+				>
 					Get Started</RouterLink
 				>
 			</div>
@@ -31,8 +34,11 @@
 import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import { useRoutes } from "@/rmo/route/use";
 interface Props {
 	district: District;
+	publicID: string;
 }
 const props = defineProps<Props>();
+const routes = useRoutes();
 </script>

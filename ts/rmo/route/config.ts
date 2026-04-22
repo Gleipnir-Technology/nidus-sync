@@ -22,6 +22,9 @@ import StatusByID from "@/rmo/view/StatusByID.vue";
 import StatusDistrict from "@/rmo/view/district/Status.vue";
 import Water from "@/rmo/view/Water.vue";
 import WaterDistrict from "@/rmo/view/district/Water.vue";
+
+import { ROUTE_NAMES } from "@/rmo/route/name";
+
 const routes: RouteRecordRaw[] = [
 	{
 		path: "/",
@@ -48,7 +51,7 @@ const routes: RouteRecordRaw[] = [
 			},
 			{
 				component: ComplianceAddress,
-				name: "ComplianceAddress",
+				name: ROUTE_NAMES.COMPLIANCE_ADDRESS,
 				path: "address",
 			},
 			{

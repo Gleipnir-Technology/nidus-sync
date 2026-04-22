@@ -44,12 +44,7 @@
 											</span>
 										</td>
 										<td>
-											<RouterLink
-												:to="{
-													name: 'Site Review',
-													query: { site: mailer.site_id },
-												}"
-											>
+											<RouterLink :to="routes.ReviewSite(mailer.site_id)">
 												{{ formatAddressShort(mailer.address) }}
 											</RouterLink>
 										</td>
@@ -87,6 +82,7 @@ import { computedAsync } from "@vueuse/core";
 import { formatDate, formatAddressShort } from "@/format";
 import { useStoreMailer } from "@/store/mailer";
 import { Mailer, MailerStatus } from "@/type/api";
+import { useRoutes } from "@/route/use";
 
 const formatStatus = (status: MailerStatus): string => {
 	return status.charAt(0).toUpperCase() + status.slice(1);
@@ -105,4 +101,5 @@ const storeMailer = useStoreMailer();
 const mailers = computedAsync(async (): Promise<Mailer[]> => {
 	return await storeMailer.list();
 });
+const routes = useRoutes();
 </script>

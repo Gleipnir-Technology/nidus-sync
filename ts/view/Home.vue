@@ -5,7 +5,7 @@
 import { onMounted } from "vue";
 import { useSessionStore } from "@/store/session";
 import { Session } from "@/type/api";
-import { router } from "@/router";
+import { router } from "@/route/config";
 
 const session = useSessionStore();
 onMounted(() => {

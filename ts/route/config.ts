@@ -35,6 +35,8 @@ import Signup from "@/view/Signup.vue";
 import Sudo from "@/view/Sudo.vue";
 import { apiClient } from "@/client";
 
+import { ROUTE_NAMES } from "@/route/name";
+
 const routes: RouteRecordRaw[] = [
 	{
 		path: "/",
@@ -166,7 +168,7 @@ const routes: RouteRecordRaw[] = [
 			},
 			{
 				path: "/_/review/site",
-				name: "Site Review",
+				name: ROUTE_NAMES.REVIEW_SITE,
 				component: ReviewSite,
 			},
 			{

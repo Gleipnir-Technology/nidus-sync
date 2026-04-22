@@ -35,7 +35,7 @@ import CSVUpload from "@/components/CSVUpload.vue";
 import TableUploadRequirements, {
 	UploadRequirement,
 } from "@/components/TableUploadRequirements.vue";
-import { router } from "@/router";
+import { router } from "@/route/config";
 
 const requirements = ref<UploadRequirement[]>([
 	{

@@ -160,7 +160,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
-import { router } from "@/rmo/router";
+import { router } from "@/rmo/route/config";
 import type { District, PublicReportCompliance } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";

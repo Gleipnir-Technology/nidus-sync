@@ -112,7 +112,7 @@
 import { ref } from "vue";
 import { apiClient } from "@/client";
 import ButtonLoading from "@/components/common/ButtonLoading.vue";
-import { router } from "@/router";
+import { router } from "@/route/config";
 
 const error = ref<string>("");
 const loading = ref<boolean>(false);

@@ -31,6 +31,7 @@ body > .container-fluid {
 					@doEvidence="doEvidence"
 					@doPermission="doPermission"
 					@doSubmit="doSubmit"
+					:publicID="report?.public_id ?? 'unset'"
 					v-model="report"
 				/>
 			</template>

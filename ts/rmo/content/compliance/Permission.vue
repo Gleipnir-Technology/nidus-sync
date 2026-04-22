@@ -280,7 +280,7 @@
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { router } from "@/rmo/router";
+import { router } from "@/rmo/route/config";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import {

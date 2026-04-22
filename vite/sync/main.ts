@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "@/AppSync.vue";
-import router from "@/router";
+import router from "@/route/config";
 import * as config from "@/config";
 
 import "maplibre-gl/dist/maplibre-gl.css";

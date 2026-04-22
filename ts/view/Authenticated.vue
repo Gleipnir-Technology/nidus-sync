@@ -24,7 +24,7 @@ import { onMounted } from "vue";
 import Sidebar from "@/components/layout/Sidebar.vue";
 import MainContent from "@/components/layout/MainContent.vue";
 import { Session } from "@/type/api";
-import { router } from "@/router";
+import { router } from "@/route/config";
 import { useSessionStore } from "@/store/session";
 
 const session = useSessionStore();

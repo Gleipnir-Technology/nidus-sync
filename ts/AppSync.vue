@@ -6,7 +6,7 @@
 import * as Sentry from "@sentry/vue";
 import { onMounted } from "vue";
 import { apiClient } from "@/client";
-import router from "@/router";
+import router from "@/route/config";
 
 import { SSEManager, type SSEMessage } from "@/SSEManager";
 
