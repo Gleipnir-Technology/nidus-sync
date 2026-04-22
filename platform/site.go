@@ -146,7 +146,7 @@ func siteQuery() bob.BaseQuery[*dialect.SelectQuery] {
 			"address.locality AS \"address.locality\"",
 			"COALESCE(address.location_latitude, 0) AS \"address.location.latitude\"",
 			"COALESCE(address.location_longitude, 0) AS \"address.location.longitude\"",
-			"address.number_ AS \"address.number\"",
+			"address.number_ AS \"address.number_\"",
 			"address.postal_code AS \"address.postal_code\"",
 			"address.region AS \"address.region\"",
 			"address.street AS \"address.street\"",

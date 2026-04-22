@@ -20,7 +20,7 @@ type Address struct {
 	ID         *int32    `db:"id" json:"-" schema:"-"`
 	Locality   string    `db:"locality" json:"locality"`
 	Location   *Location `db:"location" json:"location" schema:"location"`
-	Number     string    `db:"number" json:"number"`
+	Number     string    `db:"number_" json:"number"`
 	PostalCode string    `db:"postal_code" json:"postal_code"`
 	Raw        string    `db:"raw" json:"raw" schema:"raw"`
 	Region     string    `db:"region" json:"region"`

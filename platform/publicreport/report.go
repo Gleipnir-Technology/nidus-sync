@@ -142,7 +142,7 @@ func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
 			"COALESCE(a.location_latitude, 0) AS \"address.location.latitude\"",
 			"COALESCE(a.location_longitude, 0) AS \"address.location.longitude\"",
 			"COALESCE(a.locality, '') AS \"address.locality\"",
-			"COALESCE(a.number_, '') AS \"address.number\"",
+			"COALESCE(a.number_, '') AS \"address.number_\"",
 			"COALESCE(a.postal_code, '') AS \"address.postal_code\"",
 			"COALESCE(a.region, '') AS \"address.region\"",
 			"COALESCE(a.street, '') AS \"address.street\"",
