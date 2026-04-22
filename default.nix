@@ -45,7 +45,7 @@ pkgs.buildGoModule rec {
   pnpmDeps = pkgs.pnpm.fetchDeps {
     inherit pname src version;
     fetcherVersion = 2;
-    hash = "sha256-UvE49UmVw8zVFHywxRWyzL0EiZvuZjmm9hA1U98o2sA=";
+    hash = "sha256-4XPkwVKSuDlErKfD59iBPHLuf44iRkjEcS6tIityCjo=";
   };
 
   preBuild = ''
