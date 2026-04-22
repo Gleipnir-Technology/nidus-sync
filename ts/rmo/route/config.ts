@@ -46,7 +46,7 @@ const routes: RouteRecordRaw[] = [
 		children: [
 			{
 				component: ComplianceIntro,
-				name: "ComplianceIntro",
+				name: ROUTE_NAMES.COMPLIANCE_INTRO,
 				path: "",
 			},
 			{
@@ -56,37 +56,37 @@ const routes: RouteRecordRaw[] = [
 			},
 			{
 				component: ComplianceComplete,
-				name: "ComplianceComplete",
+				name: ROUTE_NAMES.COMPLIANCE_COMPLETE,
 				path: "complete",
 			},
 			{
 				component: ComplianceConcern,
-				name: "ComplianceConcern",
+				name: ROUTE_NAMES.COMPLIANCE_CONCERN,
 				path: "concern",
 			},
 			{
 				component: ComplianceContact,
-				name: "ComplianceContact",
+				name: ROUTE_NAMES.COMPLIANCE_CONTACT,
 				path: "contact",
 			},
 			{
 				component: ComplianceEvidence,
-				name: "ComplianceEvidence",
+				name: ROUTE_NAMES.COMPLIANCE_EVIDENCE,
 				path: "evidence",
 			},
 			{
 				component: CompliancePermission,
-				name: "CompliancePermission",
+				name: ROUTE_NAMES.COMPLIANCE_PERMISSION,
 				path: "permission",
 			},
 			{
 				component: ComplianceProcess,
-				name: "ComplianceProcess",
+				name: ROUTE_NAMES.COMPLIANCE_PROCESS,
 				path: "process",
 			},
 			{
 				component: ComplianceSubmit,
-				name: "ComplianceSubmit",
+				name: ROUTE_NAMES.COMPLIANCE_SUBMIT,
 				path: "submit",
 			},
 		],

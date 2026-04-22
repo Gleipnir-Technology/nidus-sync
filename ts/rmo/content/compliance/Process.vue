@@ -136,10 +136,16 @@
 
 			<!-- Navigation Buttons -->
 			<div class="d-flex gap-2 mt-4">
-				<RouterLink to="contact" class="btn btn-outline-secondary">
+				<RouterLink
+					class="btn btn-outline-secondary"
+					:to="routes.ComplianceContact(publicID)"
+				>
 					Back
 				</RouterLink>
-				<RouterLink to="submit" class="btn btn-primary flex-grow-1">
+				<RouterLink
+					class="btn btn-primary flex-grow-1"
+					:to="routes.ComplianceSubmit(publicID)"
+				>
 					Continue
 				</RouterLink>
 			</div>
@@ -150,8 +156,11 @@
 import type { District } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import { useRoutes } from "@/rmo/route/use";
 interface Props {
 	district: District;
+	publicID: string;
 }
 const props = defineProps<Props>();
+const routes = useRoutes();
 </script>

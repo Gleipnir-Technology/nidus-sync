@@ -147,7 +147,10 @@
 
 			<!-- Navigation Buttons -->
 			<div class="d-flex gap-2 mt-4">
-				<RouterLink to="./address" class="btn btn-outline-secondary">
+				<RouterLink
+					class="btn btn-outline-secondary"
+					:to="routes.ComplianceAddress(publicID)"
+				>
 					Back
 				</RouterLink>
 				<button class="btn btn-primary flex-grow-1" @click="doContinue">
@@ -165,6 +168,7 @@ import type { District, PublicReportCompliance } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ImageUpload, { Image } from "@/components/ImageUpload.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import { useRoutes } from "@/rmo/route/use";
 
 interface Emits {
 	(e: "update:modelValue", value: PublicReportCompliance): void;
@@ -173,13 +177,15 @@ interface Emits {
 interface Props {
 	district: District;
 	modelValue: PublicReportCompliance;
+	publicID: string;
 }
 const emit = defineEmits<Emits>();
 const images = ref<Image[]>([]);
 const props = defineProps<Props>();
+const routes = useRoutes();
 function doContinue() {
 	emit("update:modelValue", props.modelValue);
 	emit("doEvidence", images.value);
-	router.push("./permission");
+	router.push(routes.CompliancePermission(props.publicID));
 }
 </script>

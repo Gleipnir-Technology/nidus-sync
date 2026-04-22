@@ -119,7 +119,10 @@
 
 			<!-- Navigation Buttons -->
 			<div class="d-flex gap-2 mt-4">
-				<RouterLink class="btn btn-outline-secondary" to="./permission">
+				<RouterLink
+					class="btn btn-outline-secondary"
+					:to="routes.CompliancePermission(publicID)"
+				>
 					Back
 				</RouterLink>
 				<button class="btn btn-primary flex-grow-1" @click="doContinue()">
@@ -136,6 +139,7 @@ import { router } from "@/rmo/route/config";
 import type { Contact, District, PublicReport } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
+import { useRoutes } from "@/rmo/route/use";
 
 interface Emits {
 	(e: "doContact"): void;
@@ -144,12 +148,14 @@ interface Emits {
 interface Props {
 	district: District;
 	modelValue: PublicReport;
+	publicID: string;
 }
 const emit = defineEmits<Emits>();
 const props = defineProps<Props>();
+const routes = useRoutes();
 function doContinue() {
 	emit("update:modelValue", props.modelValue);
 	emit("doContact");
-	router.push("./process");
+	router.push(routes.ComplianceProcess(props.publicID));
 }
 </script>

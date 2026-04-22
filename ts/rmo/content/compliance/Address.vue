@@ -16,7 +16,10 @@
 			/>
 
 			<div class="d-flex gap-2 mt-4">
-				<RouterLink class="btn btn-outline-secondary" to="../compliance">
+				<RouterLink
+					class="btn btn-outline-secondary"
+					:to="routes.ComplianceIntro(props.publicID)"
+				>
 					Back
 				</RouterLink>
 				<button class="btn btn-primary flex-grow-1" @click="doContinue">
@@ -35,6 +38,7 @@ import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { Camera } from "@/type/map";
+import { useRoutes } from "@/rmo/route/use";
 
 interface Emits {
 	(e: "doAddress"): void;
@@ -43,6 +47,7 @@ interface Emits {
 interface Props {
 	district: District;
 	modelValue: PublicReportCompliance;
+	publicID: string;
 }
 const emit = defineEmits<Emits>();
 const error = ref<string>("");
@@ -56,11 +61,12 @@ const initialCamera = computed((): Camera | undefined => {
 	}
 	return undefined;
 });
+const routes = useRoutes();
 function doContinue() {
 	emit("update:modelValue", props.modelValue);
 	emit("doAddress");
 	// re-add when we have the concern data to show
 	// router.push("./concern");
-	router.push(`/district/${props.district.slug}/compliance/evidence`);
+	router.push(routes.ComplianceEvidence(props.publicID));
 }
 </script>

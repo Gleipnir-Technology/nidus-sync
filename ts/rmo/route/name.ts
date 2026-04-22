@@ -1,5 +1,13 @@
 export const ROUTE_NAMES = {
 	COMPLIANCE_ADDRESS: "compliance-address",
+	COMPLIANCE_COMPLETE: "compliance-complete",
+	COMPLIANCE_CONCERN: "compliance-concern",
+	COMPLIANCE_CONTACT: "compliance-contact",
+	COMPLIANCE_EVIDENCE: "compliance-evidence",
+	COMPLIANCE_INTRO: "compliance-intro",
+	COMPLIANCE_PERMISSION: "compliance-permission",
+	COMPLIANCE_PROCESS: "compliance-process",
+	COMPLIANCE_SUBMIT: "compliance-submit",
 	REVIEW_SITE: "review-site",
 } as const;
 
