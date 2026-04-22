@@ -124,7 +124,7 @@
 			<MapAggregate
 				:bounds="mapBounds()"
 				:markers="[]"
-				:organizationId="dashboard.organization.id"
+				:organizationId="session.organization?.id ?? 0"
 				:tegola="session.urls?.tegola ?? ''"
 			/>
 		</div>

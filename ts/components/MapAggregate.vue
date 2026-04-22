@@ -69,26 +69,26 @@ const initializeMap = () => {
 
 	const bounds = _bounds();
 
-	map.value = new maplibregl.Map({
+	const _map = new maplibregl.Map({
 		bounds: bounds,
 		container: mapContainer.value,
 		style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",
 	});
+	map.value = _map;
 
 	console.log("Initializing map to bounds", bounds);
 	const mapInstance = map.value;
 	if (mapInstance) {
 		map.value.on("load", () => {
-			if (!map.value) return;
-
-			map.value.addSource("tegola", {
+			_map.addSource("tegola", {
 				type: "vector",
 				tiles: [
 					`${props.tegola}maps/nidus/{z}/{x}/{y}?id=${props.organizationId}&organization_id=${props.organizationId}`,
 				],
 			});
+			console.log("Added tegola", props.tegola, props.organizationId);
 
-			map.value.addLayer({
+			_map.addLayer({
 				id: "mosquito_source",
 				type: "fill",
 				filter: [
@@ -104,7 +104,7 @@ const initializeMap = () => {
 				},
 			});
 
-			map.value.addLayer({
+			_map.addLayer({
 				id: "service_request",
 				type: "fill",
 				filter: [
@@ -120,7 +120,7 @@ const initializeMap = () => {
 				},
 			});
 
-			map.value.addLayer({
+			_map.addLayer({
 				id: "trap",
 				type: "fill",
 				filter: [
@@ -136,7 +136,7 @@ const initializeMap = () => {
 				},
 			});
 
-			map.value.addLayer({
+			_map.addLayer({
 				id: "service-area",
 				source: "tegola",
 				"source-layer": "service-area-bounds",
@@ -146,13 +146,13 @@ const initializeMap = () => {
 				},
 			});
 
-			map.value.on("mouseenter", "mosquito_source", () => {
+			_map.on("mouseenter", "mosquito_source", () => {
 				if (map.value) {
 					map.value.getCanvas().style.cursor = "pointer";
 				}
 			});
 
-			map.value.on("mouseleave", "mosquito_source", () => {
+			_map.on("mouseleave", "mosquito_source", () => {
 				if (map.value) {
 					map.value.getCanvas().style.cursor = "";
 				}
@@ -167,9 +167,9 @@ const initializeMap = () => {
 				emit("cell-click", properties.cell);
 			};
 
-			map.value.on("click", "mosquito_source", handleClick);
-			map.value.on("click", "service_request", handleClick);
-			map.value.on("click", "trap", handleClick);
+			_map.on("click", "mosquito_source", handleClick);
+			_map.on("click", "service_request", handleClick);
+			_map.on("click", "trap", handleClick);
 		});
 	}
 };
