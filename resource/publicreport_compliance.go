@@ -61,38 +61,14 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	if n.District.IsUnset() && n.MailerID.IsUnset() {
 		return nil, nhttp.NewBadRequest("You must provide a district_id or mailer_id")
 	}
-	var district_id int32
-	var err error
-	var public_id string
-	if n.District.IsValue() {
-		district_str := n.District.MustGet()
-		var district_id_ptr *int
-		district_id_ptr, err = res.router.IDFromURI("district.ByIDGet", district_str)
-		if err != nil || district_id_ptr == nil {
-			return nil, nhttp.NewBadRequest("parse district ID: %w", err)
-		}
-		district_id = int32(*district_id_ptr)
-		public_id, err = platform.GenerateReportID()
-		if err != nil {
-			return nil, nhttp.NewError("generate public ID: %w", err)
-		}
-	}
-	if n.MailerID.IsValue() {
-		public_id = n.MailerID.MustGet()
-		org_id, err := platform.OrganizationIDForComplianceReportRequest(ctx, public_id)
-		if err != nil {
-			return nil, nhttp.NewBadRequest("no such mailer")
-		}
-		district_id = org_id
-	}
 	user_agent := r.Header.Get("User-Agent")
-	err = platform.EnsureClient(ctx, n.ClientID, user_agent)
+	err := platform.EnsureClient(ctx, n.ClientID, user_agent)
 	if err != nil {
 		return nil, nhttp.NewError("Failed to ensure client: %w", err)
 	}
 	setter_report := models.PublicreportReportSetter{
-		//AddressID:              omitnull.From(latlng.Cell.String()),
-		AddressGid: omit.From(""),
+		//AddressID:              omitnull.From(...),
+		//AddressGid: omit.From(...),
 		AddressRaw: omit.From(""),
 		ClientUUID: omitnull.From(n.ClientID),
 		Created:    omit.From(time.Now()),
@@ -100,10 +76,10 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),
 		LatlngAccuracyValue: omit.From(float32(0.0)),
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
-		Location:            omitnull.FromPtr[string](nil),
-		MapZoom:             omit.From(float32(0.0)),
-		OrganizationID:      omit.From[int32](district_id),
-		PublicID:            omit.From(public_id),
+		Location: omitnull.FromPtr[string](nil),
+		MapZoom:  omit.From(float32(0.0)),
+		//OrganizationID:      omit.From[int32](),
+		//PublicID:            omit.From(),
 		ReporterEmail:       omit.From(""),
 		ReporterName:        omit.From(""),
 		ReporterPhone:       omit.From(""),
@@ -121,7 +97,37 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		//ReportID            omit.Val[int32]
 		WantsScheduled: omitnull.FromPtr[bool](nil),
 	}
-	report, err := platform.PublicReportComplianceCreate(ctx, setter_report, setter_compliance, district_id)
+	var org_id int32
+	if n.District.IsValue() {
+		district_str := n.District.MustGet()
+		var district_id_ptr *int
+		district_id_ptr, err := res.router.IDFromURI("district.ByIDGet", district_str)
+		if err != nil || district_id_ptr == nil {
+			return nil, nhttp.NewBadRequest("parse district ID: %w", err)
+		}
+		org_id = int32(*district_id_ptr)
+		public_id, err := platform.GenerateReportID()
+		if err != nil {
+			return nil, nhttp.NewError("generate public ID: %w", err)
+		}
+		setter_report.PublicID = omit.From(public_id)
+	}
+	if n.MailerID.IsValue() {
+		public_id := n.MailerID.MustGet()
+		setter_report.PublicID = omit.From(public_id)
+
+		org_id, err = platform.OrganizationIDForComplianceReportRequest(ctx, public_id)
+		if err != nil {
+			return nil, nhttp.NewBadRequest("no such mailer")
+		}
+		address, err := platform.AddressFromComplianceReportRequestID(ctx, public_id)
+		if err != nil {
+			return nil, nhttp.NewError("get address gid: %w", err)
+		}
+		setter_report.AddressID = omitnull.FromPtr(address.ID)
+		setter_report.AddressGid = omit.From(address.GID)
+	}
+	report, err := platform.PublicReportComplianceCreate(ctx, setter_report, setter_compliance, org_id)
 	if err != nil {
 		return nil, nhttp.NewError("create compliance report: %w", err)
 	}
