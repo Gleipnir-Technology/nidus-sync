@@ -19,7 +19,6 @@ func Router(r *mux.Router) {
 
 	// Utility endpoints
 	r.HandleFunc("/privacy", getPrivacy)
-	r.HandleFunc("/template-test", getTemplateTest)
 
 	//r.HandleFunc("/", getRoot)
 	//r.HandleFunc("/_/*", getRoot)

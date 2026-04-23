@@ -78,9 +78,6 @@ func getSource(ctx context.Context, r *http.Request, user platform.User) (*html.
 	return html.NewResponse("sync/source.html", data), nil
 }
 
-func getTemplateTest(w http.ResponseWriter, r *http.Request) {
-	html.RenderOrError(w, "sync/template-test.html", nil)
-}
 func getTrap(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentTrap], *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	globalid_s := vars["globalid"]
