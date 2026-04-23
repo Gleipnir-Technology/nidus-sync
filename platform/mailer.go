@@ -48,7 +48,7 @@ func mailerQuery() bob.BaseQuery[*dialect.SelectQuery] {
 			//sm.From(psql.F("COALESCE", psql.Raw("address.location_longitude"), 0)).As("address.location.longitude"),
 			"COALESCE(address.location_latitude, 0) AS \"address.location.latitude\"",
 			"COALESCE(address.location_longitude, 0) AS \"address.location.longitude\"",
-			models.Addresses.Columns.Number.As("address.number"),
+			models.Addresses.Columns.Number.As("address.number_"),
 			models.Addresses.Columns.PostalCode.As("address.postal_code"),
 			models.Addresses.Columns.Region.As("address.region"),
 			models.Addresses.Columns.Street.As("address.street"),
