@@ -4,19 +4,25 @@
 		<p>select a site to see actions</p>
 	</template>
 	<template v-if="selectedSite">
-		<ButtonLoading
-			@click="emit('doRequestComplianceMailer', selectedSite?.id ?? 0)"
-			:disabled="!selectedSite"
-			icon="bi-check-circle"
-			:loading="submitting"
-			text="Send Compliance Mailer"
-			variant="success"
-		/>
+		<template v-if="session.organization?.lob_address_id">
+			<ButtonLoading
+				@click="emit('doRequestComplianceMailer', selectedSite?.id ?? 0)"
+				:disabled="!selectedSite"
+				icon="bi-check-circle"
+				:loading="submitting"
+				text="Send Compliance Mailer"
+				variant="success"
+			/>
+		</template>
+		<template v-else>
+			<p>Set Lob Address ID</p>
+		</template>
 	</template>
 </template>
 <script setup lang="ts">
-import { Site } from "@/type/api";
 import ButtonLoading from "@/components/common/ButtonLoading.vue";
+import { useSessionStore } from "@/store/session";
+import { Site } from "@/type/api";
 
 interface Emits {
 	(e: "doRequestComplianceMailer", id: number): void;
@@ -29,4 +35,5 @@ const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
 	submitting: false,
 });
+const session = useSessionStore();
 </script>

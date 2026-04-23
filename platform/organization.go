@@ -46,28 +46,6 @@ func (o Organization) CountTrap(ctx context.Context) (uint, error) {
 	}
 	return uint(result), nil
 }
-func (o Organization) HasServiceArea() bool {
-	return o.model.ServiceAreaGeometry.IsValue()
-}
-func (o Organization) IsCatchall() bool {
-	return o.model.IsCatchall
-}
-func (o Organization) MarshalJSON() ([]byte, error) {
-	to_marshal := map[string]any{}
-	to_marshal["id"] = o.ID
-	to_marshal["name"] = o.Name()
-	to_marshal["service_area"] = o.ServiceArea
-	return json.Marshal(to_marshal)
-}
-func (o Organization) Name() string {
-	return o.model.Name
-}
-func (o Organization) PhoneOffice() string {
-	return o.model.OfficePhone.GetOr("")
-}
-func (o Organization) IsSyncOngoing() bool {
-	return IsSyncOngoing(o.ID)
-}
 func (o Organization) FieldseekerSyncLatest(ctx context.Context) (*models.FieldseekerSync, error) {
 	sync, err := o.model.FieldseekerSyncs(sm.OrderBy("created").Desc()).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
@@ -79,6 +57,32 @@ func (o Organization) FieldseekerSyncLatest(ctx context.Context) (*models.Fields
 	return sync, nil
 }
 
+func (o Organization) HasServiceArea() bool {
+	return o.model.ServiceAreaGeometry.IsValue()
+}
+func (o Organization) IsCatchall() bool {
+	return o.model.IsCatchall
+}
+func (o Organization) IsSyncOngoing() bool {
+	return IsSyncOngoing(o.ID)
+}
+func (o Organization) LobAddressID() string {
+	return o.model.LobAddressID.GetOr("")
+}
+func (o Organization) MarshalJSON() ([]byte, error) {
+	to_marshal := map[string]any{}
+	to_marshal["id"] = o.ID
+	to_marshal["name"] = o.Name()
+	to_marshal["service_area"] = o.ServiceArea
+	to_marshal["lob_address_id"] = o.model.LobAddressID
+	return json.Marshal(to_marshal)
+}
+func (o Organization) Name() string {
+	return o.model.Name
+}
+func (o Organization) PhoneOffice() string {
+	return o.model.OfficePhone.GetOr("")
+}
 func (o Organization) ServiceRequestRecent(ctx context.Context) ([]*models.FieldseekerServicerequest, error) {
 	results, err := o.model.Servicerequests(sm.OrderBy("creationdate").Desc(), sm.Limit(10)).All(ctx, db.PGInstance.BobDB)
 	if err != nil {

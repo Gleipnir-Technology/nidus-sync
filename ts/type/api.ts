@@ -739,6 +739,7 @@ export class Mailer {
 export interface Organization {
 	id: number;
 	name: string;
+	lob_address_id: string;
 	service_area?: Bounds;
 }
 export interface UserNotificationCounts {
