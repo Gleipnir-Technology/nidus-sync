@@ -150,8 +150,15 @@
 						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#dc3545' }"
 						source="tegola"
 						sourceLayer="mosquito_source"
-						,
 						type="fill"
+					/>
+					<Layer
+						id="parcel"
+						:minzoom="14"
+						:paint="{ 'line-color': '#0f0' }"
+						source="tegola"
+						sourceLayer="parcel"
+						type="line"
 					/>
 					<Layer
 						id="service_request"
@@ -163,7 +170,6 @@
 						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#ffc107' }"
 						source="tegola"
 						sourceLayer="service_request"
-						,
 						type="fill"
 					/>
 					<Layer
@@ -176,7 +182,6 @@
 						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#ffc107' }"
 						source="tegola"
 						sourceLayer="trap"
-						,
 						type="fill"
 					/>
 					<Layer
@@ -184,7 +189,6 @@
 						:paint="{ 'line-color': '#f00' }"
 						source="tegola"
 						sourceLayer="service-area-bounds"
-						,
 						type="line"
 					/>
 

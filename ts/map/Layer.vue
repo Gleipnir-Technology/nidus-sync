@@ -10,6 +10,7 @@ type LayerType = maplibregl.LayerSpecification["type"];
 export interface Props {
 	filter?: maplibregl.FilterSpecification;
 	id: string;
+	minzoom?: number;
 	paint: Object;
 	source: string;
 	sourceLayer: string;
@@ -31,6 +32,7 @@ const getLayerConfig = (): maplibregl.LayerSpecification => {
 		"source-layer": props.sourceLayer,
 		type: props.type,
 		...(props.filter && { filter: props.filter }),
+		...(props.minzoom && { minzoom: props.minzoom }),
 		...(props.paint && { paint: props.paint }),
 	} as maplibregl.LayerSpecification;
 	return result;
