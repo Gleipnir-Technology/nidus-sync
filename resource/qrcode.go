@@ -30,12 +30,12 @@ func (res *qrcodeR) Mailer(ctx context.Context, w http.ResponseWriter, r *http.R
 	content := config.MakeURLReport("/mailer/%s", code)
 	return writeQRCode(w, r, content)
 }
-func (res *qrcodeR) Marketing(w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
+func (res *qrcodeR) Marketing(ctx context.Context, w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
 	content := "https://nidus.cloud"
 	return writeQRCode(w, r, content)
 }
 
-func (res *qrcodeR) Report(w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
+func (res *qrcodeR) Report(ctx context.Context, w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
 	vars := mux.Vars(r)
 	code := vars["code"]
 	if code == "" {
