@@ -57,10 +57,12 @@ provide("registerSource", (id: string, config: any) => {
 
 provide("unregisterSource", (id: string) => {
 	console.log("unregister source", id);
+	/*
 	sources.delete(id);
 	if (map.value && map.value?.getSource(id)) {
 		map.value.removeSource(id);
 	}
+*/
 });
 
 provide("registerLayer", (id: string, config: any) => {
@@ -75,10 +77,12 @@ provide("registerLayer", (id: string, config: any) => {
 
 provide("unregisterLayer", (id: string) => {
 	console.log("unregister layer", id);
+	/*
 	layers.delete(id);
 	if (map.value?.getLayer(id)) {
 		map.value.removeLayer(id);
 	}
+*/
 });
 
 function initializeMap() {
