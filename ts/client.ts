@@ -1,12 +1,15 @@
 // src/api/axios.ts
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 
+export interface AxiosErrorJSON {
+	status: number;
+}
 class ApiClient {
 	private client: AxiosInstance;
 
 	constructor() {
 		this.client = axios.create({
-			timeout: 60000,
+			timeout: 10000,
 			withCredentials: true,
 		});
 

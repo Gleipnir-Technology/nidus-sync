@@ -18,19 +18,22 @@ type reqSignin struct {
 
 func postSignin(ctx context.Context, r *http.Request, req reqSignin) (string, *nhttp.ErrorWithStatus) {
 	if req.Password == "" {
-		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "Empty password")
+		return "", nhttp.NewBadRequest("Empty password")
 	}
 	if req.Username == "" {
-		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "Empty username")
+		return "", nhttp.NewBadRequest("Empty username")
 	}
 	log.Info().Str("username", req.Username).Msg("API Signin")
 	_, err := auth.SigninUser(r, req.Username, req.Password)
 	if err != nil {
 		if errors.Is(err, auth.InvalidCredentials{}) {
-			return "", nhttp.NewErrorStatus(http.StatusUnauthorized, "invalid credentials")
+			return "", nhttp.NewUnauthorized("invalid credentials")
 		}
 		if errors.Is(err, auth.InvalidUsername{}) {
-			return "", nhttp.NewErrorStatus(http.StatusUnauthorized, "invalid credentials")
+			return "", nhttp.NewUnauthorized("invalid credentials")
+		}
+		if errors.Is(err, platform.NoUserError{}) {
+			return "", nhttp.NewUnauthorized("invalid credentials")
 		}
 		log.Error().Err(err).Str("username", req.Username).Msg("Login server error")
 		return "", nhttp.NewError("login server error")

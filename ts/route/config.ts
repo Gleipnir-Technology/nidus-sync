@@ -224,7 +224,10 @@ router.beforeEach(async (to, from) => {
 	const storeSession = useSessionStore();
 	try {
 		if (!storeSession.isLoading && !storeSession.isAuthenticated) {
-			console.log("sending to signin because we're not authenticated");
+			console.log(
+				"sending to signin because we're not authenticated and user wanted",
+				to.fullPath,
+			);
 			return `/signin?next=${from.fullPath}`;
 		}
 	} catch (error) {

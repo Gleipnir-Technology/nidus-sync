@@ -23,6 +23,12 @@ import (
 type NoUserError struct{}
 
 func (e NoUserError) Error() string { return "That user does not exist" }
+func (e NoUserError) Is(target error) bool {
+	if _, ok := target.(NoUserError); ok {
+		return true
+	}
+	return false
+}
 
 type User struct {
 	Active           bool

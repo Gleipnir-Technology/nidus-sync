@@ -75,6 +75,9 @@
 						<a href="forgot-password.html">Forgot password?</a>
 					</div>
 
+					<div class="mt-3 text-center" v-if="isLoginSuccess">
+						<div class="alert alert-success">Login successful</div>
+					</div>
 					<div class="mt-3 text-center" v-if="error">
 						<div class="alert alert-danger">{{ error }}</div>
 					</div>
@@ -113,23 +116,43 @@ import { apiClient } from "@/client";
 import ButtonLoading from "@/components/common/ButtonLoading.vue";
 import { useQueryParam } from "@/composable/use-query-param";
 import { router } from "@/route/config";
+import { useSessionStore } from "@/store/session";
 
 const error = ref<string>("");
+const isLoginSuccess = ref<boolean>(false);
 const loading = ref<boolean>(false);
 const paramNext = useQueryParam("next");
 const password = ref<string>("");
+const session = useSessionStore();
 const username = ref<string>("");
 async function doLogin() {
+	if (username.value == "" && password.value == "") {
+		error.value =
+			"Slow down there partner, you should add a username and password first.";
+		return;
+	} else if (username.value == "") {
+		error.value = "Your username is empty - we've got to know who you are.";
+		return;
+	} else if (password.value == "") {
+		error.value = "Your password is empty - you've got to put something there.";
+		return;
+	}
+
 	loading.value = true;
+	error.value = "";
 	try {
-		const resp = await apiClient.JSONPost("/api/signin", {
-			password: password.value,
-			username: username.value,
-		});
-		if (paramNext.value.value) {
-			router.push(paramNext.value.value);
+		const resp = await session.doSignin(password.value, username.value);
+		isLoginSuccess.value = resp.is_success;
+		if (resp.status == 200) {
+			if (paramNext.value.value && paramNext.value.value != "/signin") {
+				router.push(paramNext.value.value);
+			} else {
+				router.push("/");
+			}
+		} else if (resp.status == 401) {
+			error.value = "Invalid credentials";
 		} else {
-			router.push("/");
+			error.value = `Status ${resp.status}`;
 		}
 	} catch (e) {
 		console.log("login failed", e);

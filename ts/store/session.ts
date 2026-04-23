@@ -1,3 +1,4 @@
+import * as axios from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { SSEManager, type SSEMessage } from "@/SSEManager";
@@ -8,8 +9,20 @@ import {
 	URLs,
 	User,
 } from "@/type/api";
-import { apiClient } from "@/client";
+import { apiClient, AxiosErrorJSON } from "@/client";
 
+export class ErrorNotSignedIn extends Error {
+	constructor() {
+		super("not signed in");
+		this.name = "ErrorNotSignedIn";
+		Object.setPrototypeOf(this, ErrorNotSignedIn.prototype);
+	}
+}
+
+export interface SigninResult {
+	is_success: boolean;
+	status: number;
+}
 export const useSessionStore = defineStore("session", () => {
 	// State
 	const hasSession = ref<boolean>(false);
@@ -32,23 +45,58 @@ export const useSessionStore = defineStore("session", () => {
 	});
 
 	// Actions
+	async function doSignin(
+		password: string,
+		username: string,
+	): Promise<SigninResult> {
+		try {
+			await apiClient.JSONPost("/api/signin", {
+				password: password,
+				username: username,
+			});
+			return {
+				is_success: true,
+				status: 200,
+			};
+		} catch (e: any) {
+			const data: AxiosErrorJSON =
+				e instanceof axios.AxiosError
+					? (e.toJSON() as AxiosErrorJSON)
+					: { status: 0 };
+			if (!data) throw e;
+			return {
+				is_success: false,
+				status: data.status,
+			};
+		}
+	}
 	async function fetchSession(): Promise<Session> {
 		error.value = null;
 
 		try {
 			const data: Session = await apiClient.JSONGet("/api/session");
 			isAuthenticated.value = true;
-			console.log("set authenticated", isAuthenticated.value);
+			console.log(
+				"set authenticated",
+				isAuthenticated.value,
+				"due to successful GET /api/session",
+			);
 			impersonating.value = data.impersonating || null;
 			notification_counts.value = data.notification_counts;
 			organization.value = data.organization;
 			self.value = data.self;
 			urls.value = data.urls;
 			return data;
-		} catch (e) {
-			error.value = e instanceof Error ? e.message : "an error ocurred";
-			console.error("Error fetching user:", e);
-			throw new Error(error.value);
+		} catch (e: any) {
+			const data: AxiosErrorJSON =
+				e instanceof axios.AxiosError
+					? (e.toJSON() as AxiosErrorJSON)
+					: { status: 0 };
+			if (data.status == 401) {
+				throw new ErrorNotSignedIn();
+			}
+			console.error("Error fetching session:", e);
+			throw e;
 		} finally {
 			hasSession.value = true;
 			isLoading.value = false;
@@ -77,7 +125,7 @@ export const useSessionStore = defineStore("session", () => {
 	}
 	async function signout(): Promise<void> {
 		isAuthenticated.value = false;
-		console.log("set authenticated", isAuthenticated.value);
+		console.log("set authenticated", isAuthenticated.value, "due to signout");
 		apiClient.JSONPost("/api/signout", {});
 	}
 	return {
@@ -93,6 +141,7 @@ export const useSessionStore = defineStore("session", () => {
 		self,
 		urls,
 		// Actions
+		doSignin,
 		fetchSession,
 		get,
 		signout,
