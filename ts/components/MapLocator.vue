@@ -163,7 +163,7 @@ import {
 	useTemplateRef,
 	watch,
 } from "vue";
-import { boundsMarkers, boundsDefault } from "@/map-utils";
+import { boundsMarkers, boundsDefault } from "@/map/util";
 import type { MapClickEvent, Marker } from "@/types";
 import type { Location } from "@/type/api";
 import type { Camera, MoveEndEventInternal } from "@/type/map";
