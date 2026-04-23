@@ -68,7 +68,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	}
 	setter_report := models.PublicreportReportSetter{
 		//AddressID:              omitnull.From(...),
-		//AddressGid: omit.From(...),
+		AddressGid: omit.From(""),
 		AddressRaw: omit.From(""),
 		ClientUUID: omitnull.From(n.ClientID),
 		Created:    omit.From(time.Now()),
