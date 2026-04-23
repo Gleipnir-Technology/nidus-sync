@@ -27,10 +27,8 @@ import {
 	shallowRef,
 } from "vue";
 
-import type { Bounds } from "@/type/api";
-
 interface Props {
-	bounds?: Bounds;
+	bounds?: maplibregl.LngLatBounds;
 	center?: maplibregl.LngLatLike;
 	zoom?: number;
 }
@@ -88,6 +86,7 @@ function initializeMap() {
 
 	console.log("initializing map...");
 	const _map = new maplibregl.Map({
+		bounds: props.bounds,
 		container: mapDiv.value,
 		center: props.center,
 		style: "https://tiles.stadiamaps.com/styles/alidade_smooth.json",

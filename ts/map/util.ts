@@ -1,6 +1,20 @@
 import maplibregl from "maplibre-gl";
 import type { Marker } from "@/types";
-import type { Location } from "@/type/api";
+import type { Bounds, Location } from "@/type/api";
+
+export function boundsDefault(): maplibregl.LngLatBounds {
+	return new maplibregl.LngLatBounds(
+		new maplibregl.LngLat(-125, 50),
+		new maplibregl.LngLat(-70, 25),
+	);
+}
+
+export function boundsFromAPI(b: Bounds): maplibregl.LngLatBounds {
+	return new maplibregl.LngLatBounds(
+		new maplibregl.LngLat(b.min.longitude, b.max.latitude),
+		new maplibregl.LngLat(b.max.longitude, b.min.latitude),
+	);
+}
 
 export function boundsMarkers(markers: Marker[]): maplibregl.LngLatBounds {
 	let min_lat = 90;
@@ -18,13 +32,6 @@ export function boundsMarkers(markers: Marker[]): maplibregl.LngLatBounds {
 		new maplibregl.LngLat(max_lng, max_lat),
 	);
 }
-export function boundsDefault(): maplibregl.LngLatBounds {
-	return new maplibregl.LngLatBounds(
-		new maplibregl.LngLat(-125, 50),
-		new maplibregl.LngLat(-70, 25),
-	);
-}
-
 // Helper functions (outside component)
 const getBoundingBox = (points: Location[]) => {
 	if (!points || points.length === 0) {

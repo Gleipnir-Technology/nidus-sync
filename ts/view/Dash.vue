@@ -232,6 +232,7 @@ import { onMounted, reactive } from "vue";
 import Map from "@/map/Map.vue";
 import Layer from "@/map/Layer.vue";
 import Source from "@/map/Source.vue";
+import { boundsDefault, boundsFromAPI } from "@/map/util";
 import { formatBigNumber, formatTimeRelative } from "@/format";
 import { router } from "@/route/config";
 import { useSessionStore } from "@/store/session";
@@ -269,11 +270,11 @@ onMounted(async () => {
 function doClickMap(cell: string) {
 	router.push("/_/cell/" + cell);
 }
-function mapBounds(): Bounds | undefined {
+function mapBounds(): maplibregl.LngLatBounds {
 	if (session.organization?.service_area) {
-		return session.organization?.service_area;
+		return boundsFromAPI(session.organization?.service_area);
 	}
-	return undefined;
+	return boundsDefault();
 }
 function refreshData() {
 	console.log("fake refresh");
