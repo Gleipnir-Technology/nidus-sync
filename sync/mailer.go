@@ -98,7 +98,7 @@ func getMailer2Preview(w http.ResponseWriter, r *http.Request) {
 		LogoURL:      config.MakeURLNidus("/api/district/delta-mvcd/logo"),
 		Organization: org,
 		PoolImageURL: config.MakeURLNidus("/mailer/pool/random"),
-		QRCodeURL:    config.MakeURLNidus("/qr-code/marketing"),
+		QRCodeURL:    config.MakeURLNidus("/api/qr-code/marketing"),
 		ReportURL:    "https://nidus.cloud",
 	})
 }
@@ -133,7 +133,7 @@ func getMailer3Preview(w http.ResponseWriter, r *http.Request) {
 		LogoURL:      config.MakeURLNidus("/api/district/%s/logo", org.Slug.GetOr("unset")),
 		Organization: org,
 		PoolImageURL: config.MakeURLNidus("/api/compliance-request/image/pool/%s", code),
-		QRCodeURL:    config.MakeURLNidus("/qr-code/mailer/%s", code),
+		QRCodeURL:    config.MakeURLNidus("/api/qr-code/mailer/%s", code),
 		ReportURL:    config.MakeURLReport("/mailer/%s", code),
 	})
 }

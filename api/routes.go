@@ -47,6 +47,11 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/mailer/{id}", authenticatedHandlerJSONPost(mailer.ByIDGet)).Methods("GET").Name("mailer.ByIDGet")
 	r.Handle("/mosquito-source", auth.NewEnsureAuth(apiMosquitoSource)).Methods("GET")
 
+	qrcode := resource.QRCode(router)
+	r.Handle("/qr-code/mailer/{code}", handlerBasic(qrcode.Mailer)).Methods("GET")
+	r.Handle("/qr-code/marketing", handlerBasic(qrcode.Marketing)).Methods("GET")
+	r.Handle("/qr-code/report/{code}", handlerBasic(qrcode.Report)).Methods("GET")
+
 	r.Handle("/publicreport/invalid", authenticatedHandlerJSONPost(postPublicreportInvalid)).Methods("POST")
 	r.Handle("/publicreport/signal", authenticatedHandlerJSONPost(postPublicreportSignal)).Methods("POST")
 	r.Handle("/publicreport/message", authenticatedHandlerJSONPost(postPublicreportMessage)).Methods("POST")

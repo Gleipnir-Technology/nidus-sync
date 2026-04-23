@@ -77,11 +77,11 @@ export default defineConfig({
 				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
-			"/oauth": {
+			"/mock": {
 				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
-			"/qr-code": {
+			"/oauth": {
 				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},

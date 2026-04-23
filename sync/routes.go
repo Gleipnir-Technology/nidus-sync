@@ -19,9 +19,6 @@ func Router(r *mux.Router) {
 
 	// Utility endpoints
 	r.HandleFunc("/privacy", getPrivacy)
-	r.HandleFunc("/qr-code/marketing", getQRCodeMarketing)
-	r.HandleFunc("/qr-code/report/{code}", getQRCodeReport)
-	r.HandleFunc("/qr-code/mailer/{code}", getQRCodeMailer)
 	r.HandleFunc("/template-test", getTemplateTest)
 
 	//r.HandleFunc("/", getRoot)
