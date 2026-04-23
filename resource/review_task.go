@@ -90,7 +90,7 @@ func (res *reviewTaskR) List(ctx context.Context, r *http.Request, user platform
 			"review_task.reviewer_id AS reviewer_id",
 			"address.country AS \"address.country\"",
 			"address.locality AS \"address.locality\"",
-			"address.number_ AS \"address.number\"",
+			"address.number_ AS \"address.number_\"",
 			"address.postal_code AS \"address.postal_code\"",
 			"address.region AS \"address.region\"",
 			"address.street AS \"address.street\"",
