@@ -1,3 +1,13 @@
+<style scoped>
+.map-container {
+	background-color: #e9ecef;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+	height: 500px;
+	margin-top: 20px;
+	position: relative;
+}
+</style>
 <template>
 	<!-- Dashboard Header -->
 	<div class="row mb-4">
@@ -121,13 +131,74 @@
 	<h3 class="section-title">Mosquito Activity Heatmap</h3>
 	<div class="row">
 		<div class="col-12">
-			<MapAggregate
-				:bounds="mapBounds()"
-				@cell-click="doClickMap"
-				:markers="[]"
-				:organizationId="session.organization?.id ?? 1"
-				:tegola="session.urls?.tegola ?? ''"
-			/>
+			<div class="map-container">
+				<Map
+					:bounds="mapBounds()"
+					@cell-click="doClickMap"
+					class="map"
+					:markers="[]"
+					:organizationId="session.organization?.id ?? 1"
+					:tegola="session.urls?.tegola ?? ''"
+				>
+					<Layer
+						id="mosquito_source"
+						:filter="[
+							'==',
+							['zoom'],
+							['+', 2, ['to-number', ['get', 'resolution']]],
+						]"
+						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#dc3545' }"
+						source="tegola"
+						sourceLayer="mosquito_source"
+						,
+						type="fill"
+					/>
+					<Layer
+						id="service_request"
+						:filter="[
+							'==',
+							['zoom'],
+							['+', 2, ['to-number', ['get', 'resolution']]],
+						]"
+						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#ffc107' }"
+						source="tegola"
+						sourceLayer="service_request"
+						,
+						type="fill"
+					/>
+					<Layer
+						id="trap"
+						:filter="[
+							'==',
+							['zoom'],
+							['+', 2, ['to-number', ['get', 'resolution']]],
+						]"
+						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#ffc107' }"
+						source="tegola"
+						sourceLayer="trap"
+						,
+						type="fill"
+					/>
+					<Layer
+						id="service-area"
+						:paint="{ 'line-color': '#f00' }"
+						source="tegola"
+						sourceLayer="service-area-bounds"
+						,
+						type="line"
+					/>
+
+					<Source
+						id="tegola"
+						type="vector"
+						:tiles="[
+							session.urls?.tegola +
+								'maps/nidus/{z}/{x}/{y}?id=' +
+								session.organization?.id,
+						]"
+					/>
+				</Map>
+			</div>
 		</div>
 	</div>
 
@@ -158,7 +229,9 @@
 
 <script setup lang="ts">
 import { onMounted, reactive } from "vue";
-import MapAggregate from "@/components/MapAggregate.vue";
+import Map from "@/map/Map.vue";
+import Layer from "@/map/Layer.vue";
+import Source from "@/map/Source.vue";
 import { formatBigNumber, formatTimeRelative } from "@/format";
 import { router } from "@/route/config";
 import { useSessionStore } from "@/store/session";
