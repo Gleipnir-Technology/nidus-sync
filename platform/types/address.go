@@ -57,7 +57,7 @@ func AddressList(ctx context.Context, ids []int32) (map[int32]*Address, error) {
 			"COALESCE(address.gid, '') AS \"gid\"",
 			"address.id AS \"id\"",
 			"COALESCE(address.locality, '') AS \"locality\"",
-			"COALESCE(address.number_, '') AS \"number\"",
+			"COALESCE(address.number_, '') AS \"number_\"",
 			"COALESCE(address.postal_code, '') AS \"postal_code\"",
 			"COALESCE(address.region, '') AS \"region\"",
 			"COALESCE(address.street, '') AS \"street\"",
