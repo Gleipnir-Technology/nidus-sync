@@ -25,15 +25,19 @@ import {
 	ref,
 	type Ref,
 	shallowRef,
+	watch,
 } from "vue";
 
 interface Props {
 	bounds?: maplibregl.LngLatBounds;
 	center?: maplibregl.LngLatLike;
+	cursor?: string;
 	zoom?: number;
 }
 
-const props = withDefaults(defineProps<Props>(), {});
+const props = withDefaults(defineProps<Props>(), {
+	cursor: "",
+});
 
 const mapDiv = ref<HTMLElement | null>(null);
 const map: Ref<maplibregl.Map | null> = shallowRef(null);
@@ -150,4 +154,12 @@ onBeforeUnmount(() => {
 		map.value.remove();
 	}
 });
+watch(
+	() => props.cursor,
+	(newCursor) => {
+		if (map.value && map.value.loaded()) {
+			map.value.getCanvas().style.cursor = newCursor;
+		}
+	},
+);
 </script>

@@ -135,6 +135,7 @@
 				<Map
 					:bounds="mapBounds()"
 					@cell-click="doClickMap"
+					:cursor="mapCursor"
 					class="map"
 					:markers="[]"
 					:organizationId="session.organization?.id ?? 1"
@@ -234,7 +235,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import Map from "@/map/Map.vue";
 import Layer from "@/map/Layer.vue";
 import Source from "@/map/Source.vue";
@@ -265,6 +266,7 @@ const dashboard = reactive({
 	},
 	recentRequests: [],
 });
+const mapCursor = ref<string>("");
 const storeServiceRequest = useStoreServiceRequest();
 const storeSync = useStoreSync();
 const session = useSessionStore();
@@ -277,10 +279,10 @@ function doClickMap(cell: string) {
 	router.push("/_/cell/" + cell);
 }
 function doLayerMouseEnter() {
-	console.log("enter");
+	mapCursor.value = "pointer";
 }
 function doLayerMouseLeave() {
-	console.log("leave");
+	mapCursor.value = "";
 }
 function mapBounds(): maplibregl.LngLatBounds {
 	if (session.organization?.service_area) {
