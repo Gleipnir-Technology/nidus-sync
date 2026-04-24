@@ -244,6 +244,7 @@ import Source from "@/map/Source.vue";
 import { boundsDefault, boundsFromAPI } from "@/map/util";
 import { formatBigNumber, formatTimeRelative } from "@/format";
 import { router } from "@/route/config";
+import { useRoutes } from "@/route/use";
 import { useSessionStore } from "@/store/session";
 import { useStoreServiceRequest } from "@/store/service_request";
 import { useStoreSync } from "@/store/sync";
@@ -269,6 +270,7 @@ const dashboard = reactive({
 	recentRequests: [],
 });
 const mapCursor = ref<string>("");
+const routes = useRoutes();
 const storeServiceRequest = useStoreServiceRequest();
 const storeSync = useStoreSync();
 const session = useSessionStore();
@@ -278,11 +280,10 @@ onMounted(async () => {
 	console.log("syncs", syncs);
 });
 function doClickMap(e: MouseEvent) {
-	//router.push("/_/cell/" + cell);
 	if (!e.features || e.features.length == 0) return;
 	const feature = e.features[0];
 	const properties = feature.properties;
-	console.log("clicked", properties.cell);
+	router.push(routes.CellDetail(properties.cell));
 }
 function doLayerMouseEnter() {
 	mapCursor.value = "pointer";

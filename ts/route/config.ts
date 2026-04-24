@@ -48,7 +48,7 @@ const routes: RouteRecordRaw[] = [
 		children: [
 			{
 				component: Cell,
-				name: "Cell",
+				name: ROUTE_NAMES.CELL_DETAIL,
 				path: "/_/cell/:cell",
 				props: true,
 			},

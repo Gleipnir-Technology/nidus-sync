@@ -1,4 +1,5 @@
 export const ROUTE_NAMES = {
+	CELL_DETAIL: "cell-detail",
 	COMPLIANCE_ADDRESS: "compliance-address",
 	REVIEW_SITE: "review-site",
 } as const;
