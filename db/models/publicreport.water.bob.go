@@ -17,28 +17,30 @@ import (
 	"github.com/Gleipnir-Technology/bob/expr"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
+	enums "github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/aarondl/opt/omit"
 )
 
 // PublicreportWater is an object representing the database table.
 type PublicreportWater struct {
-	AccessComments         string `db:"access_comments" `
-	AccessGate             bool   `db:"access_gate" `
-	AccessFence            bool   `db:"access_fence" `
-	AccessLocked           bool   `db:"access_locked" `
-	AccessDog              bool   `db:"access_dog" `
-	AccessOther            bool   `db:"access_other" `
-	Comments               string `db:"comments" `
-	IsReporterConfidential bool   `db:"is_reporter_confidential" `
-	IsReporterOwner        bool   `db:"is_reporter_owner" `
-	HasAdult               bool   `db:"has_adult" `
-	HasBackyardPermission  bool   `db:"has_backyard_permission" `
-	HasLarvae              bool   `db:"has_larvae" `
-	HasPupae               bool   `db:"has_pupae" `
-	OwnerEmail             string `db:"owner_email" `
-	OwnerName              string `db:"owner_name" `
-	OwnerPhone             string `db:"owner_phone" `
-	ReportID               int32  `db:"report_id,pk" `
+	AccessComments         string                                 `db:"access_comments" `
+	AccessGate             bool                                   `db:"access_gate" `
+	AccessFence            bool                                   `db:"access_fence" `
+	AccessLocked           bool                                   `db:"access_locked" `
+	AccessDog              bool                                   `db:"access_dog" `
+	AccessOther            bool                                   `db:"access_other" `
+	Comments               string                                 `db:"comments" `
+	IsReporterConfidential bool                                   `db:"is_reporter_confidential" `
+	IsReporterOwner        bool                                   `db:"is_reporter_owner" `
+	HasAdult               bool                                   `db:"has_adult" `
+	HasBackyardPermission  bool                                   `db:"has_backyard_permission" `
+	HasLarvae              bool                                   `db:"has_larvae" `
+	HasPupae               bool                                   `db:"has_pupae" `
+	OwnerEmail             string                                 `db:"owner_email" `
+	OwnerName              string                                 `db:"owner_name" `
+	OwnerPhone             string                                 `db:"owner_phone" `
+	ReportID               int32                                  `db:"report_id,pk" `
+	Duration               enums.PublicreportNuisancedurationtype `db:"duration" `
 
 	R publicreportWaterR `db:"-" `
 }
@@ -61,7 +63,7 @@ type publicreportWaterR struct {
 func buildPublicreportWaterColumns(alias string) publicreportWaterColumns {
 	return publicreportWaterColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "comments", "is_reporter_confidential", "is_reporter_owner", "has_adult", "has_backyard_permission", "has_larvae", "has_pupae", "owner_email", "owner_name", "owner_phone", "report_id",
+			"access_comments", "access_gate", "access_fence", "access_locked", "access_dog", "access_other", "comments", "is_reporter_confidential", "is_reporter_owner", "has_adult", "has_backyard_permission", "has_larvae", "has_pupae", "owner_email", "owner_name", "owner_phone", "report_id", "duration",
 		).WithParent("publicreport.water"),
 		tableAlias:             alias,
 		AccessComments:         psql.Quote(alias, "access_comments"),
@@ -81,6 +83,7 @@ func buildPublicreportWaterColumns(alias string) publicreportWaterColumns {
 		OwnerName:              psql.Quote(alias, "owner_name"),
 		OwnerPhone:             psql.Quote(alias, "owner_phone"),
 		ReportID:               psql.Quote(alias, "report_id"),
+		Duration:               psql.Quote(alias, "duration"),
 	}
 }
 
@@ -104,6 +107,7 @@ type publicreportWaterColumns struct {
 	OwnerName              psql.Expression
 	OwnerPhone             psql.Expression
 	ReportID               psql.Expression
+	Duration               psql.Expression
 }
 
 func (c publicreportWaterColumns) Alias() string {
@@ -118,27 +122,28 @@ func (publicreportWaterColumns) AliasedAs(alias string) publicreportWaterColumns
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportWaterSetter struct {
-	AccessComments         omit.Val[string] `db:"access_comments" `
-	AccessGate             omit.Val[bool]   `db:"access_gate" `
-	AccessFence            omit.Val[bool]   `db:"access_fence" `
-	AccessLocked           omit.Val[bool]   `db:"access_locked" `
-	AccessDog              omit.Val[bool]   `db:"access_dog" `
-	AccessOther            omit.Val[bool]   `db:"access_other" `
-	Comments               omit.Val[string] `db:"comments" `
-	IsReporterConfidential omit.Val[bool]   `db:"is_reporter_confidential" `
-	IsReporterOwner        omit.Val[bool]   `db:"is_reporter_owner" `
-	HasAdult               omit.Val[bool]   `db:"has_adult" `
-	HasBackyardPermission  omit.Val[bool]   `db:"has_backyard_permission" `
-	HasLarvae              omit.Val[bool]   `db:"has_larvae" `
-	HasPupae               omit.Val[bool]   `db:"has_pupae" `
-	OwnerEmail             omit.Val[string] `db:"owner_email" `
-	OwnerName              omit.Val[string] `db:"owner_name" `
-	OwnerPhone             omit.Val[string] `db:"owner_phone" `
-	ReportID               omit.Val[int32]  `db:"report_id,pk" `
+	AccessComments         omit.Val[string]                                 `db:"access_comments" `
+	AccessGate             omit.Val[bool]                                   `db:"access_gate" `
+	AccessFence            omit.Val[bool]                                   `db:"access_fence" `
+	AccessLocked           omit.Val[bool]                                   `db:"access_locked" `
+	AccessDog              omit.Val[bool]                                   `db:"access_dog" `
+	AccessOther            omit.Val[bool]                                   `db:"access_other" `
+	Comments               omit.Val[string]                                 `db:"comments" `
+	IsReporterConfidential omit.Val[bool]                                   `db:"is_reporter_confidential" `
+	IsReporterOwner        omit.Val[bool]                                   `db:"is_reporter_owner" `
+	HasAdult               omit.Val[bool]                                   `db:"has_adult" `
+	HasBackyardPermission  omit.Val[bool]                                   `db:"has_backyard_permission" `
+	HasLarvae              omit.Val[bool]                                   `db:"has_larvae" `
+	HasPupae               omit.Val[bool]                                   `db:"has_pupae" `
+	OwnerEmail             omit.Val[string]                                 `db:"owner_email" `
+	OwnerName              omit.Val[string]                                 `db:"owner_name" `
+	OwnerPhone             omit.Val[string]                                 `db:"owner_phone" `
+	ReportID               omit.Val[int32]                                  `db:"report_id,pk" `
+	Duration               omit.Val[enums.PublicreportNuisancedurationtype] `db:"duration" `
 }
 
 func (s PublicreportWaterSetter) SetColumns() []string {
-	vals := make([]string, 0, 17)
+	vals := make([]string, 0, 18)
 	if s.AccessComments.IsValue() {
 		vals = append(vals, "access_comments")
 	}
@@ -189,6 +194,9 @@ func (s PublicreportWaterSetter) SetColumns() []string {
 	}
 	if s.ReportID.IsValue() {
 		vals = append(vals, "report_id")
+	}
+	if s.Duration.IsValue() {
+		vals = append(vals, "duration")
 	}
 	return vals
 }
@@ -245,6 +253,9 @@ func (s PublicreportWaterSetter) Overwrite(t *PublicreportWater) {
 	if s.ReportID.IsValue() {
 		t.ReportID = s.ReportID.MustGet()
 	}
+	if s.Duration.IsValue() {
+		t.Duration = s.Duration.MustGet()
+	}
 }
 
 func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
@@ -253,7 +264,7 @@ func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 17)
+		vals := make([]bob.Expression, 18)
 		if s.AccessComments.IsValue() {
 			vals[0] = psql.Arg(s.AccessComments.MustGet())
 		} else {
@@ -356,6 +367,12 @@ func (s *PublicreportWaterSetter) Apply(q *dialect.InsertQuery) {
 			vals[16] = psql.Raw("DEFAULT")
 		}
 
+		if s.Duration.IsValue() {
+			vals[17] = psql.Arg(s.Duration.MustGet())
+		} else {
+			vals[17] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -365,7 +382,7 @@ func (s PublicreportWaterSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 17)
+	exprs := make([]bob.Expression, 0, 18)
 
 	if s.AccessComments.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -483,6 +500,13 @@ func (s PublicreportWaterSetter) Expressions(prefix ...string) []bob.Expression 
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "report_id")...),
 			psql.Arg(s.ReportID),
+		}})
+	}
+
+	if s.Duration.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "duration")...),
+			psql.Arg(s.Duration),
 		}})
 	}
 
@@ -802,6 +826,7 @@ type publicreportWaterWhere[Q psql.Filterable] struct {
 	OwnerName              psql.WhereMod[Q, string]
 	OwnerPhone             psql.WhereMod[Q, string]
 	ReportID               psql.WhereMod[Q, int32]
+	Duration               psql.WhereMod[Q, enums.PublicreportNuisancedurationtype]
 }
 
 func (publicreportWaterWhere[Q]) AliasedAs(alias string) publicreportWaterWhere[Q] {
@@ -827,6 +852,7 @@ func buildPublicreportWaterWhere[Q psql.Filterable](cols publicreportWaterColumn
 		OwnerName:              psql.Where[Q, string](cols.OwnerName),
 		OwnerPhone:             psql.Where[Q, string](cols.OwnerPhone),
 		ReportID:               psql.Where[Q, int32](cols.ReportID),
+		Duration:               psql.Where[Q, enums.PublicreportNuisancedurationtype](cols.Duration),
 	}
 }
 

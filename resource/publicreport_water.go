@@ -33,26 +33,27 @@ type water struct {
 	URI      string `json:"uri"`
 }
 type waterForm struct {
-	AccessComments         string         `schema:"access-comments"`
-	AccessDog              bool           `schema:"access-dog"`
-	AccessFence            bool           `schema:"access-fence"`
-	AccessGate             bool           `schema:"access-gate"`
-	AccessLocked           bool           `schema:"access-locked"`
-	AccessOther            bool           `schema:"access-other"`
-	Address                types.Address  `schema:"address"`
-	AddressGID             string         `schema:"address-gid"`
-	ClientID               uuid.UUID      `schema:"client_id" json:"client_id"`
-	Comments               string         `schema:"comments"`
-	HasAdult               bool           `schema:"has-adult"`
-	HasBackyardPermission  bool           `schema:"backyard-permission"`
-	HasLarvae              bool           `schema:"has-larvae"`
-	HasPupae               bool           `schema:"has-pupae"`
-	IsReporterConfidential bool           `schema:"reporter-confidential"`
-	IsReporter_owner       bool           `schema:"property-ownership"`
-	Location               types.Location `schema:"location"`
-	OwnerEmail             string         `schema:"owner-email"`
-	OwnerName              string         `schema:"owner-name"`
-	OwnerPhone             string         `schema:"owner-phone"`
+	AccessComments         string                                           `schema:"access-comments"`
+	AccessDog              bool                                             `schema:"access-dog"`
+	AccessFence            bool                                             `schema:"access-fence"`
+	AccessGate             bool                                             `schema:"access-gate"`
+	AccessLocked           bool                                             `schema:"access-locked"`
+	AccessOther            bool                                             `schema:"access-other"`
+	Address                types.Address                                    `schema:"address"`
+	AddressGID             string                                           `schema:"address-gid"`
+	ClientID               uuid.UUID                                        `schema:"client_id" json:"client_id"`
+	Comments               string                                           `schema:"comments"`
+	Duration               omit.Val[enums.PublicreportNuisancedurationtype] `schema:"duration"`
+	HasAdult               bool                                             `schema:"has-adult"`
+	HasBackyardPermission  bool                                             `schema:"backyard-permission"`
+	HasLarvae              bool                                             `schema:"has-larvae"`
+	HasPupae               bool                                             `schema:"has-pupae"`
+	IsReporterConfidential bool                                             `schema:"reporter-confidential"`
+	IsReporter_owner       bool                                             `schema:"property-ownership"`
+	Location               types.Location                                   `schema:"location"`
+	OwnerEmail             string                                           `schema:"owner-email"`
+	OwnerName              string                                           `schema:"owner-name"`
+	OwnerPhone             string                                           `schema:"owner-phone"`
 }
 
 func (res *waterR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
@@ -115,6 +116,7 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 		AccessLocked:           omit.From(w.AccessLocked),
 		AccessOther:            omit.From(w.AccessOther),
 		Comments:               omit.From(w.Comments),
+		Duration:               w.Duration,
 		HasAdult:               omit.From(w.HasAdult),
 		HasBackyardPermission:  omit.From(w.HasBackyardPermission),
 		HasLarvae:              omit.From(w.HasLarvae),

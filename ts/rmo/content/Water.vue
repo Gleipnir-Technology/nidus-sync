@@ -207,36 +207,6 @@ select.tall {
 						</div>
 					</div>
 
-					<div class="row mb-3">
-						<!-- Hidden fields for location data -->
-						<input type="hidden" id="address-country" name="address-country" />
-						<input
-							type="hidden"
-							id="address-locality"
-							name="address-locality"
-						/>
-						<input type="hidden" id="address-number" name="address-number" />
-						<input
-							type="hidden"
-							id="address-postalcode"
-							name="address-postalcode"
-						/>
-						<input type="hidden" id="address-region" name="address-region" />
-						<input type="hidden" id="address-street" name="address-street" />
-						<input type="hidden" id="latitude" name="latitude" />
-						<input type="hidden" id="longitude" name="longitude" />
-						<input
-							type="hidden"
-							id="latlng-accuracy-type"
-							name="latlng-accuracy-type"
-						/>
-						<input
-							type="hidden"
-							id="latlng-accuracy-value"
-							name="latlng-accuracy-value"
-						/>
-					</div>
-
 					<p class="small text-muted mb-2">
 						You can also click on the map to mark the location precisely
 					</p>
@@ -266,17 +236,14 @@ select.tall {
 								<label for="duration" class="form-label"
 									>How long has this production source been present?</label
 								>
-								<select
-									class="form-select"
-									id="duration"
-									name="source-duration"
-								>
+								<select class="form-select" id="duration" name="duration">
 									<option value="none">I don't know</option>
-									<option value="less-than-week">Less than a week</option>
+									<option value="just-noticed">Just noticed</option>
+									<option value="few-days">Less than a week</option>
 									<option value="1-2-weeks">1-2 weeks</option>
 									<option value="2-4-weeks">2-4 weeks</option>
 									<option value="1-3-months">1-3 months</option>
-									<option value="more-than-3-months">More than 3 months</option>
+									<option value="seasonal">More than 3 months</option>
 								</select>
 							</div>
 

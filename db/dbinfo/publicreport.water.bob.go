@@ -168,6 +168,15 @@ var PublicreportWaters = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Duration: column{
+			Name:      "duration",
+			DBType:    "publicreport.nuisancedurationtype",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportWaterIndexes{
 		WaterPkey: index{
@@ -226,11 +235,12 @@ type publicreportWaterColumns struct {
 	OwnerName              column
 	OwnerPhone             column
 	ReportID               column
+	Duration               column
 }
 
 func (c publicreportWaterColumns) AsSlice() []column {
 	return []column{
-		c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Comments, c.IsReporterConfidential, c.IsReporterOwner, c.HasAdult, c.HasBackyardPermission, c.HasLarvae, c.HasPupae, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.ReportID,
+		c.AccessComments, c.AccessGate, c.AccessFence, c.AccessLocked, c.AccessDog, c.AccessOther, c.Comments, c.IsReporterConfidential, c.IsReporterOwner, c.HasAdult, c.HasBackyardPermission, c.HasLarvae, c.HasPupae, c.OwnerEmail, c.OwnerName, c.OwnerPhone, c.ReportID, c.Duration,
 	}
 }
 
