@@ -31,6 +31,16 @@ export class Address {
 		public location?: Location,
 	) {}
 }
+export interface TegolaURLs {
+	nidus: string;
+	rmo: string;
+}
+export interface APIProperties {
+	environment: string;
+	sentry_dsn: string;
+	tegola: TegolaURLs;
+	version: string;
+}
 export interface Bounds {
 	min: Location;
 	max: Location;

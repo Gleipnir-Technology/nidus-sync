@@ -137,8 +137,6 @@
 					:cursor="mapCursor"
 					class="map"
 					:markers="[]"
-					:organizationId="session.organization?.id ?? 1"
-					:tegola="session.urls?.tegola ?? ''"
 				>
 					<Layer
 						@click="doClickMap"

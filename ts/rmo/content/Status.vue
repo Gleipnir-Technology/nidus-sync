@@ -67,16 +67,18 @@
 }
 </style>
 <template>
-	<div class="container my-4">
+	<div class="container my-4" v-if="tegola">
 		<!-- Search Box -->
 		<div class="card search-box mb-4">
 			<div class="card-body">
 				<form class="row g-3 align-items-center" action="#" id="lookup-form">
 					<div class="col-md-9">
+						<!--
 						<address-or-report-input
 							name="address-or-report"
 							placeholder="Enter a report ID, address, neighborhood, or zip code"
 						></address-or-report-input>
+						-->
 					</div>
 					<div class="col-md-3">
 						<span
@@ -132,15 +134,16 @@
 			</div>
 			<div class="card-body p-0">
 				<div class="map-container">
-					<map-multipoint
-						id="map"
-						xmax="-118.0"
-						ymax="37.0"
-						xmin="-119.0"
-						ymin="36.0"
-						tegola="{{ .URL.Tegola }}"
-						zoom="9"
-					></map-multipoint>
+					<Map class="map" tegola="tegola">
+						<Layer
+							id="nuisance"
+							:paint="paintConfigNuisance"
+							source="tegola"
+							sourceLayer="nuisance_location"
+							type="circle"
+						/>
+						<Source id="tegola" type="vector" :tiles="[tegola]" />
+					</Map>
 				</div>
 			</div>
 		</div>
@@ -159,7 +162,9 @@
 			</div>
 			<div class="card-body p-0">
 				<div class="table-responsive">
+					<!--
 					<table-report />
+					-->
 				</div>
 			</div>
 			<!--
@@ -181,4 +186,37 @@
 		-->
 		</div>
 	</div>
+	<div v-else>
+		<p>loading...</p>
+	</div>
 </template>
+
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+
+import Map from "@/map/Map.vue";
+import Layer, { MouseEvent } from "@/map/Layer.vue";
+import Source from "@/map/Source.vue";
+import { apiClient } from "@/client";
+import { useStoreAPI } from "@/store/api";
+
+const storeAPI = useStoreAPI();
+const tegola = ref<string | null>(null);
+const paintConfigNuisance = {
+	"circle-color": "#DC4535",
+	"circle-radius": 7,
+	"circle-stroke-color": "#9C1C28",
+	"circle-stroke-width": 2,
+};
+const paintConfigWater = {
+	"circle-color": "#0D6EfD",
+	"circle-radius": 7,
+	"circle-stroke-color": "#024AB6",
+	"circle-stroke-width": 2,
+};
+onMounted(() => {
+	const a = storeAPI.get().then((a) => {
+		tegola.value = a.tegola.rmo;
+	});
+});
+</script>

@@ -273,15 +273,24 @@ func parseTime(x string) (*time.Time, error) {
 }
 
 type about struct {
-	Environment string `json:"environment"`
-	SentryDSN   string `json:"sentry_dsn"`
-	Version     string `json:"version"`
+	Environment string     `json:"environment"`
+	SentryDSN   string     `json:"sentry_dsn"`
+	Tegola      tegolaURLs `json:"tegola"`
+	Version     string     `json:"version"`
+}
+type tegolaURLs struct {
+	Nidus string `json:"nidus"`
+	RMO   string `json:"rmo"`
 }
 
 func getRoot(ctx context.Context, r *http.Request, q resource.QueryParams) (*about, *nhttp.ErrorWithStatus) {
 	return &about{
 		Environment: config.Environment,
 		SentryDSN:   config.SentryDSNFrontend,
-		Version:     version,
+		Tegola: tegolaURLs{
+			Nidus: config.MakeURLTegola("/maps/nidus/{z}/{x}/{y}?id={organization_id}"),
+			RMO:   config.MakeURLTegola("/maps/rmo/{z}/{x}/{y}"),
+		},
+		Version: version,
 	}, nil
 }
