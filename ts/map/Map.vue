@@ -47,6 +47,7 @@ provide("map", map);
 
 // Registry for tracking child components
 const ons = new Map();
+const onces = new Map();
 const sources = new Map();
 const layers = new Map();
 
@@ -66,6 +67,24 @@ provide(
 		});
 		if (map.value && map.value.loaded()) {
 			map.value.on(eventname, layerid, callback);
+		}
+	},
+);
+provide(
+	"registerOnce",
+	(
+		eventname: keyof maplibregl.MapLayerEventType,
+		layerid: string,
+		callback: OnCallbackFunc,
+	) => {
+		console.log("register map.once", eventname, layerid);
+		onces.set(`${eventname}.${layerid}`, {
+			callback: callback,
+			eventname: eventname,
+			layerid: layerid,
+		});
+		if (map.value && map.value.loaded()) {
+			map.value.once(eventname, layerid, callback);
 		}
 	},
 );
@@ -142,6 +161,10 @@ function initializeMap() {
 			console.log("adding map.on", config.eventname, config.layerid);
 			_map.on(config.eventname, config.layerid, config.callback);
 		});
+	});
+	onces.forEach((config, id) => {
+		console.log("adding map.on", config.eventname, config.layerid);
+		_map.once(config.eventname, config.layerid, config.callback);
 	});
 	map.value = _map;
 }

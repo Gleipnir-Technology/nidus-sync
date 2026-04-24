@@ -141,6 +141,7 @@
 							source="tegola"
 							sourceLayer="nuisance_location"
 							type="circle"
+							v-model="renderedReportsNuisance"
 						/>
 						<Source id="tegola" type="vector" :tiles="[tegola]" />
 					</Map>
@@ -162,9 +163,7 @@
 			</div>
 			<div class="card-body p-0">
 				<div class="table-responsive">
-					<!--
-					<table-report />
-					-->
+					<TableReport :reports="renderedReports" />
 				</div>
 			</div>
 			<!--
@@ -192,16 +191,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
-import Map from "@/map/Map.vue";
-import Layer, { MouseEvent } from "@/map/Layer.vue";
-import Source from "@/map/Source.vue";
+import TableReport, { Report } from "@/rmo/components/TableReport.vue";
 import { apiClient } from "@/client";
+import Map from "@/map/Map.vue";
+import Layer, { Feature, MouseEvent } from "@/map/Layer.vue";
+import Source from "@/map/Source.vue";
 import { useStoreAPI } from "@/store/api";
 
-const storeAPI = useStoreAPI();
-const tegola = ref<string | null>(null);
 const paintConfigNuisance = {
 	"circle-color": "#DC4535",
 	"circle-radius": 7,
@@ -214,6 +212,24 @@ const paintConfigWater = {
 	"circle-stroke-color": "#024AB6",
 	"circle-stroke-width": 2,
 };
+const renderedReportsNuisance = ref<Feature[]>([]);
+const storeAPI = useStoreAPI();
+const tegola = ref<string | null>(null);
+
+const renderedReports = computed((): Report[] => {
+	let reports: Report[] = [];
+	renderedReportsNuisance.value.forEach((f) => {
+		const p = f.properties;
+		reports.push({
+			id: p.public_id,
+			created: new Date(p.created),
+			type: "nuisance",
+			address: p.address_raw,
+			status: p.status,
+		});
+	});
+	return reports;
+});
 onMounted(() => {
 	const a = storeAPI.get().then((a) => {
 		tegola.value = a.tegola.rmo;
