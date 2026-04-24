@@ -4,9 +4,13 @@
 
 <script setup lang="ts">
 import maplibregl from "maplibre-gl";
-import { inject, onMounted, onBeforeUnmount, Ref, watch } from "vue";
+import { inject, onMounted, onBeforeUnmount, Ref, useAttrs, watch } from "vue";
 
 type LayerType = maplibregl.LayerSpecification["type"];
+interface Emits {
+	(e: "mouseenter"): void;
+	(e: "mouseleave"): void;
+}
 export interface Props {
 	filter?: maplibregl.FilterSpecification;
 	id: string;
@@ -16,11 +20,21 @@ export interface Props {
 	sourceLayer: string;
 	type: LayerType;
 }
+const attrs = useAttrs();
+const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {});
 
+type OnCallbackFunc = () => void;
+type RegisterOnFunc = (
+	eventname: string,
+	layerid: string,
+	callback: OnCallbackFunc,
+) => void;
 type RegisterLayerFunc = (id: string, config: any) => void;
 type UnregisterLayerFunc = (id: string) => void;
+
 const map: Ref<maplibregl.Map | null> | undefined = inject("map");
+const registerOn: RegisterOnFunc | undefined = inject("registerOn");
 const registerLayer: RegisterLayerFunc | undefined = inject("registerLayer");
 const unregisterLayer: UnregisterLayerFunc | undefined =
 	inject("unregisterLayer");
@@ -41,8 +55,16 @@ const getLayerConfig = (): maplibregl.LayerSpecification => {
 onMounted(() => {
 	if (registerLayer) {
 		registerLayer(props.id, getLayerConfig());
-	} else {
-		console.log("registerLayer is nully");
+	}
+	if (registerOn) {
+		registerOn("mouseenter", props.id, () => {
+			emit("mouseenter");
+		});
+	}
+	if (registerOn) {
+		registerOn("mouseleave", props.id, () => {
+			emit("mouseleave");
+		});
 	}
 });
 

@@ -147,6 +147,8 @@
 							['zoom'],
 							['+', 2, ['to-number', ['get', 'resolution']]],
 						]"
+						@mouseenter="doLayerMouseEnter()"
+						@mouseleave="doLayerMouseLeave()"
 						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#dc3545' }"
 						source="tegola"
 						sourceLayer="mosquito_source"
@@ -273,6 +275,12 @@ onMounted(async () => {
 });
 function doClickMap(cell: string) {
 	router.push("/_/cell/" + cell);
+}
+function doLayerMouseEnter() {
+	console.log("enter");
+}
+function doLayerMouseLeave() {
+	console.log("leave");
 }
 function mapBounds(): maplibregl.LngLatBounds {
 	if (session.organization?.service_area) {

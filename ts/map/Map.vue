@@ -42,9 +42,29 @@ const map: Ref<maplibregl.Map | null> = shallowRef(null);
 provide("map", map);
 
 // Registry for tracking child components
+const ons = new Map();
 const sources = new Map();
 const layers = new Map();
 
+type OnCallbackFunc = () => void;
+provide(
+	"registerOn",
+	(
+		eventname: keyof maplibregl.MapLayerEventType,
+		layerid: string,
+		callback: OnCallbackFunc,
+	) => {
+		console.log("register map.on", eventname, layerid);
+		ons.set(`${eventname}.${layerid}`, {
+			callback: callback,
+			eventname: eventname,
+			layerid: layerid,
+		});
+		if (map.value && map.value.loaded()) {
+			map.value.on(eventname, layerid, callback);
+		}
+	},
+);
 provide("registerSource", (id: string, config: any) => {
 	console.log("register source", id, config);
 	sources.set(id, config);
@@ -112,6 +132,11 @@ function initializeMap() {
 			if (!_map.getLayer(id)) {
 				_map.addLayer(config);
 			}
+		});
+
+		ons.forEach((config, id) => {
+			console.log("adding map.on", config.eventname, config.layerid);
+			_map.on(config.eventname, config.layerid, config.callback);
 		});
 	});
 	map.value = _map;
