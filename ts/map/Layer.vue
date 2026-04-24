@@ -6,8 +6,10 @@
 import maplibregl from "maplibre-gl";
 import { inject, onMounted, onBeforeUnmount, Ref, useAttrs, watch } from "vue";
 
+export type MouseEvent = maplibregl.MapLayerMouseEvent;
 type LayerType = maplibregl.LayerSpecification["type"];
 interface Emits {
+	(e: "click", evt: MouseEvent): void;
 	(e: "mouseenter"): void;
 	(e: "mouseleave"): void;
 }
@@ -24,7 +26,7 @@ const attrs = useAttrs();
 const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {});
 
-type OnCallbackFunc = () => void;
+type OnCallbackFunc = (e?: MouseEvent) => void;
 type RegisterOnFunc = (
 	eventname: string,
 	layerid: string,
@@ -55,6 +57,13 @@ const getLayerConfig = (): maplibregl.LayerSpecification => {
 onMounted(() => {
 	if (registerLayer) {
 		registerLayer(props.id, getLayerConfig());
+	}
+	if (registerOn) {
+		registerOn("click", props.id, (e?: MouseEvent) => {
+			if (e) {
+				emit("click", e);
+			}
+		});
 	}
 	if (registerOn) {
 		registerOn("mouseenter", props.id, () => {

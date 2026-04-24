@@ -134,7 +134,6 @@
 			<div class="map-container">
 				<Map
 					:bounds="mapBounds()"
-					@cell-click="doClickMap"
 					:cursor="mapCursor"
 					class="map"
 					:markers="[]"
@@ -142,12 +141,13 @@
 					:tegola="session.urls?.tegola ?? ''"
 				>
 					<Layer
-						id="mosquito_source"
+						@click="doClickMap"
 						:filter="[
 							'==',
 							['zoom'],
 							['+', 2, ['to-number', ['get', 'resolution']]],
 						]"
+						id="mosquito_source"
 						@mouseenter="doLayerMouseEnter()"
 						@mouseleave="doLayerMouseLeave()"
 						:paint="{ 'fill-opacity': 0.4, 'fill-color': '#dc3545' }"
@@ -156,6 +156,7 @@
 						type="fill"
 					/>
 					<Layer
+						@click="doClickMap"
 						id="parcel"
 						:minzoom="14"
 						:paint="{ 'line-color': '#0f0' }"
@@ -164,6 +165,7 @@
 						type="line"
 					/>
 					<Layer
+						@click="doClickMap"
 						id="service_request"
 						:filter="[
 							'==',
@@ -237,7 +239,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
 import Map from "@/map/Map.vue";
-import Layer from "@/map/Layer.vue";
+import Layer, { MouseEvent } from "@/map/Layer.vue";
 import Source from "@/map/Source.vue";
 import { boundsDefault, boundsFromAPI } from "@/map/util";
 import { formatBigNumber, formatTimeRelative } from "@/format";
@@ -275,8 +277,12 @@ onMounted(async () => {
 	const syncs = await storeSync.fetchAll();
 	console.log("syncs", syncs);
 });
-function doClickMap(cell: string) {
-	router.push("/_/cell/" + cell);
+function doClickMap(e: MouseEvent) {
+	//router.push("/_/cell/" + cell);
+	if (!e.features || e.features.length == 0) return;
+	const feature = e.features[0];
+	const properties = feature.properties;
+	console.log("clicked", properties.cell);
 }
 function doLayerMouseEnter() {
 	mapCursor.value = "pointer";
