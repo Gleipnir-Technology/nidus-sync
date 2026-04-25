@@ -73,12 +73,10 @@
 			<div class="card-body">
 				<form class="row g-3 align-items-center" action="#" id="lookup-form">
 					<div class="col-md-9">
-						<!--
-						<address-or-report-input
+						<AddressOrReportSuggestionInput
 							name="address-or-report"
 							placeholder="Enter a report ID, address, neighborhood, or zip code"
-						></address-or-report-input>
-						-->
+						/>
 					</div>
 					<div class="col-md-3">
 						<span
@@ -194,6 +192,7 @@
 import { computed, onMounted, ref } from "vue";
 
 import TableReport, { Report } from "@/rmo/components/TableReport.vue";
+import AddressOrReportSuggestionInput from "@/components/AddressOrReportSuggestionInput.vue";
 import { apiClient } from "@/client";
 import Map from "@/map/Map.vue";
 import Layer, { Feature, MouseEvent } from "@/map/Layer.vue";
