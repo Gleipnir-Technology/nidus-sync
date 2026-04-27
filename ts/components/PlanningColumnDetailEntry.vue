@@ -5,10 +5,10 @@
 		<FlyoverPoolCard :location="signal.location" :markers="[]" />
 	</div>
 	<div v-else-if="signal.type == 'publicreport nuisance' && signal.report">
-		<PublicreportCard :report="signal.report" />
+		<PublicReportCard :report="signal.report" />
 	</div>
 	<div v-else-if="signal.type == 'publicreport water' && signal.report">
-		<PublicreportCard :report="signal.report" />
+		<PublicReportCard :report="signal.report" />
 	</div>
 	<div v-else>
 		<p>No report or pool</p>
@@ -17,7 +17,7 @@
 
 <script setup lang="ts">
 import FlyoverPoolCard from "@/components/FlyoverPoolCard.vue";
-import PublicreportCard from "@/components/PublicreportCard.vue";
+import PublicReportCard from "@/components/PublicReportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import { formatAddressShort } from "@/format";
 import { Signal } from "@/type/api";

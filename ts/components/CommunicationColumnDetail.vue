@@ -58,7 +58,7 @@
 				</div>
 
 				<div v-if="selectedCommunication" class="h-100 d-flex flex-column">
-					<PublicreportCard
+					<PublicReportCard
 						v-if="selectedCommunication?.public_report"
 						:report="selectedCommunication?.public_report"
 						@viewImage="openPhotoViewer"
@@ -73,7 +73,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import MapMultipoint from "@/components/MapMultipoint.vue";
-import PublicreportCard from "@/components/PublicreportCard.vue";
+import PublicReportCard from "@/components/PublicReportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import type { Marker } from "@/types";
 import type { Bounds, Communication, User } from "@/type/api";
