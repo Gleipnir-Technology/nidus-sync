@@ -58,12 +58,18 @@
 							class="form-label text-muted small mb-0"
 						>
 							<i class="bi bi-envelope"></i>
+							<a :href="'mailto:' + report.reporter.email">{{
+								report.reporter.email
+							}}</a>
 						</label>
 						<label
 							v-if="report.reporter.has_phone"
 							class="form-label text-muted small mb-0"
 						>
 							<i class="bi bi-phone"></i>
+							<a :href="'tel:+' + report.reporter.phone">{{
+								report.reporter.phone
+							}}</a>
 						</label>
 					</div>
 				</div>
