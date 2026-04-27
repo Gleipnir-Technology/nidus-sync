@@ -44,7 +44,7 @@ func AddressFromModel(m *models.Address) Address {
 		},
 		Number:     m.Number,
 		PostalCode: m.PostalCode,
-		Raw:        "",
+		Raw:        fmt.Sprintf("%s %s, %s, %s", m.Number, m.Street, m.Locality, m.Region),
 		Region:     m.Region,
 		Street:     m.Street,
 		Unit:       m.Unit,
