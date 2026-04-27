@@ -72,60 +72,7 @@
 					}"
 					@click="handleClick(comm.id)"
 				>
-					<!-- First row: icon, type badge, and time -->
-					<div class="d-flex justify-content-between align-items-center mb-2">
-						<div class="d-flex align-items-center">
-							<i
-								v-if="comm.type === 'publicreport.nuisance'"
-								class="bi bi-mosquito icon-nuisance fs-4 me-2"
-							>
-							</i>
-							<i
-								v-if="comm.type === 'publicreport.water'"
-								class="bi bi-droplet-fill icon-standing-water fs-4 me-2"
-							></i>
-							<span
-								class="badge"
-								:class="
-									comm.type === 'publicreport.nuisance'
-										? 'bg-danger'
-										: 'bg-info'
-								"
-							>
-								{{
-									comm.type === "publicreport.nuisance"
-										? "Nuisance"
-										: "Standing Water"
-								}}
-							</span>
-						</div>
-						<small>
-							<TimeRelative :time="comm.created" />
-						</small>
-					</div>
-
-					<!-- Details section: full width -->
-					<div>
-						<div>
-							<i class="bi bi-geo-alt text-muted"></i>
-							<span class="fw-medium">{{
-								comm.public_report?.address.postal_code
-							}}</span>
-						</div>
-						<small>{{ formatAddress(comm.public_report?.address) }}</small>
-						<div
-							v-if="
-								comm.public_report?.images &&
-								comm.public_report?.images.length > 0
-							"
-							class="mt-1"
-						>
-							<small class="text-muted">
-								<i class="bi bi-camera"></i>
-								{{ comm.public_report.images.length }} photo(s)
-							</small>
-						</div>
-					</div>
+					<ListCardPublicReport :comm="comm" />
 				</div>
 			</div>
 		</div>
@@ -142,8 +89,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import TimeRelative from "@/components/TimeRelative.vue";
-import { formatAddress } from "@/format";
+import ListCardPublicReport from "@/components/ListCardPublicReport.vue";
 import { Communication, LogEntry, PublicReport } from "@/type/api";
 
 interface Props {
