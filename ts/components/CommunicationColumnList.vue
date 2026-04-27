@@ -183,7 +183,7 @@ function selectCommunication(communication: Communication) {
 }
 
 // Computed properties
-const filteredCommunications = computed(() => {
+const filteredCommunications = computed((): Communication[] => {
 	if (props.all == null) {
 		return [];
 	}

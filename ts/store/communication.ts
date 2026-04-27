@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { Communication } from "@/type/api";
+import { Communication, CommunicationDTO } from "@/type/api";
 import { SSEManager, SSEMessage } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
 
@@ -38,7 +38,9 @@ export const useCommunicationStore = defineStore("communication", () => {
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			const data = await response.json();
-			all.value = data.communications;
+			all.value = data.communications.map((c: CommunicationDTO) =>
+				Communication.fromJSON(c),
+			);
 			return data.communications;
 		} catch (err) {
 			console.error("Error loading communications:", err);
