@@ -11,15 +11,15 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
+	//"github.com/gorilla/mux"
 	//"github.com/rs/zerolog/log"
 )
 
 type communicationR struct {
-	router *mux.Router
+	router *router
 }
 
-func Communication(r *mux.Router) *communicationR {
+func Communication(r *router) *communicationR {
 	return &communicationR{
 		router: r,
 	}
@@ -53,6 +53,8 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 	}
 	comms := make([]communication, len(reports))
 	for i, report := range reports {
+		populateDistrictURI(report, res.router)
+		populateReportURI(report, res.router)
 		comms[i] = communication{
 			Created:      report.Created,
 			ID:           report.PublicID,

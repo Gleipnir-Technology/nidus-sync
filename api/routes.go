@@ -22,7 +22,7 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/avatar/{uuid}", authenticatedHandlerGetImage(avatar.ByUUIDGet)).Methods("GET").Name("avatar.ByUUIDGet")
 	r.Handle("/avatar", authenticatedHandlerPostMultipart(avatar.Create, file.CollectionAvatar)).Methods("POST")
 	r.Handle("/client/ios", auth.NewEnsureAuth(handleClientIos)).Methods("GET")
-	communication := resource.Communication(r)
+	communication := resource.Communication(router)
 	r.Handle("/communication", authenticatedHandlerJSON(communication.List)).Methods("GET")
 	compliance_request := resource.ComplianceRequest(router)
 	r.Handle("/compliance-request/mailer", authenticatedHandlerJSONPost(compliance_request.CreateMailer)).Methods("POST")
