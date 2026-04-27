@@ -7,14 +7,12 @@ export const useStoreGeocode = defineStore("geocode", () => {
 	const loading = ref(false);
 	const error = ref(null);
 
-	// Actions
-	async function reverse(location: Location): Promise<Geocode> {
+	async function doReverse(url: string, location: Location): Promise<Geocode> {
 		loading.value = true;
 		error.value = null;
 		try {
 			//const url = `https://api.stadiamaps.com/geocoding/v2/reverse?point.lat=${location.lat}&point.lon=${location.lng}`;
 
-			const url = "/api/geocode/reverse";
 			const response = await fetch(url, {
 				body: JSON.stringify(location),
 				method: "POST",
@@ -29,9 +27,17 @@ export const useStoreGeocode = defineStore("geocode", () => {
 			throw err;
 		}
 	}
+	// Actions
+	async function reverse(location: Location): Promise<Geocode> {
+		return doReverse("/api/geocode/reverse", location);
+	}
+	async function reverseClosest(location: Location): Promise<Geocode> {
+		return doReverse("/api/geocode/reverse/closest", location);
+	}
 
 	return {
 		// Actions
 		reverse,
+		reverseClosest,
 	};
 });

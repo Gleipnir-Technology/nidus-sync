@@ -10,10 +10,7 @@
 				Please enter the address so we can match your response with our records.
 			</p>
 
-			<AddressAndMapLocator
-				:initialCamera="initialCamera"
-				v-model="modelValue.address"
-			/>
+			<AddressAndMapLocator :initialCamera="initialCamera" v-model="locator" />
 
 			<div class="d-flex gap-2 mt-4">
 				<RouterLink
@@ -30,14 +27,14 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { router } from "@/rmo/route/config";
 import type { District, PublicReportCompliance } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
-import { Camera } from "@/type/map";
+import { Camera, Locator } from "@/type/map";
 import { useRoutes } from "@/rmo/route/use";
 
 interface Emits {
@@ -50,7 +47,9 @@ interface Props {
 	publicID: string;
 }
 const emit = defineEmits<Emits>();
+
 const error = ref<string>("");
+const locator = ref<Locator>(new Locator());
 const props = defineProps<Props>();
 const initialCamera = computed((): Camera | undefined => {
 	if (props.modelValue.location) {
@@ -63,6 +62,8 @@ const initialCamera = computed((): Camera | undefined => {
 });
 const routes = useRoutes();
 function doContinue() {
+	props.modelValue.address = locator.value.address;
+	props.modelValue.location = locator.value.location;
 	emit("update:modelValue", props.modelValue);
 	emit("doAddress");
 	if (props.modelValue.concerns.length > 0) {
@@ -71,4 +72,7 @@ function doContinue() {
 		router.push(routes.ComplianceEvidence(props.publicID));
 	}
 }
+onMounted(() => {
+	locator.value.address = props.modelValue.address;
+});
 </script>

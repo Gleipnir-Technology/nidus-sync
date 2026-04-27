@@ -125,7 +125,7 @@ select.tall {
 				<p class="small text-muted mb-2">
 					You can also click on the map to mark the location precisely
 				</p>
-				<AddressAndMapLocator v-model="address" />
+				<AddressAndMapLocator v-model="locator" />
 
 				<!-- Mosquito Activity Section -->
 				<div class="form-section">
@@ -470,21 +470,17 @@ import MapLocator from "@/components/MapLocator.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { useStoreGeocode } from "@/store/geocode";
 import { useStoreLocal } from "@/store/local";
-import { useStoreLocation } from "@/store/location";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { Marker } from "@/types";
 import {
-	Address,
 	type Geocode,
 	type GeocodeSuggestion,
-	type Location,
 	type PublicReport,
 } from "@/type/api";
+import { Locator } from "@/type/map";
 import type { Camera } from "@/type/map";
 
-const address = ref<Address>(new Address());
-const currentCamera = ref<Camera | null>(null);
-const currentLocation = ref<Location | null>(null);
+const locator = ref<Locator>(new Locator());
 const errorMessage = ref("");
 const formElement = ref<HTMLFormElement | null>(null);
 const images = ref<Image[]>([]);
@@ -492,7 +488,6 @@ const isSubmitting = ref(false);
 
 const showMore = ref<boolean>(false);
 const storeLocal = useStoreLocal();
-const storeLocation = useStoreLocation();
 const storePublicReport = useStorePublicReport();
 const geocode = useStoreGeocode();
 const router = useRouter();
@@ -504,32 +499,28 @@ async function doSubmit() {
 	try {
 		const client_id = storeLocal.getClientID();
 		const formData = new FormData(formElement.value);
+		formData.append("address.gid", locator.value.address.gid);
+		formData.append("address.raw", locator.value.address.raw);
+		formData.append(
+			"address.location.latitude",
+			locator.value.address.location?.latitude?.toString() ?? "0",
+		);
+		formData.append(
+			"address.location.longitude",
+			locator.value.address.location?.longitude?.toString() ?? "0",
+		);
 		formData.append("client_id", client_id);
-		if (address.value) {
-			formData.append("address.gid", address.value.gid);
-			formData.append("address.raw", address.value.raw);
-			if (address.value.location) {
-				formData.append(
-					"address.location.latitude",
-					address.value.location.latitude.toString(),
-				);
-				formData.append(
-					"address.location.longitude",
-					address.value.location.longitude.toString(),
-				);
-			}
-		}
 		formData.append(
 			"location.accuracy",
-			currentLocation.value?.accuracy?.toString() ?? "0",
+			locator.value.location.accuracy?.toString() ?? "0",
 		);
 		formData.append(
 			"location.latitude",
-			currentLocation.value?.latitude.toString() ?? "0",
+			locator.value.location.latitude?.toString() ?? "0",
 		);
 		formData.append(
 			"location.longitude",
-			currentLocation.value?.longitude.toString() ?? "0",
+			locator.value.location.longitude?.toString() ?? "0",
 		);
 		images.value.forEach((image, index) => {
 			formData.append(`image[${index}]`, image.file, image.name);
@@ -549,20 +540,4 @@ async function doSubmit() {
 		isSubmitting.value = false;
 	}
 }
-onMounted(() => {
-	storeLocation
-		.get()
-		.then((loc: GeolocationPosition) => {
-			console.log("user geolocation", loc);
-			const coords = loc.coords;
-			currentLocation.value = coords;
-			currentCamera.value = {
-				location: coords,
-				zoom: 15,
-			};
-		})
-		.catch((e) => {
-			console.log("failed to get location", e);
-		});
-});
 </script>

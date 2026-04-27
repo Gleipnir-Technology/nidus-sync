@@ -38,7 +38,7 @@
 <template>
 	<div class="mb-4">
 		<AddressSuggestion
-			v-model="modelValue"
+			v-model="modelValue.address"
 			placeholder="Start typing an address (min 3 characters)"
 			@suggestion-selected="doAddressSuggestionSelected"
 		>
@@ -60,33 +60,33 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import AddressSuggestion from "@/components/AddressSuggestion.vue";
 import MapLocator from "@/components/MapLocator.vue";
 import { Address } from "@/type/api";
 import type { Geocode, GeocodeSuggestion, Location } from "@/type/api";
 import { useStoreGeocode } from "@/store/geocode";
-import { Camera } from "@/type/map";
+import { useStoreLocation } from "@/store/location";
+import { Camera, Locator } from "@/type/map";
 import type { MapClickEvent, Marker } from "@/types";
 
 interface Emits {
-	(e: "update:modelValue", value: Address): void;
+	(e: "update:modelValue", value: Locator): void;
 }
 interface Props {
 	initialCamera?: Camera;
-	modelValue: Address;
+	modelValue: Locator;
 }
-const address = ref<string>("");
 const currentCamera = ref<Camera>(new Camera());
 const emit = defineEmits<Emits>();
 const geocode = useStoreGeocode();
 const markers = computed((): Marker[] => {
-	if (!props.modelValue.location) {
+	if (!props.modelValue.address.location) {
 		return [];
 	}
 	if (
-		props.modelValue.location.latitude == 0.0 ||
-		props.modelValue.location.longitude == 0.0
+		props.modelValue.address.location.latitude == 0.0 ||
+		props.modelValue.address.location.longitude == 0.0
 	) {
 		return [];
 	}
@@ -94,15 +94,12 @@ const markers = computed((): Marker[] => {
 		color: "#FF0000",
 		draggable: true,
 		id: "x",
-		location: props.modelValue.location,
+		location: props.modelValue.address.location,
 	};
 	return [marker];
 });
-const modelValue = computed({
-	get: () => props.modelValue,
-	set: (value: Address) => emit("update:modelValue", value),
-});
 const props = defineProps<Props>();
+const storeLocation = useStoreLocation();
 function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
 	console.log("Address suggestion selected", suggestion);
 
@@ -110,7 +107,11 @@ function doAddressSuggestionSelected(suggestion: GeocodeSuggestion) {
 }
 async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 	// Fetch full details for the selected suggestion
-	updateModel(suggestion.gid, suggestion.detail, props.modelValue.location);
+	updateModel(
+		suggestion.gid,
+		suggestion.detail,
+		props.modelValue.address.location,
+	);
 	const url = `/api/geocode/by-gid/${suggestion.gid}`;
 	const response = await fetch(url);
 	if (!response.ok) {
@@ -126,14 +127,18 @@ async function doAddressSuggestionDetails(suggestion: GeocodeSuggestion) {
 	updateModel(data.address.gid, data.address.raw, data.address.location);
 }
 function doMapClick(event: MapClickEvent) {
-	updateModel(props.modelValue.gid, props.modelValue.raw, event.location);
+	updateModel(
+		props.modelValue.address.gid,
+		props.modelValue.address.raw,
+		event.location,
+	);
 	geocode
-		.reverse(event.location)
+		.reverseClosest(event.location)
 		.then((code: Geocode) => {
 			updateModel(
 				code.address.gid,
 				code.address.raw,
-				props.modelValue.location,
+				props.modelValue.address.location,
 			);
 			console.log("reverse geocoded", code);
 		})
@@ -142,7 +147,11 @@ function doMapClick(event: MapClickEvent) {
 		});
 }
 function doMapMarkerDragEnd(location: Location) {
-	updateModel(props.modelValue.gid, props.modelValue.raw, location);
+	updateModel(
+		props.modelValue.address.gid,
+		props.modelValue.address.raw,
+		location,
+	);
 }
 function updateModel(
 	address_gid: string,
@@ -161,6 +170,27 @@ function updateModel(
 		"",
 		location,
 	);
-	emit("update:modelValue", newAddress);
+	const newLocator = new Locator(newAddress, props.modelValue.location);
+	emit("update:modelValue", newLocator);
 }
+onMounted(() => {
+	storeLocation
+		.get()
+		.then((loc: GeolocationPosition) => {
+			console.log("user geolocation", loc);
+			const coords = loc.coords;
+			// If we don't already have an address then zoom on the users location
+			// because an address signals they've typed something or the report came
+			// pre-populated with something
+			if (props.modelValue.address.gid == "") {
+				currentCamera.value = {
+					location: coords,
+					zoom: 15,
+				};
+			}
+		})
+		.catch((e) => {
+			console.log("failed to get location", e);
+		});
+});
 </script>
