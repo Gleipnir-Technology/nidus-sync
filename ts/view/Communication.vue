@@ -69,7 +69,10 @@ import { SSEManager } from "@/SSEManager";
 import { useCommunicationStore } from "@/store/communication";
 import { useSessionStore } from "@/store/session";
 import type { Marker } from "@/types";
-import type { Bounds, Communication } from "@/type/api";
+import type { Communication } from "@/type/api";
+import { Bounds } from "@/type/api";
+import type { LngLatBounds } from "@/map/Map.vue";
+import { boundsWithPadding } from "@/map/util";
 
 const communication = useCommunicationStore();
 const session = useSessionStore();
@@ -81,7 +84,7 @@ onMounted(() => {
 const currentImageIndex = ref<number>(0);
 const error = ref<string | null>(null);
 const loading = ref<boolean>(true);
-const mapBounds = ref<Bounds | null>(null);
+const mapBounds = ref<LngLatBounds | null>(null);
 const mapMarkers = ref<Marker[]>([]);
 const selectedId = ref<string | null>(null);
 const showImageModal = ref(false);
@@ -158,7 +161,7 @@ async function markInvalid() {
 	const payload = {
 		reportID: selectedCommunication.value.id,
 	};
-	const response = await fetch("api/publicreport/invalid", {
+	const response = await fetch("/api/publicreport/invalid", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -259,55 +262,50 @@ function showNotification(title: string, message: string) {
 }
 
 function updateMap() {
+	let bounds = new Bounds();
 	const loc = selectedCommunication.value?.public_report?.location;
 	console.log("updating for loc", loc);
-	if (loc == null) {
-		mapMarkers.value = [];
-		return;
+	let markers: Marker[] = [];
+	if (loc && loc.latitude != 0 && loc.longitude != 0) {
+		bounds.addLocation(loc);
+		markers.push({
+			color: "#0000FF",
+			draggable: false,
+			id: "reporter",
+			location: loc,
+		});
 	}
-
-	mapMarkers.value = [
-		{
+	const address_loc =
+		selectedCommunication.value?.public_report?.address.location;
+	if (address_loc && address_loc.latitude != 0 && address_loc.longitude != 0) {
+		bounds.addLocation(address_loc);
+		markers.push({
 			color: "#FF0000",
 			draggable: false,
-			id: String(Date.now()),
-			location: loc,
-		},
-	];
-	console.log("markers now", mapMarkers.value);
-
-	let min = loc;
-	let max = loc;
-
-	for (const i of selectedCommunication.value?.public_report?.images ?? []) {
-		if (
-			i.location != null &&
-			i.location.latitude != 0 &&
-			i.location.longitude != 0
-		) {
-			mapMarkers.value.push({
-				color: "#00FF00",
-				draggable: false,
-				id: new Date().toISOString(),
-				location: i.location,
-			});
-			min.latitude = Math.min(min.latitude, i.location.latitude);
-			min.longitude = Math.min(min.longitude, i.location.longitude);
-			max.latitude = Math.max(max.latitude, i.location.latitude);
-			max.longitude = Math.max(max.longitude, i.location.longitude);
-		}
+			id: "address",
+			location: address_loc,
+		});
 	}
 
-	mapBounds.value = {
-		max: {
-			latitude: max.latitude + 0.01,
-			longitude: max.longitude + 0.01,
-		},
-		min: {
-			latitude: min.latitude - 0.01,
-			longitude: min.longitude - 0.01,
-		},
-	};
+	for (const [i, image] of (
+		selectedCommunication.value?.public_report?.images ?? []
+	).entries()) {
+		if (
+			image.location != null &&
+			image.location.latitude != 0 &&
+			image.location.longitude != 0
+		) {
+			bounds.addLocation(image.location);
+			markers.push({
+				color: "#00FF00",
+				draggable: false,
+				id: `image-${i}`,
+				location: image.location,
+			});
+		}
+	}
+	mapMarkers.value = markers;
+	mapBounds.value = boundsWithPadding(bounds.min, bounds.max, 0.01);
 }
 // Lifecycle hooks
 onMounted(async () => {

@@ -32,6 +32,16 @@ export function boundsMarkers(markers: Marker[]): maplibregl.LngLatBounds {
 		new maplibregl.LngLat(max_lng, max_lat),
 	);
 }
+export function boundsWithPadding(
+	min: Location,
+	max: Location,
+	padding: number,
+) {
+	return new maplibregl.LngLatBounds(
+		new maplibregl.LngLat(min.longitude - padding, min.latitude - padding),
+		new maplibregl.LngLat(max.longitude + padding, max.latitude + padding),
+	);
+}
 // Helper functions (outside component)
 const getBoundingBox = (points: Location[]) => {
 	if (!points || points.length === 0) {

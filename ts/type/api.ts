@@ -41,9 +41,27 @@ export interface APIProperties {
 	tegola: TegolaURLs;
 	version: string;
 }
-export interface Bounds {
+export interface BoundsDTO {
 	min: Location;
 	max: Location;
+}
+
+export class Bounds {
+	min: Location;
+	max: Location;
+	constructor(
+		min: Location = new Location(90, 180),
+		max: Location = new Location(-90, -180),
+	) {
+		this.min = min;
+		this.max = max;
+	}
+	addLocation(l: Location) {
+		this.min.latitude = Math.min(this.min.latitude, l.latitude);
+		this.min.longitude = Math.min(this.min.longitude, l.longitude);
+		this.max.latitude = Math.max(this.max.latitude, l.latitude);
+		this.max.longitude = Math.max(this.max.longitude, l.longitude);
+	}
 }
 export interface ContactOptions {
 	can_sms: boolean;

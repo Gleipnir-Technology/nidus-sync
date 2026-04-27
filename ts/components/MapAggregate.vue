@@ -31,7 +31,7 @@ import maplibregl from "maplibre-gl";
 import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import { onMounted, onUnmounted, ref, shallowRef, type Ref } from "vue";
 import { Marker } from "@/types";
-import type { Bounds } from "@/type/api";
+import { Bounds } from "@/type/api";
 
 interface Emits {
 	(e: "cell-click", cell: string): void;
@@ -47,10 +47,10 @@ const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
 	// default bounds cover a bunch of the continental US
 	bounds: (): Bounds => {
-		return {
-			max: { longitude: -70, latitude: 50 },
-			min: { longitude: -125, latitude: 25 },
-		};
+		return new Bounds(
+			{ longitude: -125, latitude: 25 },
+			{ longitude: -70, latitude: 50 },
+		);
 	},
 });
 

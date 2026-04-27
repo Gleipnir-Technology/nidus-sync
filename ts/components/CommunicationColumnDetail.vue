@@ -24,8 +24,12 @@
 	color: #dc3545;
 }
 .map-container {
+	background-color: #e9ecef;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 	height: 400px;
-	width: 100%;
+	margin-top: 20px;
+	position: relative;
 }
 </style>
 
@@ -41,13 +45,36 @@
 			</div>
 			<div v-else>
 				<div class="map-container">
-					<MapMultipoint
-						id="map"
+					<Map
 						:bounds="mapBounds"
 						:markers="mapMarkers"
 						:organizationId="session.organization?.id"
-						:tegola="session.urls?.tegola ?? ''"
-					/>
+					>
+						<Layer
+							id="parcel"
+							:minzoom="14"
+							:paint="{ 'line-color': '#0f0' }"
+							source="tegola"
+							sourceLayer="parcel"
+							type="line"
+						/>
+						<Layer
+							id="service-area"
+							:paint="{ 'line-color': '#f00' }"
+							source="tegola"
+							sourceLayer="service-area-bounds"
+							type="line"
+						/>
+						<Source
+							id="tegola"
+							type="vector"
+							:tiles="[
+								session.urls?.tegola +
+									'maps/nidus/{z}/{x}/{y}?id=' +
+									session.organization?.id,
+							]"
+						/>
+					</Map>
 				</div>
 				<div
 					v-if="!selectedCommunication"
@@ -72,7 +99,9 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import MapMultipoint from "@/components/MapMultipoint.vue";
+import Map, { LngLatBounds } from "@/map/Map.vue";
+import Layer from "@/map/Layer.vue";
+import Source from "@/map/Source.vue";
 import PublicReportCard from "@/components/PublicReportCard.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
 import type { Marker } from "@/types";
@@ -84,7 +113,7 @@ interface Emits {
 }
 interface Props {
 	loading: boolean;
-	mapBounds?: Bounds;
+	mapBounds?: LngLatBounds;
 	mapMarkers: Marker[];
 	selectedCommunication: Communication | null;
 }

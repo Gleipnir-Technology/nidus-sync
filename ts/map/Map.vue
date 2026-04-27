@@ -28,19 +28,33 @@ import {
 	watch,
 } from "vue";
 
+import type { MapClickEvent, Marker } from "@/types";
+import type { Location } from "@/type/api";
+
+export type LngLatLike = maplibregl.LngLatLike;
+export type LngLatBounds = maplibregl.LngLatBounds;
+interface Emits {
+	(e: "marker-drag-end", location: Location): void;
+}
 interface Props {
-	bounds?: maplibregl.LngLatBounds;
-	center?: maplibregl.LngLatLike;
+	bounds?: LngLatBounds;
+	center?: LngLatLike;
 	cursor?: string;
+	markers?: Marker[];
 	zoom?: number;
 }
 
+const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
 	cursor: "",
+	markers: () => [],
 });
 
 const mapDiv = ref<HTMLElement | null>(null);
 const map: Ref<maplibregl.Map | null> = shallowRef(null);
+const mapMarkers: Ref<Map<string, maplibregl.Marker>> = shallowRef<
+	Map<string, maplibregl.Marker>
+>(new Map());
 
 // Provide the map instance to children
 provide("map", map);
@@ -168,6 +182,58 @@ function initializeMap() {
 	});
 	map.value = _map;
 }
+// Update markers on the map
+const updateMarkers = () => {
+	if (!map.value) return;
+
+	// Remove markers that no longer exist
+	const currentMarkerIds = new Set(props.markers.map((m) => m.id));
+	for (const [id, marker] of mapMarkers.value) {
+		if (!currentMarkerIds.has(id)) {
+			marker.remove();
+			mapMarkers.value.delete(id);
+		}
+	}
+
+	// Add or update markers
+	props.markers.forEach((markerData) => {
+		let marker = mapMarkers.value.get(markerData.id);
+
+		if (marker) {
+			// Update existing marker
+			marker.setLngLat([
+				markerData.location.longitude,
+				markerData.location.latitude,
+			]);
+			marker.setDraggable(markerData.draggable ?? false);
+		} else {
+			marker = new maplibregl.Marker({
+				color: markerData.color,
+				draggable: markerData.draggable ?? false,
+			})
+				.setLngLat([
+					markerData.location.longitude,
+					markerData.location.latitude,
+				])
+				.addTo(map.value!);
+
+			// Handle marker drag end
+			if (markerData.draggable) {
+				marker.on("dragend", () => {
+					const lngLat = marker!.getLngLat();
+					const location: Location = {
+						latitude: lngLat.lat,
+						longitude: lngLat.lng,
+					};
+					emit("marker-drag-end", location);
+				});
+			}
+
+			mapMarkers.value.set(markerData.id, marker);
+		}
+	});
+};
+
 onMounted(() => {
 	initializeMap();
 });
@@ -184,5 +250,12 @@ watch(
 			map.value.getCanvas().style.cursor = newCursor;
 		}
 	},
+);
+watch(
+	() => props.markers,
+	() => {
+		updateMarkers();
+	},
+	{ deep: true },
 );
 </script>
