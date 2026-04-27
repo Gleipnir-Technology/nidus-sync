@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
@@ -35,4 +36,9 @@ func (l Location) GeometryQuery() (string, error) {
 }
 func LocationFromFS(pl *models.FieldseekerPointlocation) Location {
 	return Location{}
+}
+func LocationDistance(l1 Location, l2 Location) float64 {
+	lat_delta := l1.Latitude - l2.Latitude
+	lng_delta := l1.Longitude - l2.Longitude
+	return math.Sqrt((lat_delta * lat_delta) + (lng_delta * lng_delta))
 }

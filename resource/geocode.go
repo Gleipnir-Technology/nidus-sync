@@ -59,6 +59,13 @@ func (res *geocodeR) Reverse(ctx context.Context, r *http.Request, location type
 	}
 	return newGeocode(g), nil
 }
+func (res *geocodeR) ReverseClosest(ctx context.Context, r *http.Request, location types.Location) (*geocode, *nhttp.ErrorWithStatus) {
+	g, err := ngeocode.ReverseGeocodeClosest(ctx, location)
+	if err != nil {
+		return nil, nhttp.NewError("reverse closest: %w", err)
+	}
+	return newGeocode(g), nil
+}
 func (res *geocodeR) SuggestionList(ctx context.Context, r *http.Request, query QueryParams) ([]*geocodeSuggestion, *nhttp.ErrorWithStatus) {
 	if query.Query == nil {
 		return nil, nhttp.NewBadRequest("you must include a query")

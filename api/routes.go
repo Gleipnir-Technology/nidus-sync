@@ -102,6 +102,7 @@ func AddRoutes(r *mux.Router) {
 	geocode := resource.Geocode(router)
 	r.Handle("/geocode/by-gid/{id:.*}", handlerJSON(geocode.ByGID)).Methods("GET")
 	r.Handle("/geocode/reverse", handlerJSONPost(geocode.Reverse)).Methods("POST")
+	r.Handle("/geocode/reverse/closest", handlerJSONPost(geocode.ReverseClosest)).Methods("POST")
 	r.Handle("/geocode/suggestion", handlerJSONSlice(geocode.SuggestionList)).Methods("GET")
 	publicreport := resource.Publicreport(router)
 	r.Handle("/publicreport/{id}", handlerBasic(publicreport.ByID)).Methods("GET").Name("publicreport.ByIDGet")

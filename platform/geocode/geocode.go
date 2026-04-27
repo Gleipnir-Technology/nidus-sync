@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"sort"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -79,7 +80,7 @@ func GeocodeRaw(ctx context.Context, org *models.Organization, address string) (
 	if err != nil {
 		return nil, fmt.Errorf("insert addresses: %w", err)
 	}
-	return toGeocodeResult(*resp, address, addresses)
+	return toGeocodeResult(resp.Features, address, addresses)
 }
 func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Address) (*GeocodeResult, error) {
 	street := fmt.Sprintf("%s %s", a.Number, a.Street)
@@ -99,49 +100,7 @@ func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Ad
 	if err != nil {
 		return nil, fmt.Errorf("insert addresses: %w", err)
 	}
-	return toGeocodeResult(*resp, a.String(), addresses)
-}
-func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResult, error) {
-	req := stadia.RequestReverseGeocode{
-		Latitude:  location.Latitude,
-		Longitude: location.Longitude,
-	}
-	resp, err := client.ReverseGeocode(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
-	}
-	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
-	if err != nil {
-		return nil, fmt.Errorf("insert addresses: %w", err)
-	}
-	return toGeocodeResult(*resp, location.String(), addresses)
-
-}
-func toGeocodeResult(resp stadia.GeocodeResponse, address_msg string, addresses []types.Address) (*GeocodeResult, error) {
-	if len(resp.Features) < 1 {
-		return nil, fmt.Errorf("%s matched no locations", address_msg)
-	}
-	if len(addresses) < 1 {
-		return nil, fmt.Errorf("no addresses")
-	}
-	if len(resp.Features) > 1 {
-		if !allFeaturesIdenticalEnough(resp.Features) {
-			return nil, fmt.Errorf("%s matched more than one location, and they differ a lot", address_msg)
-		}
-	}
-	feature := resp.Features[0]
-	address := addresses[0]
-	if feature.Geometry.Type != "Point" {
-		return nil, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, address_msg)
-	}
-	cell, err := h3utils.GetCell(address.Location.Longitude, address.Location.Latitude, 15)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", address.Location.Longitude, address.Location.Latitude)
-	}
-	return &GeocodeResult{
-		Address: address,
-		Cell:    cell,
-	}, nil
+	return toGeocodeResult(resp.Features, a.String(), addresses)
 }
 
 // Get the parcel for a given address, if one can be found
@@ -160,6 +119,71 @@ func GetParcel(ctx context.Context, txn bob.Executor, a types.Address) (*models.
 		return nil, fmt.Errorf("Get parcel from address %d: %w", a.ID, err)
 	}
 	return result, nil
+}
+func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResult, error) {
+	req := stadia.RequestReverseGeocode{
+		Latitude:  location.Latitude,
+		Longitude: location.Longitude,
+	}
+	resp, err := client.ReverseGeocode(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
+	}
+	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	if err != nil {
+		return nil, fmt.Errorf("insert addresses: %w", err)
+	}
+	return toGeocodeResult(resp.Features, location.String(), addresses)
+
+}
+func ReverseGeocodeClosest(ctx context.Context, location types.Location) (*GeocodeResult, error) {
+	req := stadia.RequestReverseGeocode{
+		Latitude:  location.Latitude,
+		Longitude: location.Longitude,
+	}
+	resp, err := client.ReverseGeocode(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
+	}
+	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	if err != nil {
+		return nil, fmt.Errorf("insert addresses: %w", err)
+	}
+	/*
+		sorter := SortAddressByDistance{
+			Addresses: addresses,
+			Location: location,
+		}
+	*/
+	sort.Sort(SortFeaturesByDistance(resp.Features))
+	return toGeocodeResult(resp.Features[:1], location.String(), addresses[:1])
+
+}
+func toGeocodeResult(features []stadia.GeocodeFeature, address_msg string, addresses []types.Address) (*GeocodeResult, error) {
+	if len(features) < 1 {
+		return nil, fmt.Errorf("%s matched no locations", address_msg)
+	}
+	if len(addresses) < 1 {
+		return nil, fmt.Errorf("no addresses")
+	}
+	if len(features) > 1 {
+		if !allFeaturesIdenticalEnough(features) {
+			return nil, fmt.Errorf("%s matched more than one location, and they differ a lot", address_msg)
+		}
+	}
+	feature := features[0]
+	address := addresses[0]
+	if feature.Geometry.Type != "Point" {
+		return nil, fmt.Errorf("wrong type %s from %s", feature.Geometry.Type, address_msg)
+	}
+	cell, err := h3utils.GetCell(address.Location.Longitude, address.Location.Latitude, 15)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert lat %f lng %f to h3 cell", address.Location.Longitude, address.Location.Latitude)
+	}
+	return &GeocodeResult{
+		Address: address,
+		Cell:    cell,
+	}, nil
 }
 func allFeaturesIdenticalEnough(features []stadia.GeocodeFeature) bool {
 	if len(features) < 2 {

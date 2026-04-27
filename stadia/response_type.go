@@ -123,6 +123,7 @@ type GeocodeProperties struct {
 	County                string                 `json:"county"`                  // "Tulare County"
 	CountyA               string                 `json:"county_a"`                // 'TL'
 	CountyGID             string                 `json:"county_gid"`              // 'whosonfirst:county:102082895'
+	Distance              *float64               `json:"distance"`                //
 	FormattedAddressLine  string                 `json:"formatted_address_line"`  // '123 Main Street, Riverton, Utah 84065, United States of America'
 	FormattedAddressLines []string               `json:"formatted_address_lines"` // '123 Main Street', 'Riverton, Utah 84065', 'United States of America'
 	GID                   string                 `json:"gid"`                     // 'openaddresses:address:us/ca/tulare-addresses-county:fe9dfab3d45c4550'
