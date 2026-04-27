@@ -319,8 +319,16 @@ function initializeMap() {
 	});
 
 	_map.on("load", () => {
+		// It's possible at this point that the client changed the camera while the map
+		// was loading. If that's the case we need to handle that change now.
+		console.log("map load complete");
 		isLoaded.value = true;
-		updateModel(_map);
+		// Delay this by a tick so that other load handlers fire first
+		// This allows updates to the camera model that happened during the load to fire
+		// and jump the camera to a new location before doing this update.
+		setTimeout(() => {
+			updateModel(_map);
+		}, 1);
 	});
 
 	_map.on("moveend", (evt: MoveEndEventInternal) => {
@@ -487,16 +495,33 @@ function panToLocation(location: Location, zoom: number) {
 watch(
 	() => props.modelValue,
 	(newCamera) => {
-		if (map.value && isLoaded.value && newCamera) {
-			console.log("panning based on model change", newCamera);
-			map.value.panTo(
-				{
-					lat: newCamera.location.latitude,
-					lng: newCamera.location.longitude,
-				},
-				{ duration: 1000, zoom: newCamera.zoom },
-				{ isInternalUpdate: true },
-			);
+		if (map.value) {
+			if (isLoaded.value) {
+				console.log("panning based on model change", newCamera);
+				map.value.panTo(
+					{
+						lat: newCamera.location.latitude,
+						lng: newCamera.location.longitude,
+					},
+					{ duration: 1000, zoom: newCamera.zoom },
+					{ isInternalUpdate: true },
+				);
+			} else {
+				console.log("delaying jump until loaded", newCamera);
+				map.value.once("load", () => {
+					if (!map.value) return;
+					map.value.jumpTo(
+						{
+							center: {
+								lat: newCamera.location.latitude,
+								lng: newCamera.location.longitude,
+							},
+							zoom: newCamera.zoom,
+						},
+						{ isInternalUpdate: true },
+					);
+				});
+			}
 		}
 	},
 	{ deep: true },
