@@ -212,7 +212,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 
-import MapCell from "@/components/MapCell.vue";
+import Map from "@/map/Map.vue";
 import { Address } from "@/type/api";
 // Types
 interface LatLng {
