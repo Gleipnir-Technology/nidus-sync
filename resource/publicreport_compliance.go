@@ -212,6 +212,23 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 	}
 	return res.complianceHydrate(report)
 }
+
+type publicreportComplianceFormSubmit struct {
+	ClientID uuid.UUID `schema:"client_id" json:"client_id"`
+}
+
+func (res *complianceR) Submit(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provide an ID")
+	}
+	report, err := platform.PublicreportComplianceSubmit(ctx, public_id)
+	if err != nil {
+		return nil, nhttp.NewError("submit report: %w", err)
+	}
+	return report, nil
+}
 func (res *complianceR) complianceHydrate(report *types.PublicReportCompliance) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	populateDistrictURI(&report.PublicReport, res.router)
 	populateReportURI(&report.PublicReport, res.router)

@@ -96,6 +96,15 @@ var PublicreportCompliances = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		Submitted: column{
+			Name:      "submitted",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: publicreportComplianceIndexes{
 		CompliancePkey: index{
@@ -146,11 +155,12 @@ type publicreportComplianceColumns struct {
 	ReportID           column
 	ReportPhoneCanText column
 	WantsScheduled     column
+	Submitted          column
 }
 
 func (c publicreportComplianceColumns) AsSlice() []column {
 	return []column{
-		c.AccessInstructions, c.AvailabilityNotes, c.Comments, c.GateCode, c.HasDog, c.PermissionType, c.ReportID, c.ReportPhoneCanText, c.WantsScheduled,
+		c.AccessInstructions, c.AvailabilityNotes, c.Comments, c.GateCode, c.HasDog, c.PermissionType, c.ReportID, c.ReportPhoneCanText, c.WantsScheduled, c.Submitted,
 	}
 }
 

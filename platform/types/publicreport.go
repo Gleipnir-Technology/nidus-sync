@@ -23,15 +23,16 @@ type PublicReport struct {
 type PublicReportCompliance struct {
 	PublicReport
 
-	AccessInstructions string `db:"access_instructions" json:"access_instructions"`
-	AvailabilityNotes  string `db:"availability_notes" json:"availability_notes"`
-	Comments           string `db:"comments" json:"comments"`
-	GateCode           string `db:"gate_code" json:"gate_code"`
-	HasDog             *bool  `db:"has_dog" json:"has_dog"`
-	PermissionType     string `db:"permission_type" json:"permission_type"`
-	ReportID           int32  `db:"report_id" json:"-"`
-	ReportPhoneCanText *bool  `db:"report_phone_can_text" json:"can_text"`
-	WantsScheduled     *bool  `db:"wants_scheduled" json:"wants_scheduled"`
+	AccessInstructions string     `db:"access_instructions" json:"access_instructions"`
+	AvailabilityNotes  string     `db:"availability_notes" json:"availability_notes"`
+	Comments           string     `db:"comments" json:"comments"`
+	GateCode           string     `db:"gate_code" json:"gate_code"`
+	HasDog             *bool      `db:"has_dog" json:"has_dog"`
+	PermissionType     string     `db:"permission_type" json:"permission_type"`
+	ReportID           int32      `db:"report_id" json:"-"`
+	ReportPhoneCanText *bool      `db:"report_phone_can_text" json:"can_text"`
+	Submitted          *time.Time `db:"submitted" json:"submitted"`
+	WantsScheduled     *bool      `db:"wants_scheduled" json:"wants_scheduled"`
 }
 type PublicReportNuisance struct {
 	PublicReport

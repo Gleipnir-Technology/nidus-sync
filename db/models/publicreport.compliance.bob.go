@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
@@ -34,6 +35,7 @@ type PublicreportCompliance struct {
 	ReportID           int32                      `db:"report_id,pk" `
 	ReportPhoneCanText null.Val[bool]             `db:"report_phone_can_text" `
 	WantsScheduled     null.Val[bool]             `db:"wants_scheduled" `
+	Submitted          null.Val[time.Time]        `db:"submitted" `
 
 	R publicreportComplianceR `db:"-" `
 }
@@ -56,7 +58,7 @@ type publicreportComplianceR struct {
 func buildPublicreportComplianceColumns(alias string) publicreportComplianceColumns {
 	return publicreportComplianceColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"access_instructions", "availability_notes", "comments", "gate_code", "has_dog", "permission_type", "report_id", "report_phone_can_text", "wants_scheduled",
+			"access_instructions", "availability_notes", "comments", "gate_code", "has_dog", "permission_type", "report_id", "report_phone_can_text", "wants_scheduled", "submitted",
 		).WithParent("publicreport.compliance"),
 		tableAlias:         alias,
 		AccessInstructions: psql.Quote(alias, "access_instructions"),
@@ -68,6 +70,7 @@ func buildPublicreportComplianceColumns(alias string) publicreportComplianceColu
 		ReportID:           psql.Quote(alias, "report_id"),
 		ReportPhoneCanText: psql.Quote(alias, "report_phone_can_text"),
 		WantsScheduled:     psql.Quote(alias, "wants_scheduled"),
+		Submitted:          psql.Quote(alias, "submitted"),
 	}
 }
 
@@ -83,6 +86,7 @@ type publicreportComplianceColumns struct {
 	ReportID           psql.Expression
 	ReportPhoneCanText psql.Expression
 	WantsScheduled     psql.Expression
+	Submitted          psql.Expression
 }
 
 func (c publicreportComplianceColumns) Alias() string {
@@ -106,10 +110,11 @@ type PublicreportComplianceSetter struct {
 	ReportID           omit.Val[int32]                      `db:"report_id,pk" `
 	ReportPhoneCanText omitnull.Val[bool]                   `db:"report_phone_can_text" `
 	WantsScheduled     omitnull.Val[bool]                   `db:"wants_scheduled" `
+	Submitted          omitnull.Val[time.Time]              `db:"submitted" `
 }
 
 func (s PublicreportComplianceSetter) SetColumns() []string {
-	vals := make([]string, 0, 9)
+	vals := make([]string, 0, 10)
 	if s.AccessInstructions.IsValue() {
 		vals = append(vals, "access_instructions")
 	}
@@ -136,6 +141,9 @@ func (s PublicreportComplianceSetter) SetColumns() []string {
 	}
 	if !s.WantsScheduled.IsUnset() {
 		vals = append(vals, "wants_scheduled")
+	}
+	if !s.Submitted.IsUnset() {
+		vals = append(vals, "submitted")
 	}
 	return vals
 }
@@ -168,6 +176,9 @@ func (s PublicreportComplianceSetter) Overwrite(t *PublicreportCompliance) {
 	if !s.WantsScheduled.IsUnset() {
 		t.WantsScheduled = s.WantsScheduled.MustGetNull()
 	}
+	if !s.Submitted.IsUnset() {
+		t.Submitted = s.Submitted.MustGetNull()
+	}
 }
 
 func (s *PublicreportComplianceSetter) Apply(q *dialect.InsertQuery) {
@@ -176,7 +187,7 @@ func (s *PublicreportComplianceSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 9)
+		vals := make([]bob.Expression, 10)
 		if s.AccessInstructions.IsValue() {
 			vals[0] = psql.Arg(s.AccessInstructions.MustGet())
 		} else {
@@ -231,6 +242,12 @@ func (s *PublicreportComplianceSetter) Apply(q *dialect.InsertQuery) {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
+		if !s.Submitted.IsUnset() {
+			vals[9] = psql.Arg(s.Submitted.MustGetNull())
+		} else {
+			vals[9] = psql.Raw("DEFAULT")
+		}
+
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
 	}))
 }
@@ -240,7 +257,7 @@ func (s PublicreportComplianceSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] 
 }
 
 func (s PublicreportComplianceSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 9)
+	exprs := make([]bob.Expression, 0, 10)
 
 	if s.AccessInstructions.IsValue() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -302,6 +319,13 @@ func (s PublicreportComplianceSetter) Expressions(prefix ...string) []bob.Expres
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "wants_scheduled")...),
 			psql.Arg(s.WantsScheduled),
+		}})
+	}
+
+	if !s.Submitted.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "submitted")...),
+			psql.Arg(s.Submitted),
 		}})
 	}
 
@@ -613,6 +637,7 @@ type publicreportComplianceWhere[Q psql.Filterable] struct {
 	ReportID           psql.WhereMod[Q, int32]
 	ReportPhoneCanText psql.WhereNullMod[Q, bool]
 	WantsScheduled     psql.WhereNullMod[Q, bool]
+	Submitted          psql.WhereNullMod[Q, time.Time]
 }
 
 func (publicreportComplianceWhere[Q]) AliasedAs(alias string) publicreportComplianceWhere[Q] {
@@ -630,6 +655,7 @@ func buildPublicreportComplianceWhere[Q psql.Filterable](cols publicreportCompli
 		ReportID:           psql.Where[Q, int32](cols.ReportID),
 		ReportPhoneCanText: psql.WhereNull[Q, bool](cols.ReportPhoneCanText),
 		WantsScheduled:     psql.WhereNull[Q, bool](cols.WantsScheduled),
+		Submitted:          psql.WhereNull[Q, time.Time](cols.Submitted),
 	}
 }
 
