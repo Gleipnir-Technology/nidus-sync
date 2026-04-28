@@ -11,7 +11,7 @@ type PublicReport struct {
 	ID         int32                             `db:"id" json:"-"`
 	Images     []Image                           `db:"images" json:"images"`
 	Location   *Location                         `db:"location" json:"location"`
-	Log        []LogEntry                        `db:"-" json:"log"`
+	Log        []*LogEntry                       `db:"-" json:"log"`
 	DistrictID *int32                            `db:"organization_id" json:"-"`
 	District   *string                           `db:"-" json:"district"`
 	PublicID   string                            `db:"public_id" json:"public_id"`
