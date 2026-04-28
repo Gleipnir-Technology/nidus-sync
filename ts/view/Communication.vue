@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { computedAsync } from "@vueuse/core";
 import maplibregl from "maplibre-gl";
 
@@ -68,6 +68,7 @@ import CommunicationColumnList from "@/components/CommunicationColumnList.vue";
 import ImageViewerModal from "@/components/ImageViewerModal.vue";
 import ThreeColumn from "@/components/layout/ThreeColumn.vue";
 import ToastNotification from "@/components/ToastNotification.vue";
+import { useQueryParam } from "@/composable/use-query-param";
 import { SSEManager } from "@/SSEManager";
 import { useCommunicationStore } from "@/store/communication";
 import { useSessionStore } from "@/store/session";
@@ -81,6 +82,7 @@ const session = useSessionStore();
 
 // Refs
 const currentImageIndex = ref<number>(0);
+const paramCommunication = useQueryParam("communication");
 const mapBounds = ref<LngLatBounds | null>(null);
 const mapMarkers = ref<Marker[]>([]);
 const selectedId = ref<string | null>(null);
@@ -134,6 +136,7 @@ const handleDeselect = (id: string) => {
 const handleSelect = (id: string) => {
 	selectedId.value = id;
 	updateMap();
+	paramCommunication.setValue(id);
 };
 function imageNext() {
 	currentImageIndex.value = Math.min(
@@ -307,4 +310,13 @@ function updateMap() {
 onMounted(async () => {
 	await storeCommunication.fetchAll();
 });
+watch(
+	paramCommunication.value,
+	(communication_id) => {
+		if (communication_id) {
+			handleSelect(communication_id);
+		}
+	},
+	{ immediate: true },
+);
 </script>
