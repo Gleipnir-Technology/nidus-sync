@@ -16,6 +16,10 @@
 		<div class="d-flex justify-content-between align-items-start mb-3">
 			<div>
 				<h5 class="mb-1">
+					<span v-if="report.type === 'compliance'">
+						<i class="bi bi-postcard icon-compliance"></i>
+						Compliance Report
+					</span>
 					<span v-if="report.type === 'nuisance'">
 						<i class="bi bi-mosquito icon-nuisance"></i>
 						Nuisance Report
@@ -88,6 +92,10 @@
 			</div>
 		</div>
 
+		<div v-if="report instanceof PublicReportCompliance">
+			<PublicReportCardCompliance :report="report" />
+		</div>
+
 		<div v-if="report instanceof PublicReportNuisance">
 			<PublicReportCardNuisance :report="report" />
 		</div>
@@ -136,11 +144,13 @@
 import { computed } from "vue";
 import MapMultipoint from "@/components/MapMultipoint.vue";
 import TimeRelative from "@/components/TimeRelative.vue";
+import PublicReportCardCompliance from "@/components/PublicReportCardCompliance.vue";
 import PublicReportCardNuisance from "@/components/PublicReportCardNuisance.vue";
 import PublicReportCardWater from "@/components/PublicReportCardWater.vue";
 import { formatAddress } from "@/format";
 import {
 	PublicReport,
+	PublicReportCompliance,
 	PublicReportNuisance,
 	PublicReportWater,
 } from "@/type/api";
