@@ -147,7 +147,7 @@ func (l *Lob) AddressCreate(ctx context.Context, req RequestAddressCreate) (Addr
 		return result, fmt.Errorf("address list post: %w", err)
 	}
 	if !resp.IsSuccess() {
-		return result, fmt.Errorf("not successful: %v", error_response)
+		return result, fmt.Errorf("address create not successful: %w", error_response)
 	}
 	return result, nil
 }
@@ -166,7 +166,7 @@ func (l *Lob) AddressList(ctx context.Context) ([]Address, error) {
 		return nil, fmt.Errorf("address list get: %w", err)
 	}
 	if !resp.IsSuccess() {
-		return nil, fmt.Errorf("not successful")
+		return nil, fmt.Errorf("address list not successful: %w", error_response)
 	}
 	return result.Addresses, nil
 }
@@ -200,7 +200,7 @@ func (l *Lob) LetterCreate(ctx context.Context, req RequestLetterCreate) (Letter
 		return result, fmt.Errorf("letters list post: %w", err)
 	}
 	if !resp.IsSuccess() {
-		return result, fmt.Errorf("not successful")
+		return result, fmt.Errorf("letter create not successful. %w", error_response)
 	}
 	return result, nil
 }
@@ -219,7 +219,7 @@ func (l *Lob) LetterList(ctx context.Context) ([]Letter, error) {
 		return nil, fmt.Errorf("letter list get: %w", err)
 	}
 	if !resp.IsSuccess() {
-		return nil, fmt.Errorf("not successful")
+		return nil, fmt.Errorf("letter list not successful. Error: %w", error_response)
 	}
 	return result.Letters, nil
 }
