@@ -123,7 +123,7 @@ func sendMail(ctx context.Context, org_address_id string, public_id string, site
 	}
 	addr_to, err := client.AddressCreate(ctx, addr_req)
 	if err != nil {
-		return nil, fmt.Errorf("create to addr: %w", err)
+		return nil, fmt.Errorf("create to addr for address %d: %w", address.ID, err)
 	}
 
 	req := lob.RequestLetterCreate{
@@ -135,7 +135,7 @@ func sendMail(ctx context.Context, org_address_id string, public_id string, site
 	}
 	letter, err := client.LetterCreate(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("letter create: %w", err)
+		return nil, fmt.Errorf("letter create for address %d: %w", address.ID, err)
 	}
 
 	return &letter, nil
