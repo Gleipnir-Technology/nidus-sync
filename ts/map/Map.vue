@@ -246,6 +246,28 @@ onBeforeUnmount(() => {
 	}
 });
 watch(
+	() => props.bounds,
+	(newBounds) => {
+		if (!map.value) return;
+		if (map.value.loaded()) {
+			map.value.fitBounds(
+				newBounds,
+				{ padding: 50, duration: 1000 },
+				{ isInternalUpdate: true },
+			);
+		} else {
+			map.value.once("load", () => {
+				if (!map.value) return;
+				map.value.fitBounds(
+					newBounds,
+					{ padding: 50, duration: 0 },
+					{ isInternalUpdate: true },
+				);
+			});
+		}
+	},
+);
+watch(
 	() => props.cursor,
 	(newCursor) => {
 		if (map.value && map.value.loaded()) {
