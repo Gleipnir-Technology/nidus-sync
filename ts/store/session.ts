@@ -54,6 +54,7 @@ export const useSessionStore = defineStore("session", () => {
 				password: password,
 				username: username,
 			});
+			isAuthenticated.value = false;
 			return {
 				is_success: true,
 				status: 200,
