@@ -9,6 +9,13 @@ export function boundsDefault(): maplibregl.LngLatBounds {
 	);
 }
 
+export function boundsForServiceArea(b?: Bounds): maplibregl.LngLatBounds {
+	if (b) {
+		return boundsFromAPI(b);
+	} else {
+		return boundsDefault();
+	}
+}
 export function boundsFromAPI(b: Bounds): maplibregl.LngLatBounds {
 	return new maplibregl.LngLatBounds(
 		new maplibregl.LngLat(b.min.longitude, b.max.latitude),

@@ -62,6 +62,14 @@ export class Bounds {
 		this.max.latitude = Math.max(this.max.latitude, l.latitude);
 		this.max.longitude = Math.max(this.max.longitude, l.longitude);
 	}
+	isEmpty() {
+		return (
+			this.min.latitude == 90 &&
+			this.min.longitude == 180 &&
+			this.max.latitude == -90 &&
+			this.max.longitude == -180
+		);
+	}
 }
 export interface ContactOptions {
 	can_sms: boolean;

@@ -75,7 +75,7 @@ import { useSessionStore } from "@/store/session";
 import type { Marker } from "@/types";
 import { Bounds, type Communication, PublicReport } from "@/type/api";
 import type { LngLatBounds } from "@/map/Map.vue";
-import { boundsWithPadding } from "@/map/util";
+import { boundsForServiceArea, boundsWithPadding } from "@/map/util";
 import { useStorePublicReport } from "@/store/publicreport";
 
 const session = useSessionStore();
@@ -83,8 +83,6 @@ const session = useSessionStore();
 // Refs
 const currentImageIndex = ref<number>(0);
 const paramCommunication = useQueryParam("communication");
-const mapBounds = ref<LngLatBounds | null>(null);
-const mapMarkers = ref<Marker[]>([]);
 const selectedId = ref<string | null>(null);
 const showImageModal = ref(false);
 const storeCommunication = useCommunicationStore();
@@ -103,6 +101,69 @@ const currentImages = computed(() => {
 		return [];
 	}
 	return selectedReport.value?.images ?? [];
+});
+const mapBounds = computed<LngLatBounds | null>((): LngLatBounds | null => {
+	let bounds = new Bounds();
+	const loc = selectedReport.value?.location;
+	console.log("updating for loc", loc);
+	if (loc && loc.latitude != 0 && loc.longitude != 0) {
+		bounds.addLocation(loc);
+	}
+	const address_loc = selectedReport.value?.address.location;
+	if (address_loc && address_loc.latitude != 0 && address_loc.longitude != 0) {
+		bounds.addLocation(address_loc);
+	}
+
+	for (const [i, image] of (selectedReport.value?.images ?? []).entries()) {
+		if (
+			image.location != null &&
+			image.location.latitude != 0 &&
+			image.location.longitude != 0
+		) {
+			bounds.addLocation(image.location);
+		}
+	}
+	if (bounds.isEmpty()) {
+		return boundsForServiceArea();
+	}
+	return boundsWithPadding(bounds.min, bounds.max, 0.01);
+});
+const mapMarkers = computed<Marker[]>((): Marker[] => {
+	const loc = selectedReport.value?.location;
+	let markers: Marker[] = [];
+	if (loc && loc.latitude != 0 && loc.longitude != 0) {
+		markers.push({
+			color: "#0000FF",
+			draggable: false,
+			id: "reporter",
+			location: loc,
+		});
+	}
+	const address_loc = selectedReport.value?.address.location;
+	if (address_loc && address_loc.latitude != 0 && address_loc.longitude != 0) {
+		markers.push({
+			color: "#FF0000",
+			draggable: false,
+			id: "address",
+			location: address_loc,
+		});
+	}
+
+	for (const [i, image] of (selectedReport.value?.images ?? []).entries()) {
+		if (
+			image.location != null &&
+			image.location.latitude != 0 &&
+			image.location.longitude != 0
+		) {
+			markers.push({
+				color: "#00FF00",
+				draggable: false,
+				id: `image-${i}`,
+				location: image.location,
+			});
+		}
+	}
+	return markers;
 });
 const selectedCommunication = computed<Communication | null>(
 	(): Communication | null => {
@@ -131,11 +192,9 @@ const selectedReport = computedAsync(
 );
 const handleDeselect = (id: string) => {
 	selectedId.value = null;
-	updateMap();
 };
 const handleSelect = (id: string) => {
 	selectedId.value = id;
-	updateMap();
 	paramCommunication.setValue(id);
 };
 function imageNext() {
@@ -263,49 +322,6 @@ function showNotification(title: string, message: string) {
 	}, 3000);
 }
 
-function updateMap() {
-	let bounds = new Bounds();
-	const loc = selectedReport.value?.location;
-	console.log("updating for loc", loc);
-	let markers: Marker[] = [];
-	if (loc && loc.latitude != 0 && loc.longitude != 0) {
-		bounds.addLocation(loc);
-		markers.push({
-			color: "#0000FF",
-			draggable: false,
-			id: "reporter",
-			location: loc,
-		});
-	}
-	const address_loc = selectedReport.value?.address.location;
-	if (address_loc && address_loc.latitude != 0 && address_loc.longitude != 0) {
-		bounds.addLocation(address_loc);
-		markers.push({
-			color: "#FF0000",
-			draggable: false,
-			id: "address",
-			location: address_loc,
-		});
-	}
-
-	for (const [i, image] of (selectedReport.value?.images ?? []).entries()) {
-		if (
-			image.location != null &&
-			image.location.latitude != 0 &&
-			image.location.longitude != 0
-		) {
-			bounds.addLocation(image.location);
-			markers.push({
-				color: "#00FF00",
-				draggable: false,
-				id: `image-${i}`,
-				location: image.location,
-			});
-		}
-	}
-	mapMarkers.value = markers;
-	mapBounds.value = boundsWithPadding(bounds.min, bounds.max, 0.01);
-}
 // Lifecycle hooks
 onMounted(async () => {
 	await storeCommunication.fetchAll();
