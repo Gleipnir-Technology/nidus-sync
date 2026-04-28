@@ -16,6 +16,7 @@ import HomeBase from "@/rmo/view/Home.vue";
 import HomeDistrict from "@/rmo/view/district/Home.vue";
 import NuisanceBase from "@/rmo/view/Nuisance.vue";
 import NuisanceDistrict from "@/rmo/view/district/Nuisance.vue";
+import RegisterNotificationsComplete from "@/rmo/view/RegisterNotificationsComplete.vue";
 import ReportSubmitted from "@/rmo/view/ReportSubmitted.vue";
 import StatusBase from "@/rmo/view/Status.vue";
 import StatusByID from "@/rmo/view/StatusByID.vue";
@@ -126,12 +127,6 @@ const routes: RouteRecordRaw[] = [
 		props: true,
 	},
 	{
-		path: "/submitted/:id",
-		name: "ReportSubmitted",
-		component: ReportSubmitted,
-		props: true,
-	},
-	{
 		path: "/status",
 		name: "StatusBase",
 		component: StatusBase,
@@ -140,6 +135,18 @@ const routes: RouteRecordRaw[] = [
 		component: StatusByID,
 		name: "StatusbyID",
 		path: "/status/:id",
+		props: true,
+	},
+	{
+		path: "/submitted/:id",
+		name: "ReportSubmitted",
+		component: ReportSubmitted,
+		props: true,
+	},
+	{
+		path: "/submitted/:id/complete",
+		name: ROUTE_NAMES.REGISTER_NOTIFICATIONS_COMPLETE,
+		component: RegisterNotificationsComplete,
 		props: true,
 	},
 	{

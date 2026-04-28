@@ -275,6 +275,7 @@
 import { ref, onMounted } from "vue";
 import { computedAsync } from "@vueuse/core";
 import { useRouter } from "vue-router";
+import { useRoutes } from "@/rmo/route/use";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStorePublicReport } from "@/store/publicreport";
 import type { District, PublicReport } from "@/type/api";
@@ -305,6 +306,7 @@ const formData = ref<FormData>({
 	subscribe: false,
 });
 const router = useRouter();
+const routes = useRoutes();
 const storeDistrict = useStoreDistrict();
 const storePublicReport = useStorePublicReport();
 
@@ -332,7 +334,7 @@ const handleSubmit = async () => {
 
 		if (response.ok) {
 			// Handle success (e.g., show a success message)
-			console.log("Form submitted successfully");
+			router.push(routes.RegisterNotificationsComplete(props.id));
 		} else {
 			// Handle error
 			console.error("Form submission failed");

@@ -8,6 +8,7 @@ export const ROUTE_NAMES = {
 	COMPLIANCE_PERMISSION: "compliance-permission",
 	COMPLIANCE_PROCESS: "compliance-process",
 	COMPLIANCE_SUBMIT: "compliance-submit",
+	REGISTER_NOTIFICATIONS_COMPLETE: "register-notifications-complete",
 	REVIEW_SITE: "review-site",
 } as const;
 

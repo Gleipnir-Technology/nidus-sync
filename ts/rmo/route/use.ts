@@ -31,6 +31,16 @@ export function useRoutes() {
 	);
 	const ComplianceProcess = complianceRoute(ROUTE_NAMES.COMPLIANCE_PROCESS);
 	const ComplianceSubmit = complianceRoute(ROUTE_NAMES.COMPLIANCE_SUBMIT);
+	const RegisterNotificationsComplete = (
+		publicID: string,
+	): RouteLocationRaw => {
+		return {
+			name: ROUTE_NAMES.REGISTER_NOTIFICATIONS_COMPLETE,
+			params: {
+				public_id: publicID,
+			},
+		};
+	};
 	return {
 		ComplianceAddress,
 		ComplianceComplete,
@@ -41,5 +51,6 @@ export function useRoutes() {
 		CompliancePermission,
 		ComplianceProcess,
 		ComplianceSubmit,
+		RegisterNotificationsComplete,
 	};
 }
