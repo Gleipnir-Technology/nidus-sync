@@ -138,7 +138,7 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	if err != nil {
 		return nil, nhttp.NewError("create nuisance report: %w", err)
 	}
-	uri, err := res.router.IDStrToURI("publicreport.ByIDGet", report.PublicID)
+	uri, err := res.router.IDStrToURI("publicreport.ByIDGetPublic", report.PublicID)
 	if err != nil {
 		return nil, nhttp.NewError("generate uri: %w", err)
 	}

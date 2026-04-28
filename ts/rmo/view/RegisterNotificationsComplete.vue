@@ -144,8 +144,8 @@
 
 						<!-- Navigation Buttons -->
 						<div class="mt-4">
-							<a
-								href="/status/{{ .ReportID }}"
+							<RouterLink
+								:to="routes.StatusByID(props.id)"
 								class="btn btn-outline-primary me-2"
 							>
 								<svg
@@ -161,7 +161,7 @@
 									/>
 								</svg>
 								Check Report Status
-							</a>
+							</RouterLink>
 						</div>
 					</div>
 				</div>
@@ -171,9 +171,11 @@
 </template>
 <script setup lang="ts">
 import { formatReportID } from "@/format";
+import { useRoutes } from "@/rmo/route/use";
 
 interface Props {
 	id: string;
 }
 const props = defineProps<Props>();
+const routes = useRoutes();
 </script>

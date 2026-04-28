@@ -124,7 +124,7 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 	if err != nil {
 		return nil, nhttp.NewError("Failed to save new report: %w", err)
 	}
-	uri, err := res.router.IDStrToURI("publicreport.ByIDGet", report.PublicID)
+	uri, err := res.router.IDStrToURI("publicreport.ByIDGetPublic", report.PublicID)
 	if err != nil {
 		return nil, nhttp.NewError("generate uri: %w", err)
 	}

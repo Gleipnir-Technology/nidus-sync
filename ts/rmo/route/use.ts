@@ -41,6 +41,14 @@ export function useRoutes() {
 			},
 		};
 	};
+	const StatusByID = (publicID: string): RouteLocationRaw => {
+		return {
+			name: ROUTE_NAMES.STATUS_BY_ID,
+			params: {
+				public_id: publicID,
+			},
+		};
+	};
 	return {
 		ComplianceAddress,
 		ComplianceComplete,
@@ -52,5 +60,6 @@ export function useRoutes() {
 		ComplianceProcess,
 		ComplianceSubmit,
 		RegisterNotificationsComplete,
+		StatusByID,
 	};
 }

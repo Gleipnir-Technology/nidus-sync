@@ -10,6 +10,7 @@ export const ROUTE_NAMES = {
 	COMPLIANCE_SUBMIT: "compliance-submit",
 	REGISTER_NOTIFICATIONS_COMPLETE: "register-notifications-complete",
 	REVIEW_SITE: "review-site",
+	STATUS_BY_ID: "status-by-id",
 } as const;
 
 export type RouteName = (typeof ROUTE_NAMES)[keyof typeof ROUTE_NAMES];

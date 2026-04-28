@@ -133,7 +133,7 @@ const routes: RouteRecordRaw[] = [
 	},
 	{
 		component: StatusByID,
-		name: "StatusbyID",
+		name: ROUTE_NAMES.STATUS_BY_ID,
 		path: "/status/:id",
 		props: true,
 	},

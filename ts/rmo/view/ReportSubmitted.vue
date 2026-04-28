@@ -222,7 +222,10 @@
 								You can check the status of your report at any time using your
 								Report ID.
 							</p>
-							<RouterLink :to="`/status/${id}`" class="btn btn-outline-primary">
+							<RouterLink
+								:to="routes.StatusByID(props.id)"
+								class="btn btn-outline-primary"
+							>
 								Check Status
 							</RouterLink>
 						</div>
