@@ -30,8 +30,8 @@
 					<div class="card-body p-4">
 						<div class="text-center mb-4">
 							<div class="alert alert-info py-3">
-								<strong>Your Report ID:</strong>
-								<span class="fs-4 fw-bold">{{ id }}</span>
+								<strong>Your Report ID: </strong>
+								<span class="fs-4 fw-bold">{{ formatReportID(id) }}</span>
 							</div>
 						</div>
 
@@ -275,6 +275,8 @@
 import { ref, onMounted } from "vue";
 import { computedAsync } from "@vueuse/core";
 import { useRouter } from "vue-router";
+
+import { formatReportID } from "@/format";
 import { useRoutes } from "@/rmo/route/use";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStorePublicReport } from "@/store/publicreport";

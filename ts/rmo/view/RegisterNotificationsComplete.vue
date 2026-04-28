@@ -49,8 +49,8 @@
 								report updates.
 							</p>
 							<div class="alert alert-secondary py-3 mt-3">
-								<strong>Report ID:</strong>
-								<span class="fs-5">{{ id }}</span>
+								<strong>Report ID: </strong>
+								<span class="fs-5">{{ formatReportID(id) }}</span>
 							</div>
 						</div>
 
@@ -170,6 +170,8 @@
 	</div>
 </template>
 <script setup lang="ts">
+import { formatReportID } from "@/format";
+
 interface Props {
 	id: string;
 }
