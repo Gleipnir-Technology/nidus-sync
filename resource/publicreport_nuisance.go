@@ -52,21 +52,10 @@ type nuisanceForm struct {
 }
 
 func (res *nuisanceR) ByID(ctx context.Context, r *http.Request, u platform.User, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
-	return res.ByIDPublic(ctx, r, query)
+	return res.byID(ctx, r, false)
 }
 func (res *nuisanceR) ByIDPublic(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	public_id := vars["id"]
-	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provid an ID")
-	}
-	report, err := platform.PublicReportByIDNuisance(ctx, public_id, true)
-	if err != nil {
-		return nil, nhttp.NewError("get report: %w", err)
-	}
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
-	return report, nil
+	return res.byID(ctx, r, true)
 }
 func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceForm) (*nuisance, *nhttp.ErrorWithStatus) {
 	user_agent := r.Header.Get("User-Agent")
@@ -151,4 +140,18 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 		PublicID: report.PublicID,
 		URI:      uri,
 	}, nil
+}
+func (res *nuisanceR) byID(ctx context.Context, r *http.Request, is_public bool) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicReportByIDNuisance(ctx, public_id, true)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router, is_public)
+	return report, nil
 }

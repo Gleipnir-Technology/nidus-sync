@@ -54,7 +54,7 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 	comms := make([]communication, len(reports))
 	for i, report := range reports {
 		populateDistrictURI(report, res.router)
-		populateReportURI(report, res.router)
+		populateReportURI(report, res.router, false)
 		comms[i] = communication{
 			Created:      report.Created,
 			ID:           report.PublicID,

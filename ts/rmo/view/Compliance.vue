@@ -53,7 +53,7 @@ import type { Image } from "@/components/ImageUpload.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
-import { useStorePublicReport } from "@/store/publicreport";
+import { useStorePublicReport } from "@/rmo/store/publicreport";
 import Intro from "@/rmo/content/compliance/Intro.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import {

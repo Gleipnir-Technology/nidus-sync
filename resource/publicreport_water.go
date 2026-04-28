@@ -149,6 +149,6 @@ func (res *waterR) byID(ctx context.Context, r *http.Request, is_public bool) (*
 		return nil, nhttp.NewError("get report: %w", err)
 	}
 	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router, is_public)
 	return report, nil
 }

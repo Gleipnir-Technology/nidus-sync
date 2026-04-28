@@ -91,8 +91,14 @@ func populateDistrictURI(report *types.PublicReport, r *router) error {
 	report.District = &district_uri
 	return nil
 }
-func populateReportURI(report *types.PublicReport, r *router) error {
-	uri, err := reportURI(r, report.Type, report.PublicID)
+func populateReportURI(report *types.PublicReport, r *router, is_public bool) error {
+	var err error
+	var uri string
+	if is_public {
+		uri, err = reportURIPublic(r, report.Type, report.PublicID)
+	} else {
+		uri, err = reportURI(r, report.Type, report.PublicID)
+	}
 	if err != nil {
 		return fmt.Errorf("report uri: %w", err)
 	}

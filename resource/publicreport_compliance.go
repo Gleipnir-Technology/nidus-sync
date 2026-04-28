@@ -46,19 +46,10 @@ type publicreportComplianceForm struct {
 }
 
 func (res *complianceR) ByID(ctx context.Context, r *http.Request, u platform.User, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
-	return res.ByIDPublic(ctx, r, query)
+	return res.byID(ctx, r, false)
 }
 func (res *complianceR) ByIDPublic(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	public_id := vars["id"]
-	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provid an ID")
-	}
-	report, err := platform.PublicReportByIDCompliance(ctx, public_id, true)
-	if err != nil {
-		return nil, nhttp.NewError("get report: %w", err)
-	}
-	return res.complianceHydrate(report)
+	return res.byID(ctx, r, true)
 }
 func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	if n.District.IsUnset() && n.MailerID.IsUnset() {
@@ -139,7 +130,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	if err != nil {
 		return nil, nhttp.NewError("get report after creation: %w", err)
 	}
-	return res.complianceHydrate(result)
+	return res.complianceHydrate(result, true)
 }
 func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
@@ -213,7 +204,7 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 	if err != nil {
 		return nil, nhttp.NewError("get report after update: %w", err)
 	}
-	return res.complianceHydrate(report)
+	return res.complianceHydrate(report, true)
 }
 
 type publicreportComplianceFormSubmit struct {
@@ -232,9 +223,21 @@ func (res *complianceR) Submit(ctx context.Context, r *http.Request, prf publicr
 	}
 	return report, nil
 }
-func (res *complianceR) complianceHydrate(report *types.PublicReportCompliance) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+func (res *complianceR) byID(ctx context.Context, r *http.Request, is_public bool) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicReportByIDCompliance(ctx, public_id, true)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	return res.complianceHydrate(report, is_public)
+}
+func (res *complianceR) complianceHydrate(report *types.PublicReportCompliance, is_public bool) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router, is_public)
 	for _, e := range report.Concerns {
 		e.PopulateURL(res.router.router)
 	}
