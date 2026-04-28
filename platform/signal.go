@@ -275,7 +275,7 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting pools by ID: %w", err)
 	}
-	reports, err := publicreport.Reports(ctx, org_id, report_ids)
+	reports, err := publicreport.Reports(ctx, org_id, report_ids, false)
 	if err != nil {
 		return nil, fmt.Errorf("getting reports by ID: %w", err)
 	}

@@ -53,11 +53,11 @@ func GenerateReportID() (string, error) {
 	return builder.String(), nil
 }
 
-func PublicreportByID(ctx context.Context, report_id string) (*types.PublicReport, error) {
-	return publicreport.ByID(ctx, report_id)
+func PublicReportByID(ctx context.Context, report_id string, is_public bool) (*types.PublicReport, error) {
+	return publicreport.ByID(ctx, report_id, is_public)
 }
-func PublicreportByIDCompliance(ctx context.Context, report_id string) (*types.PublicReportCompliance, error) {
-	result, err := publicreport.ByIDCompliance(ctx, report_id)
+func PublicReportByIDCompliance(ctx context.Context, report_id string, is_public bool) (*types.PublicReportCompliance, error) {
+	result, err := publicreport.ByIDCompliance(ctx, report_id, is_public)
 	if err != nil {
 		return nil, fmt.Errorf("byidcompliance: %w", err)
 	}
@@ -75,14 +75,14 @@ func PublicreportByIDCompliance(ctx context.Context, report_id string) (*types.P
 	}
 	return result, nil
 }
-func PublicreportByIDNuisance(ctx context.Context, report_id string) (*types.PublicReportNuisance, error) {
-	return publicreport.ByIDNuisance(ctx, report_id)
+func PublicReportByIDNuisance(ctx context.Context, report_id string, is_public bool) (*types.PublicReportNuisance, error) {
+	return publicreport.ByIDNuisance(ctx, report_id, is_public)
 }
-func PublicreportByIDWater(ctx context.Context, report_id string) (*types.PublicReportWater, error) {
-	return publicreport.ByIDWater(ctx, report_id)
+func PublicReportByIDWater(ctx context.Context, report_id string, is_public bool) (*types.PublicReportWater, error) {
+	return publicreport.ByIDWater(ctx, report_id, is_public)
 }
-func PublicreportComplianceSubmit(ctx context.Context, report_id string) (*types.PublicReportCompliance, error) {
-	report, err := publicreport.ByIDCompliance(ctx, report_id)
+func PublicReportComplianceSubmit(ctx context.Context, report_id string, is_public bool) (*types.PublicReportCompliance, error) {
+	report, err := publicreport.ByIDCompliance(ctx, report_id, is_public)
 	if err != nil {
 		return nil, fmt.Errorf("byidcompliance: %w", err)
 	}
@@ -94,9 +94,9 @@ func PublicreportComplianceSubmit(ctx context.Context, report_id string) (*types
 	if err != nil {
 		return nil, fmt.Errorf("update report submitted: %w", err)
 	}
-	return publicreport.ByIDCompliance(ctx, report_id)
+	return publicreport.ByIDCompliance(ctx, report_id, is_public)
 }
-func PublicreportInvalid(ctx context.Context, user User, public_id string) error {
+func PublicReportInvalid(ctx context.Context, user User, public_id string) error {
 	report, err := publicReportFromID(ctx, public_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
@@ -206,13 +206,13 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 		}
 	}
 	txn.Commit(ctx)
-	return publicreport.ByIDCompliance(ctx, public_id)
+	return publicreport.ByIDCompliance(ctx, public_id, false)
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOPublicReport, org_id, report_id)
 }
-func PublicReportsForOrganization(ctx context.Context, org_id int32) ([]*types.PublicReport, error) {
-	return publicreport.ReportsForOrganization(ctx, org_id)
+func PublicReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
+	return publicreport.ReportsForOrganization(ctx, org_id, is_public)
 }
 func PublicReportComplianceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_compliance models.PublicreportComplianceSetter, org_id int32) (*models.PublicreportReport, error) {
 	return publicReportCreate(ctx, setter_report, nil, nil, nil, org_id, func(ctx context.Context, txn bob.Executor, report_id int32) error {

@@ -26,7 +26,7 @@ type formPublicreportInvalid struct {
 }
 
 func postPublicreportInvalid(ctx context.Context, r *http.Request, user platform.User, req formPublicreportSignal) (string, *nhttp.ErrorWithStatus) {
-	err := platform.PublicreportInvalid(ctx, user, req.ReportID)
+	err := platform.PublicReportInvalid(ctx, user, req.ReportID)
 	if err != nil {
 		return "", nhttp.NewError("create signal: %w", err)
 	}

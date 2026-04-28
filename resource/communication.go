@@ -47,7 +47,7 @@ func toImageURLs(m map[string][]uuid.UUID, id string) []string {
 	return urls
 }
 func (res *communicationR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*communicationList, *nhttp.ErrorWithStatus) {
-	reports, err := platform.PublicReportsForOrganization(ctx, user.Organization.ID)
+	reports, err := platform.PublicReportsForOrganization(ctx, user.Organization.ID, false)
 	if err != nil {
 		return nil, nhttp.NewError("nuisance report query: %w", err)
 	}

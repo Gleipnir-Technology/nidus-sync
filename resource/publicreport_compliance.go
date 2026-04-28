@@ -45,13 +45,16 @@ type publicreportComplianceForm struct {
 	WantsScheduled     omitnull.Val[bool]                   `schema:"wants_scheduled" json:"wants_scheduled"`
 }
 
-func (res *complianceR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+func (res *complianceR) ByID(ctx context.Context, r *http.Request, u platform.User, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+	return res.ByIDPublic(ctx, r, query)
+}
+func (res *complianceR) ByIDPublic(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
 		return nil, nhttp.NewBadRequest("You must provid an ID")
 	}
-	report, err := platform.PublicreportByIDCompliance(ctx, public_id)
+	report, err := platform.PublicReportByIDCompliance(ctx, public_id, true)
 	if err != nil {
 		return nil, nhttp.NewError("get report: %w", err)
 	}
@@ -132,7 +135,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		return nil, nhttp.NewError("create compliance report: %w", err)
 	}
 	// Return a fully-fleshed-out report object, even though it's a bit more expensive
-	result, err := platform.PublicreportByIDCompliance(ctx, report.PublicID)
+	result, err := platform.PublicReportByIDCompliance(ctx, report.PublicID, true)
 	if err != nil {
 		return nil, nhttp.NewError("get report after creation: %w", err)
 	}
@@ -206,7 +209,7 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 		return nil, nhttp.NewError("platform update report compliance: %w", err)
 	}
 	// Return a fully-fleshed-out report object, even though it's a bit more expensive
-	report, err = platform.PublicreportByIDCompliance(ctx, public_id)
+	report, err = platform.PublicReportByIDCompliance(ctx, public_id, true)
 	if err != nil {
 		return nil, nhttp.NewError("get report after update: %w", err)
 	}
@@ -223,7 +226,7 @@ func (res *complianceR) Submit(ctx context.Context, r *http.Request, prf publicr
 	if public_id == "" {
 		return nil, nhttp.NewBadRequest("You must provide an ID")
 	}
-	report, err := platform.PublicreportComplianceSubmit(ctx, public_id)
+	report, err := platform.PublicReportComplianceSubmit(ctx, public_id, true)
 	if err != nil {
 		return nil, nhttp.NewError("submit report: %w", err)
 	}

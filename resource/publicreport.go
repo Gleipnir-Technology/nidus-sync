@@ -23,7 +23,7 @@ func Publicreport(r *router) *publicreportR {
 	}
 }
 
-func (res *publicreportR) ByID(ctx context.Context, w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
+func (res *publicreportR) ByID(ctx context.Context, w http.ResponseWriter, r *http.Request, u platform.User) *nhttp.ErrorWithStatus {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
@@ -34,6 +34,23 @@ func (res *publicreportR) ByID(ctx context.Context, w http.ResponseWriter, r *ht
 		return nhttp.NewError("get report '%s': %w", public_id, err)
 	}
 	path, err := reportURI(res.router, report_type, public_id)
+	if err != nil {
+		return nhttp.NewError("get uri '%s': %w", public_id, err)
+	}
+	http.Redirect(w, r, path, http.StatusFound)
+	return nil
+}
+func (res *publicreportR) ByIDPublic(ctx context.Context, w http.ResponseWriter, r *http.Request) *nhttp.ErrorWithStatus {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nhttp.NewBadRequest("You must provide an ID")
+	}
+	report_type, err := platform.PublicReportTypeByID(ctx, public_id)
+	if err != nil {
+		return nhttp.NewError("get report '%s': %w", public_id, err)
+	}
+	path, err := reportURIPublic(res.router, report_type, public_id)
 	if err != nil {
 		return nhttp.NewError("get uri '%s': %w", public_id, err)
 	}
@@ -91,6 +108,24 @@ func reportURI(r *router, report_type string, public_id string) (string, error) 
 		route_name = "publicreport.nuisance.ByIDGet"
 	case "water":
 		route_name = "publicreport.water.ByIDGet"
+	default:
+		return "", fmt.Errorf("Unrecognized report type '%s'", report_type)
+	}
+	uri, err := r.IDStrToURI(route_name, public_id)
+	if err != nil {
+		return "", fmt.Errorf("id str to uri '%s' '%s': %w", route_name, public_id, err)
+	}
+	return uri, nil
+}
+func reportURIPublic(r *router, report_type string, public_id string) (string, error) {
+	var route_name string
+	switch report_type {
+	case "compliance":
+		route_name = "publicreport.compliance.ByIDGetPublic"
+	case "nuisance":
+		route_name = "publicreport.nuisance.ByIDGetPublic"
+	case "water":
+		route_name = "publicreport.water.ByIDGetPublic"
 	default:
 		return "", fmt.Errorf("Unrecognized report type '%s'", report_type)
 	}

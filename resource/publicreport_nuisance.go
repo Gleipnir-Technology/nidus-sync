@@ -51,13 +51,16 @@ type nuisanceForm struct {
 	TODNight          bool           `schema:"tod-night"`
 }
 
-func (res *nuisanceR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
+func (res *nuisanceR) ByID(ctx context.Context, r *http.Request, u platform.User, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
+	return res.ByIDPublic(ctx, r, query)
+}
+func (res *nuisanceR) ByIDPublic(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportNuisance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
 		return nil, nhttp.NewBadRequest("You must provid an ID")
 	}
-	report, err := platform.PublicreportByIDNuisance(ctx, public_id)
+	report, err := platform.PublicReportByIDNuisance(ctx, public_id, true)
 	if err != nil {
 		return nil, nhttp.NewError("get report: %w", err)
 	}

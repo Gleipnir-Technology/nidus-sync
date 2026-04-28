@@ -56,19 +56,11 @@ type waterForm struct {
 	OwnerPhone             string                                           `schema:"owner-phone"`
 }
 
-func (res *waterR) ByID(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	public_id := vars["id"]
-	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provid an ID")
-	}
-	report, err := platform.PublicreportByIDWater(ctx, public_id)
-	if err != nil {
-		return nil, nhttp.NewError("get report: %w", err)
-	}
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router)
-	return report, nil
+func (res *waterR) ByID(ctx context.Context, r *http.Request, u platform.User, query QueryParams) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
+	return res.byID(ctx, r, false)
+}
+func (res *waterR) ByIDPublic(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
+	return res.byID(ctx, r, true)
 }
 
 func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*water, *nhttp.ErrorWithStatus) {
@@ -145,4 +137,18 @@ func (res *waterR) Create(ctx context.Context, r *http.Request, w waterForm) (*w
 		PublicID: report.PublicID,
 		URI:      uri,
 	}, nil
+}
+func (res *waterR) byID(ctx context.Context, r *http.Request, is_public bool) (*types.PublicReportWater, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	public_id := vars["id"]
+	if public_id == "" {
+		return nil, nhttp.NewBadRequest("You must provid an ID")
+	}
+	report, err := platform.PublicReportByIDWater(ctx, public_id, is_public)
+	if err != nil {
+		return nil, nhttp.NewError("get report: %w", err)
+	}
+	populateDistrictURI(&report.PublicReport, res.router)
+	populateReportURI(&report.PublicReport, res.router)
+	return report, nil
 }

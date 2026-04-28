@@ -15,7 +15,7 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-func logEntriesByReportID(ctx context.Context, report_ids []int32) (map[int32][]*types.LogEntry, error) {
+func logEntriesByReportID(ctx context.Context, report_ids []int32, is_public bool) (map[int32][]*types.LogEntry, error) {
 	results := make(map[int32][]*types.LogEntry, len(report_ids))
 	for _, report_id := range report_ids {
 		results[report_id] = make([]*types.LogEntry, 0)
@@ -49,19 +49,21 @@ func logEntriesByReportID(ctx context.Context, report_ids []int32) (map[int32][]
 	for _, row := range rows {
 		results[row.ReportID] = append(results[row.ReportID], &row)
 	}
-	logs_from_texts, err := logEntriesFromTexts(ctx, report_ids)
-	if err != nil {
-		return results, fmt.Errorf("log from texts: %w", err)
-	}
-	for report_id, logs := range logs_from_texts {
-		cur_logs, ok := results[report_id]
-		if !ok {
-			return results, fmt.Errorf("no text logs for %d", report_id)
+	if !is_public {
+		logs_from_texts, err := logEntriesFromTexts(ctx, report_ids)
+		if err != nil {
+			return results, fmt.Errorf("log from texts: %w", err)
 		}
-		for _, l := range logs {
-			cur_logs = append(cur_logs, l)
+		for report_id, logs := range logs_from_texts {
+			cur_logs, ok := results[report_id]
+			if !ok {
+				return results, fmt.Errorf("no text logs for %d", report_id)
+			}
+			for _, l := range logs {
+				cur_logs = append(cur_logs, l)
+			}
+			results[report_id] = cur_logs
 		}
-		results[report_id] = cur_logs
 	}
 	return results, nil
 }

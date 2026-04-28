@@ -146,7 +146,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
 import { computedAsync } from "@vueuse/core";
 import Header from "@/rmo/components/Header.vue";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";
@@ -154,7 +154,7 @@ import MapLocatorDisplay from "@/components/MapLocatorDisplay.vue";
 import ReportDetailNuisance from "@/rmo/components/ReportDetailNuisance.vue";
 import ReportDetailWater from "@/rmo/components/ReportDetailWater.vue";
 import { useStoreDistrict } from "@/rmo/store/district";
-import { useStorePublicReport } from "@/store/publicreport";
+import { useStorePublicReport } from "@/rmo/store/publicreport";
 import type { Marker } from "@/types";
 import {
 	type District,
@@ -200,27 +200,4 @@ const markers = computed((): Marker[] => {
 		},
 	];
 });
-
-// Lifecycle
-onMounted(() => {
-	// Load map scripts if needed
-	loadMapScripts();
-});
-
-const loadMapScripts = () => {
-	// Load MapLibre GL if not already loaded
-	if (!document.querySelector('script[src*="maplibre-gl"]')) {
-		const script1 = document.createElement("script");
-		script1.src = "//unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.js";
-		document.head.appendChild(script1);
-	}
-
-	// Load Mapbox GL if not already loaded
-	if (!document.querySelector('script[src*="mapbox-gl"]')) {
-		const script2 = document.createElement("script");
-		script2.src =
-			"https://api.mapbox.com/mapbox-gl-js/v3.17.0-beta.1/mapbox-gl.js";
-		document.head.appendChild(script2);
-	}
-};
 </script>
