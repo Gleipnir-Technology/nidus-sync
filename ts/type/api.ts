@@ -510,7 +510,7 @@ export class PublicReportWater extends PublicReport {
 export interface CommunicationDTO {
 	created: string;
 	id: string;
-	public_report?: PublicReportDTO;
+	public_report?: string;
 	type: string;
 }
 export class Communication {
@@ -518,16 +518,14 @@ export class Communication {
 		public created: Date,
 		public id: string,
 		public type: string,
-		public public_report?: PublicReport,
+		public public_report?: string,
 	) {}
 	static fromJSON(json: CommunicationDTO): Communication {
 		return new Communication(
 			new Date(json.created),
 			json.id,
 			json.type,
-			json.public_report == undefined
-				? undefined
-				: PublicReport.fromJSON(json.public_report),
+			json.public_report,
 		);
 	}
 }

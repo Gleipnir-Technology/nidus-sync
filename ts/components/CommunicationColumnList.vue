@@ -61,12 +61,14 @@
 			</div>
 
 			<div class="list-group list-group-flush">
-				<div v-if="loading || all == null" class="loading">Loading...</div>
+				<div class="loading list-group-item" v-if="loading || all == null">
+					Loading...
+				</div>
 				<div
 					v-else-if="all.length > 0"
 					v-for="comm in filteredCommunications"
 					:key="comm.id"
-					class="border rounded list-group-item report-card p-3"
+					class="list-group-item report-card p-3"
 					:class="{
 						active: selectedId && selectedId === comm.id,
 					}"
@@ -133,36 +135,6 @@ const filteredCommunications = computed((): Communication[] => {
 	if (props.all == null) {
 		return [];
 	}
-	return props.all.filter((c) => {
-		const matchesType =
-			typeFilter.value === "all" || c.type === typeFilter.value;
-		return matchesType && filterMatches(searchFilter.value, c);
-	});
+	return props.all;
 });
-// Methods
-function filterMatches(filter: string, comm: Communication) {
-	const pr = comm.public_report;
-	// When we have non-public-report communications fix this.
-	if (pr == null) {
-		return false;
-	}
-	return filterMatchesPublicReport(filter, pr);
-}
-function filterMatchesLogEntry(filter: string, logs: LogEntry[]) {
-	for (const le of logs) {
-		if (le.message.includes(filter)) {
-			return true;
-		}
-	}
-}
-function filterMatchesPublicReport(filter: string, pr: PublicReport) {
-	if (
-		pr.address.raw.includes(filter) ||
-		pr.public_id.includes(filter) ||
-		filterMatchesLogEntry(filter, pr.log)
-	) {
-		return true;
-	}
-	return false;
-}
 </script>

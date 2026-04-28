@@ -37,61 +37,49 @@
 	<div class="card shadow-sm mb-3">
 		<div class="card-header bg-white pane-header">Communication Workbench</div>
 		<div class="card-body">
-			<div
-				v-if="loading || session.self == null || session.organization == null"
-				class="loading"
-			>
-				Loading...
-			</div>
-			<div v-else>
-				<div class="map-container">
-					<Map
-						:bounds="mapBounds"
-						:markers="mapMarkers"
-						:organizationId="session.organization?.id"
-					>
-						<Layer
-							id="parcel"
-							:minzoom="14"
-							:paint="{ 'line-color': '#0f0' }"
-							source="tegola"
-							sourceLayer="parcel"
-							type="line"
-						/>
-						<Layer
-							id="service-area"
-							:paint="{ 'line-color': '#f00' }"
-							source="tegola"
-							sourceLayer="service-area-bounds"
-							type="line"
-						/>
-						<Source
-							id="tegola"
-							type="vector"
-							:tiles="[
-								session.urls?.tegola +
-									'maps/nidus/{z}/{x}/{y}?id=' +
-									session.organization?.id,
-							]"
-						/>
-					</Map>
-				</div>
-				<div
-					v-if="!selectedCommunication"
-					class="d-flex flex-column align-items-center justify-content-center text-muted"
-				>
-					<i class="bi bi-hand-index fs-1"></i>
-					<p class="mt-2">Select a report to view details</p>
-				</div>
-
-				<div v-if="selectedCommunication" class="h-100 d-flex flex-column">
-					<PublicReportCard
-						v-if="selectedCommunication?.public_report"
-						:report="selectedCommunication?.public_report"
-						@viewImage="openPhotoViewer"
+			<div class="map-container">
+				<Map :bounds="mapBounds" :markers="mapMarkers">
+					<Layer
+						id="parcel"
+						:minzoom="14"
+						:paint="{ 'line-color': '#0f0' }"
+						source="tegola"
+						sourceLayer="parcel"
+						type="line"
 					/>
-					<p v-else>No public report</p>
-				</div>
+					<Layer
+						id="service-area"
+						:paint="{ 'line-color': '#f00' }"
+						source="tegola"
+						sourceLayer="service-area-bounds"
+						type="line"
+					/>
+					<Source
+						id="tegola"
+						type="vector"
+						:tiles="[
+							session.urls?.tegola +
+								'maps/nidus/{z}/{x}/{y}?id=' +
+								session.organization?.id,
+						]"
+					/>
+				</Map>
+			</div>
+			<div
+				v-if="!selectedCommunication"
+				class="d-flex flex-column align-items-center justify-content-center text-muted"
+			>
+				<i class="bi bi-hand-index fs-1"></i>
+				<p class="mt-2">Select a report to view details</p>
+			</div>
+
+			<div class="h-100 d-flex flex-column" v-else>
+				<PublicReportCard
+					v-if="selectedReport"
+					:report="selectedReport"
+					@viewImage="openPhotoViewer"
+				/>
+				<p v-else>Loading details...</p>
 			</div>
 		</div>
 	</div>
@@ -99,14 +87,15 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+
+import PublicReportCard from "@/components/PublicReportCard.vue";
+import TimeRelative from "@/components/TimeRelative.vue";
 import Map, { LngLatBounds } from "@/map/Map.vue";
 import Layer from "@/map/Layer.vue";
 import Source from "@/map/Source.vue";
-import PublicReportCard from "@/components/PublicReportCard.vue";
-import TimeRelative from "@/components/TimeRelative.vue";
-import type { Marker } from "@/types";
-import type { Bounds, Communication, User } from "@/type/api";
 import { useSessionStore } from "@/store/session";
+import type { Marker } from "@/types";
+import type { Bounds, Communication, PublicReport, User } from "@/type/api";
 
 interface Emits {
 	(e: "viewImage", index: number): void;
@@ -116,6 +105,7 @@ interface Props {
 	mapBounds?: LngLatBounds;
 	mapMarkers: Marker[];
 	selectedCommunication: Communication | null;
+	selectedReport: PublicReport | undefined;
 }
 
 const emit = defineEmits<Emits>();

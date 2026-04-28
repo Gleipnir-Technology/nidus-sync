@@ -7,7 +7,44 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func AddRoutes(r *mux.Router) {
+func AddRoutesRMO(r *mux.Router) {
+	router := resource.NewRouter(r)
+
+	compliance_request := resource.ComplianceRequest(router)
+	district := resource.District(router)
+	geocode := resource.Geocode(router)
+	nuisance := resource.Nuisance(router)
+	pr_compliance := resource.PublicReportCompliance(router)
+	publicreport := resource.Publicreport(router)
+	publicreport_notification := resource.PublicreportNotification(router)
+	qrcode := resource.QRCode(router)
+	water := resource.Water(router)
+
+	r.HandleFunc("/compliance-request/image/pool/{public_id}", compliance_request.ImagePoolGet).Methods("GET").Name("compliance-request.image.pool.ByIDGet")
+	r.Handle("/district", handlerJSONSlice(district.List)).Methods("GET")
+	r.Handle("/district/{id}", handlerJSON(district.GetByID)).Methods("GET").Name("district.ByIDGet")
+	r.HandleFunc("/district/{slug}/logo", apiGetDistrictLogo).Methods("GET").Name("district.logo.BySlug")
+	r.Handle("/geocode/by-gid/{id:.*}", handlerJSON(geocode.ByGID)).Methods("GET")
+	r.Handle("/geocode/reverse", handlerJSONPost(geocode.Reverse)).Methods("POST")
+	r.Handle("/geocode/reverse/closest", handlerJSONPost(geocode.ReverseClosest)).Methods("POST")
+	r.Handle("/geocode/suggestion", handlerJSONSlice(geocode.SuggestionList)).Methods("GET")
+
+	r.Handle("/publicreport-notification", handlerJSONPost(publicreport_notification.Create)).Methods("POST")
+	r.Handle("/qr-code/mailer/{code}", handlerBasic(qrcode.Mailer)).Methods("GET")
+	r.Handle("/qr-code/marketing", handlerBasic(qrcode.Marketing)).Methods("GET")
+	r.Handle("/qr-code/report/{code}", handlerBasic(qrcode.Report)).Methods("GET")
+	r.HandleFunc("/rmo/compliance", handlerJSONPost(pr_compliance.Create)).Methods("POST")
+	r.HandleFunc("/rmo/nuisance", handlerFormPost(nuisance.Create)).Methods("POST")
+	r.Handle("/rmo/publicreport/{id}", handlerBasic(publicreport.ByIDPublic)).Methods("GET").Name("publicreport.ByIDGetPublic")
+	r.Handle("/rmo/publicreport/compliance/{id}/image", handlerFormPost(publicreport.ImageCreate)).Methods("POST")
+	r.Handle("/rmo/publicreport/compliance/{id}", handlerJSON(pr_compliance.ByIDPublic)).Methods("GET").Name("publicreport.compliance.ByIDGetPublic")
+	r.Handle("/rmo/publicreport/compliance/{id}", handlerJSONPut(pr_compliance.Update)).Methods("PUT")
+	r.Handle("/rmo/publicreport/nuisance/{id}", handlerJSON(nuisance.ByIDPublic)).Methods("GET").Name("publicreport.nuisance.ByIDGetPublic")
+	r.Handle("/rmo/publicreport/water/{id}", handlerJSON(water.ByIDPublic)).Methods("GET").Name("publicreport.water.ByIDGetPublic")
+	r.Handle("/rmo/publicreport/{id}", handlerBasic(publicreport.ByIDPublic)).Methods("GET").Name("publicreport.ByIDGetPublicPublic")
+	r.HandleFunc("/rmo/water", handlerFormPost(water.Create)).Methods("POST")
+}
+func AddRoutesSync(r *mux.Router) {
 	router := resource.NewRouter(r)
 
 	compliance_request := resource.ComplianceRequest(router)
@@ -39,16 +76,6 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/qr-code/mailer/{code}", handlerBasic(qrcode.Mailer)).Methods("GET")
 	r.Handle("/qr-code/marketing", handlerBasic(qrcode.Marketing)).Methods("GET")
 	r.Handle("/qr-code/report/{code}", handlerBasic(qrcode.Report)).Methods("GET")
-	r.HandleFunc("/rmo/compliance", handlerJSONPost(pr_compliance.Create)).Methods("POST")
-	r.HandleFunc("/rmo/nuisance", handlerFormPost(nuisance.Create)).Methods("POST")
-	r.Handle("/rmo/publicreport/{id}", handlerBasic(publicreport.ByIDPublic)).Methods("GET").Name("publicreport.ByIDGetPublic")
-	r.Handle("/rmo/publicreport/compliance/{id}/image", handlerFormPost(publicreport.ImageCreate)).Methods("POST")
-	r.Handle("/rmo/publicreport/compliance/{id}", handlerJSON(pr_compliance.ByIDPublic)).Methods("GET").Name("publicreport.compliance.ByIDGetPublic")
-	r.Handle("/rmo/publicreport/compliance/{id}", handlerJSONPut(pr_compliance.Update)).Methods("PUT")
-	r.Handle("/rmo/publicreport/nuisance/{id}", handlerJSON(nuisance.ByIDPublic)).Methods("GET").Name("publicreport.nuisance.ByIDGetPublic")
-	r.Handle("/rmo/publicreport/water/{id}", handlerJSON(water.ByIDPublic)).Methods("GET").Name("publicreport.water.ByIDGetPublic")
-	r.Handle("/rmo/publicreport/{id}", handlerBasic(publicreport.ByIDPublic)).Methods("GET").Name("publicreport.ByIDGetPublicPublic")
-	r.HandleFunc("/rmo/water", handlerFormPost(water.Create)).Methods("POST")
 	r.HandleFunc("/signin", handlerJSONPost(postSignin))
 	r.Handle("/signout", authenticatedHandlerBasic(postSignout))
 	r.HandleFunc("/signup", handlerJSONPost(postSignup))

@@ -122,16 +122,15 @@ func main() {
 	r.Use(sentryMiddleware.Handle)
 	r.Use(auth.NewSessionManager().LoadAndSave)
 
-	sync_router := r.Host(config.DomainNidus).Subrouter()
-	rmo_router := r.Host(config.DomainRMO).Subrouter()
-
 	// Set up routing by hostname
+	sync_router := r.Host(config.DomainNidus).Subrouter()
 	sync_api_router := sync_router.PathPrefix("/api").Subrouter()
-	api.AddRoutes(sync_api_router)
+	api.AddRoutesSync(sync_api_router)
 	nidussync.Router(sync_router)
 
+	rmo_router := r.Host(config.DomainRMO).Subrouter()
 	rmo_api_router := rmo_router.PathPrefix("/api").Subrouter()
-	api.AddRoutes(rmo_api_router)
+	api.AddRoutesRMO(rmo_api_router)
 	rmo.Router(rmo_router)
 
 	//hr.Map("", sr)                         // default

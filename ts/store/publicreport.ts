@@ -63,6 +63,8 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		} catch (err) {
 			console.error("Error loading users:", err);
 			throw err;
+		} finally {
+			loading.value = false;
 		}
 	}
 	async function update(
@@ -81,5 +83,7 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		fetchByID,
 		fetchByURI,
 		update,
+		// State
+		loading,
 	};
 });

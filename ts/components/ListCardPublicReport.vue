@@ -1,33 +1,17 @@
 <template>
 	<!-- First row: icon, type badge, and time -->
 	<div class="d-flex justify-content-between align-items-center mb-2">
-		<div class="d-flex align-items-center">
-			<i class="bi fs-4 me-2" :class="iconForType()"></i>
-			<span class="badge" :class="colorForType()">
-				{{ titleForType() }}
-			</span>
+		<div class="row">
+			<div class="d-flex align-items-center">
+				<i class="bi fs-4 me-2" :class="iconForType()"></i>
+				<span class="badge" :class="colorForType()">
+					{{ titleForType() }}
+				</span>
+			</div>
 		</div>
-		<small>
-			<TimeRelative :time="comm.created" />
-		</small>
-	</div>
-
-	<!-- Details section: full width -->
-	<div>
-		<div>
-			<i class="bi bi-geo-alt text-muted"></i>
-			<span class="fw-medium">{{
-				comm.public_report?.address.postal_code
-			}}</span>
-		</div>
-		<small>{{ formatAddress(comm.public_report?.address) }}</small>
-		<div
-			v-if="comm.public_report?.images && comm.public_report?.images.length > 0"
-			class="mt-1"
-		>
-			<small class="text-muted">
-				<i class="bi bi-camera"></i>
-				{{ comm.public_report.images.length }} photo(s)
+		<div class="row">
+			<small>
+				<TimeRelative :time="comm.created" />
 			</small>
 		</div>
 	</div>

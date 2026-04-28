@@ -28,6 +28,7 @@ import {
 	watch,
 } from "vue";
 
+import { boundsDefault } from "@/map/util";
 import type { MapClickEvent, Marker } from "@/types";
 import type { Location } from "@/type/api";
 
@@ -46,6 +47,7 @@ interface Props {
 
 const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {
+	bounds: boundsDefault,
 	cursor: "",
 	markers: () => [],
 });
@@ -145,7 +147,7 @@ provide("unregisterLayer", (id: string) => {
 function initializeMap() {
 	if (!mapDiv.value) return;
 
-	console.log("initializing map...");
+	console.log("initializing map...", props.bounds, props.center, props.zoom);
 	const _map = new maplibregl.Map({
 		bounds: props.bounds,
 		container: mapDiv.value,

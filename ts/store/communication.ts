@@ -1,8 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { Communication, CommunicationDTO } from "@/type/api";
+
+import { apiClient } from "@/client";
 import { SSEManager, SSEMessage } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
+import { Communication, CommunicationDTO } from "@/type/api";
 
 export const useCommunicationStore = defineStore("communication", () => {
 	// State
@@ -30,14 +32,9 @@ export const useCommunicationStore = defineStore("communication", () => {
 			params.append("sort", "-created");
 			//if (typeFilter.value) params.append("type", typeFilter.value);
 
-			const response = await fetch(
-				`${session.urls.api.communication}?${params}`,
-			);
+			const url = `${session.urls.api.communication}?${params}`;
+			const data = await apiClient.JSONGet(url);
 
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
 			all.value = data.communications.map((c: CommunicationDTO) =>
 				Communication.fromJSON(c),
 			);
@@ -45,11 +42,14 @@ export const useCommunicationStore = defineStore("communication", () => {
 		} catch (err) {
 			console.error("Error loading communications:", err);
 			throw err;
+		} finally {
+			loading.value = false;
 		}
 	}
 	return {
 		// State
 		all,
+		loading,
 		// Actions
 		fetchAll,
 	};

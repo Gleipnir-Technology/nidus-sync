@@ -9,7 +9,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/google/uuid"
 	//"github.com/gorilla/mux"
 	//"github.com/rs/zerolog/log"
@@ -26,10 +25,10 @@ func Communication(r *router) *communicationR {
 }
 
 type communication struct {
-	Created      time.Time          `json:"created"`
-	ID           string             `json:"id"`
-	PublicReport types.PublicReport `json:"public_report"`
-	Type         string             `json:"type"`
+	Created      time.Time `json:"created"`
+	ID           string    `json:"id"`
+	PublicReport string    `json:"public_report"`
+	Type         string    `json:"type"`
 }
 type communicationList struct {
 	Communications []communication `json:"communications"`
@@ -58,7 +57,7 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 		comms[i] = communication{
 			Created:      report.Created,
 			ID:           report.PublicID,
-			PublicReport: *report,
+			PublicReport: report.URI,
 			Type:         "publicreport." + string(report.Type),
 		}
 	}

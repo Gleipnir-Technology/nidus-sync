@@ -14,29 +14,31 @@
 		</template>
 		<template #left>
 			<CommunicationColumnList
-				:all="communication.all"
+				:all="storeCommunication.all"
 				@deselect="handleDeselect"
-				:loading="loading"
+				:loading="storeCommunication.loading"
 				:selected-id="selectedId"
 				@select="handleSelect"
 			/>
 		</template>
 		<template #center>
 			<CommunicationColumnDetail
-				:loading="loading"
+				:loading="storePublicReport.loading || storeCommunication.loading"
 				:mapBounds="mapBounds || undefined"
 				:mapMarkers="mapMarkers"
 				:selectedCommunication="selectedCommunication"
+				:selectedReport="selectedReport"
 				@viewImage="openImageViewer"
 			/>
 		</template>
 		<template #right>
 			<CommunicationColumnAction
-				:loading="loading"
+				:loading="storePublicReport.loading || storeCommunication.loading"
 				@markInvalid="markInvalid"
 				@markSignal="markSignal"
 				@sendMessage="sendMessage"
 				:selectedCommunication="selectedCommunication"
+				:selectedReport="selectedReport"
 			/>
 		</template>
 	</ThreeColumn>
@@ -57,6 +59,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { computedAsync } from "@vueuse/core";
 import maplibregl from "maplibre-gl";
 
 import CommunicationColumnAction from "@/components/CommunicationColumnAction.vue";
@@ -69,50 +72,59 @@ import { SSEManager } from "@/SSEManager";
 import { useCommunicationStore } from "@/store/communication";
 import { useSessionStore } from "@/store/session";
 import type { Marker } from "@/types";
-import type { Communication } from "@/type/api";
-import { Bounds } from "@/type/api";
+import { Bounds, type Communication, PublicReport } from "@/type/api";
 import type { LngLatBounds } from "@/map/Map.vue";
 import { boundsWithPadding } from "@/map/util";
+import { useStorePublicReport } from "@/store/publicreport";
 
-const communication = useCommunicationStore();
 const session = useSessionStore();
-onMounted(() => {
-	fetchCommunications();
-});
 
 // Refs
 const currentImageIndex = ref<number>(0);
-const error = ref<string | null>(null);
-const loading = ref<boolean>(true);
 const mapBounds = ref<LngLatBounds | null>(null);
 const mapMarkers = ref<Marker[]>([]);
 const selectedId = ref<string | null>(null);
 const showImageModal = ref(false);
+const storeCommunication = useCommunicationStore();
+const storePublicReport = useStorePublicReport();
 const toastMessage = ref("");
 const toastShow = ref(false);
 const toastTitle = ref("");
 
 const currentImage = computed(() => {
 	const comm = selectedCommunication.value;
-	return comm?.public_report?.images[currentImageIndex.value] ?? null;
+	return selectedReport.value?.images[currentImageIndex.value] ?? null;
 });
 const currentImages = computed(() => {
 	const comm = selectedCommunication.value;
 	if (comm == null || comm.public_report == null) {
 		return [];
 	}
-	return comm.public_report.images ?? [];
+	return selectedReport.value?.images ?? [];
 });
 const selectedCommunication = computed<Communication | null>(
 	(): Communication | null => {
 		if (selectedId.value == null) {
 			return null;
 		}
-		if (communication.all == null) {
+		if (storeCommunication.all == null) {
 			return null;
 		}
-		const result = communication.all.find((c) => c.id == selectedId.value);
+		const result = storeCommunication.all.find((c) => c.id == selectedId.value);
 		return result || null;
+	},
+);
+const selectedReport = computedAsync(
+	async (): Promise<PublicReport | undefined> => {
+		if (
+			!(
+				selectedCommunication.value && selectedCommunication.value.public_report
+			)
+		)
+			return;
+		return await storePublicReport.fetchByURI(
+			selectedCommunication.value.public_report,
+		);
 	},
 );
 const handleDeselect = (id: string) => {
@@ -123,9 +135,6 @@ const handleSelect = (id: string) => {
 	selectedId.value = id;
 	updateMap();
 };
-async function fetchCommunications() {
-	await communication.fetchAll();
-}
 function imageNext() {
 	currentImageIndex.value = Math.min(
 		currentImages.value.length - 1,
@@ -134,18 +143,6 @@ function imageNext() {
 }
 function imagePrevious() {
 	currentImageIndex.value = Math.max(0, currentImageIndex.value - 1);
-}
-async function loadFromAPI() {
-	loading.value = true;
-	error.value = null;
-	try {
-		await Promise.all([fetchCommunications()]);
-	} catch (err) {
-		error.value = err instanceof Error ? err.message : "fetch error";
-		console.error("Error loading data:", err);
-	} finally {
-		loading.value = false;
-	}
 }
 
 function openImageViewer(index: number) {
@@ -174,7 +171,7 @@ async function markInvalid() {
 		`Report #${selectedCommunication.value.id} has been marked as invalid`,
 	);
 	removeCurrentFromList();
-	await fetchCommunications();
+	await storeCommunication.fetchAll();
 }
 
 async function markSignal() {
@@ -202,24 +199,25 @@ async function markSignal() {
 			"Report Marked Signal",
 			`Report #${report_id} has been marked as useful signal`,
 		);
-		await fetchCommunications();
+		await storeCommunication.fetchAll();
 	} catch (err) {
-		error.value = err instanceof Error ? err.message : "fetch error";
 		console.error("Error creating lead:", err);
 	}
 }
 
 function removeCurrentFromList() {
-	if (communication.all == null) {
+	if (storeCommunication.all == null) {
 		return;
 	}
-	const index = communication.all.findIndex((c) => c.id === selectedId.value);
+	const index = storeCommunication.all.findIndex(
+		(c) => c.id === selectedId.value,
+	);
 	if (index > -1) {
-		communication.all.splice(index, 1);
+		storeCommunication.all.splice(index, 1);
 	}
-	if (communication.all.length > 0) {
-		const nextIndex = Math.min(index, communication.all.length - 1);
-		selectedId.value = communication.all[nextIndex].id;
+	if (storeCommunication.all.length > 0) {
+		const nextIndex = Math.min(index, storeCommunication.all.length - 1);
+		selectedId.value = storeCommunication.all[nextIndex].id;
 	} else {
 		selectedId.value = null;
 	}
@@ -227,6 +225,7 @@ function removeCurrentFromList() {
 async function sendMessage(message: string) {
 	if (!message.trim()) return;
 	if (selectedCommunication.value == null) return;
+	if (selectedReport.value == null) return;
 	if (session.urls == null) return;
 	console.log("Sending message reporter:", message);
 
@@ -248,7 +247,7 @@ async function sendMessage(message: string) {
 
 	showNotification(
 		"Message Sent",
-		`Message successfully sent to ${selectedCommunication.value.public_report?.reporter.name}`,
+		`Message successfully sent to ${selectedReport.value.reporter.name}`,
 	);
 }
 function showNotification(title: string, message: string) {
@@ -263,7 +262,7 @@ function showNotification(title: string, message: string) {
 
 function updateMap() {
 	let bounds = new Bounds();
-	const loc = selectedCommunication.value?.public_report?.location;
+	const loc = selectedReport.value?.location;
 	console.log("updating for loc", loc);
 	let markers: Marker[] = [];
 	if (loc && loc.latitude != 0 && loc.longitude != 0) {
@@ -275,8 +274,7 @@ function updateMap() {
 			location: loc,
 		});
 	}
-	const address_loc =
-		selectedCommunication.value?.public_report?.address.location;
+	const address_loc = selectedReport.value?.address.location;
 	if (address_loc && address_loc.latitude != 0 && address_loc.longitude != 0) {
 		bounds.addLocation(address_loc);
 		markers.push({
@@ -287,9 +285,7 @@ function updateMap() {
 		});
 	}
 
-	for (const [i, image] of (
-		selectedCommunication.value?.public_report?.images ?? []
-	).entries()) {
+	for (const [i, image] of (selectedReport.value?.images ?? []).entries()) {
 		if (
 			image.location != null &&
 			image.location.latitude != 0 &&
@@ -309,25 +305,6 @@ function updateMap() {
 }
 // Lifecycle hooks
 onMounted(async () => {
-	await loadFromAPI();
-
-	// Setup map layer after next tick to ensure map is mounted
-	/*
-	if (mapRef.value) {
-		const mapEl = mapRef.value.$el || mapRef.value;
-		mapEl.addEventListener("load", () => {
-			mapEl.addLayer({
-				id: "parcel",
-				minzoom: 14,
-				paint: {
-					"line-color": "#0f0",
-				},
-				source: "tegola",
-				"source-layer": "parcel",
-				type: "line",
-			});
-		});
-	}
-	*/
+	await storeCommunication.fetchAll();
 });
 </script>
