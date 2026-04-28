@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div class="text-muted">
-			<i class="bi" :class="typeToIcon()" />{{ typeToTitle() }}
+			<i class="bi" :class="typeToIcon()" /> {{ typeToTitle() }}
 		</div>
 		<div>{{ entry.message }}</div>
 		<small class="text-muted">{{ formatDate(entry.created) }}</small>
@@ -22,7 +22,7 @@ function typeToIcon(): string {
 	if (props.entry.type == "message-text-incoming") {
 		return "bi-box-arrow-in-left";
 	} else if (props.entry.type == "message-text-outgoing") {
-		return "bi-box-arrow-out-right";
+		return "bi-box-arrow-right";
 	} else if (props.entry.type == "created") {
 		return "bi-stars";
 	} else {
