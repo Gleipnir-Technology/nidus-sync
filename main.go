@@ -22,6 +22,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
 	"github.com/Gleipnir-Technology/nidus-sync/version"
+	"github.com/coreos/go-systemd/activation"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/getsentry/sentry-go/zerolog"
@@ -145,13 +146,18 @@ func main() {
 		log.Error().Err(err).Msg("Failed to start openAI client")
 		os.Exit(8)
 	}
+	listeners, _ := activation.Listeners()
+	if len(listeners) != 1 {
+		log.Error().Int("len", len(listeners)).Msg("Unexpected number of socket activation FDs")
+		os.Exit(1)
+	}
 	server := &http.Server{
 		Addr:    config.Bind,
 		Handler: r,
 	}
 	go func() {
 		log.Info().Str("address", config.Bind).Msg("Serving HTTP requests")
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(listeners[0]); err != nil && err != http.ErrServerClosed {
 			log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
 		}
 		log.Debug().Msg("Exiting listen-and-serve goroutine")
