@@ -174,7 +174,7 @@ func main() {
 	defer shutdownCancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Error().Err(err).Msg("Error on HTTP server shutdown")
+		log.Warn().Err(err).Msg("Error on HTTP server shutdown")
 	}
 
 	cancel()
