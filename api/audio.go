@@ -75,6 +75,11 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, user platform.U
 		models.SelectWhere.NoteAudios.UUID.EQ(u),
 		models.SelectWhere.NoteAudios.OrganizationID.EQ(user.Organization.ID),
 	).One(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		log.Printf("Failed to get note audio %s for org %d: %w", u_str, user.Organization.ID, err)
+		http.Error(w, "failed to update database", http.StatusBadRequest)
+	}
+
 	background.NewAudioTranscode(ctx, db.PGInstance.BobDB, a.ID)
 	w.WriteHeader(http.StatusOK)
 }
