@@ -170,11 +170,11 @@ func main() {
 	os.Stderr.Sync()
 
 	platform.EventShutdown()
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Warn().Err(err).Msg("Error on HTTP server shutdown")
+		log.Error().Err(err).Msg("Server didn't shutdown cleanly")
 	}
 
 	cancel()
