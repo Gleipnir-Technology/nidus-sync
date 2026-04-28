@@ -629,7 +629,7 @@ func logPermissions(ctx context.Context, fssync *fieldseeker.FieldSeeker) {
 			log.Info().Msg("This oauth token is not allowed to query for admin info")
 			return
 		}
-		log.Error().Err(err).Msg("Failed to get admin info during log permissions")
+		log.Warn().Err(err).Msg("Failed to get admin info during log permissions")
 		return
 	}
 	permissions, err := fssync.PermissionList(ctx)
