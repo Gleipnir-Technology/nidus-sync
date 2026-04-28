@@ -9,9 +9,6 @@
 		<!-- Bootstrap Icons -->
 		<link rel="icon" href="/static/ico/favicon-sync.ico" type="image/x-icon" />
 		{{ block "extraheader" . }}{{ end }}
-		{{ if not .Config.IsProductionEnvironment }}
-			<script src="/.flogo/injector.js"></script>
-		{{ end }}
 	</head>
 	<body>
 		{{ template "content" . }}

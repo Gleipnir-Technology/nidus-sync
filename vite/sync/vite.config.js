@@ -85,6 +85,10 @@ export default defineConfig({
 				target: "http://127.0.0.1:9003",
 				changeOrigin: false,
 			},
+			"/privacy": {
+				target: "http://127.0.0.1:9003",
+				changeOrigin: false,
+			},
 		},
 		strictPort: true,
 	},
