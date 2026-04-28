@@ -166,6 +166,10 @@ func listenAndDoOneJob(ctx context.Context) error {
 		notification, err := conn.Conn().WaitForNotification(ctx)
 		if err != nil {
 			//if !pgconn.Timeout(err) {
+			if err2 := ctx.Err(); err2 != nil {
+				log.Info().Err(err2).Msg("DB notification context err")
+				return nil
+			}
 			return fmt.Errorf("failed while waiting for notification of new job: %w", err)
 		}
 
