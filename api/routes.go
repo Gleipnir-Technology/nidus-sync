@@ -46,7 +46,7 @@ func AddRoutes(r *mux.Router) {
 	r.Handle("/rmo/publicreport/compliance/{id}", handlerJSON(pr_compliance.ByIDPublic)).Methods("GET").Name("publicreport.compliance.ByIDGetPublic")
 	r.Handle("/rmo/publicreport/compliance/{id}", handlerJSONPut(pr_compliance.Update)).Methods("PUT")
 	r.Handle("/rmo/publicreport/nuisance/{id}", handlerJSON(nuisance.ByIDPublic)).Methods("GET").Name("publicreport.nuisance.ByIDGetPublic")
-	r.Handle("/rmo/publicreport/water/{id}", handlerJSON(water.ByIDPublic)).Methods("GET").Name("publicreport.water.ByIDGet")
+	r.Handle("/rmo/publicreport/water/{id}", handlerJSON(water.ByIDPublic)).Methods("GET").Name("publicreport.water.ByIDGetPublic")
 	r.Handle("/rmo/publicreport/{id}", handlerBasic(publicreport.ByIDPublic)).Methods("GET").Name("publicreport.ByIDGetPublicPublic")
 	r.HandleFunc("/rmo/water", handlerFormPost(water.Create)).Methods("POST")
 	r.HandleFunc("/signin", handlerJSONPost(postSignin))
