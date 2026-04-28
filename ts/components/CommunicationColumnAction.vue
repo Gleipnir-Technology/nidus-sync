@@ -112,20 +112,7 @@
 									:key="index"
 									class="border-start border-2 ps-2 mb-2"
 								>
-									<div v-if="entry.type === 'created'">
-										<div class="text-muted">Initial Report</div>
-										<small class="text-muted">{{
-											formatDate(entry.created)
-										}}</small>
-									</div>
-									<div v-else-if="entry.type === 'message-text'">
-										<div class="text-muted">Text Message</div>
-										<div>{{ entry.message }}</div>
-										<small class="text-muted">{{
-											formatDate(entry.created)
-										}}</small>
-									</div>
-									<div v-else>{{ entry.type }}</div>
+									<ListCardActivityLog :entry="entry" />
 								</div>
 								<div
 									v-if="
@@ -148,6 +135,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { Communication, User } from "@/type/api";
+import ListCardActivityLog from "@/components/ListCardActivityLog.vue";
 interface Emits {
 	(e: "markSignal"): void;
 	(e: "markInvalid"): void;
@@ -172,9 +160,6 @@ function applyMessageTemplate(template: string) {
 	if (template in templates) {
 		messageText.value = templates[template as keyof typeof templates];
 	}
-}
-function formatDate(date: Date) {
-	return date.toLocaleString();
 }
 function handleTemplateChange(event: Event) {
 	const target = event.target as HTMLSelectElement;

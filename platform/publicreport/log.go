@@ -8,6 +8,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/rs/zerolog/log"
@@ -157,12 +158,16 @@ func logEntriesFromTexts(ctx context.Context, report_ids []int32) (map[int32][]*
 		} else {
 			user_id_ptr = &user_id
 		}
+		type_ := "message-text-outgoing"
+		if row.Origin == enums.CommsTextoriginCustomer {
+			type_ = "message-text-incoming"
+		}
 		logs = append(logs, &types.LogEntry{
 			Created:  row.Created,
 			ID:       row.ID,
 			Message:  row.Content,
 			ReportID: report_id,
-			Type:     "text-message",
+			Type:     type_,
 			UserID:   user_id_ptr,
 		})
 		results[report_id] = logs
