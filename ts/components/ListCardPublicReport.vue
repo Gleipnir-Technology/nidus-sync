@@ -1,12 +1,16 @@
 <template>
 	<!-- First row: icon, type badge, and time -->
-	<div class="d-flex justify-content-between align-items-center mb-2">
+	<div class="justify-content-between align-items-center">
 		<div class="row">
 			<div class="d-flex align-items-center">
-				<i class="bi fs-4 me-2" :class="iconForType()"></i>
-				<span class="badge" :class="colorForType()">
-					{{ titleForType() }}
-				</span>
+				<div class="col">
+					<i class="bi fs-4 me-2" :class="iconForType()"></i>
+				</div>
+				<div class="col-6 text-end">
+					<span class="badge" :class="colorForType()">
+						{{ titleForType() }}
+					</span>
+				</div>
 			</div>
 		</div>
 		<div class="row">
