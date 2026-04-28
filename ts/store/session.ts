@@ -1,7 +1,7 @@
 import * as axios from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { SSEManager, type SSEMessage } from "@/SSEManager";
+import { SSEManager, type SSEMessageResource } from "@/SSEManager";
 import {
 	Organization,
 	Session,
@@ -38,7 +38,7 @@ export const useSessionStore = defineStore("session", () => {
 	const urls = ref<URLs | null>(null);
 
 	// Subscription
-	SSEManager.subscribe((msg: SSEMessage) => {
+	SSEManager.subscribe((msg: SSEMessageResource) => {
 		if (msg.type == "sync:session") {
 			fetchSession();
 		}

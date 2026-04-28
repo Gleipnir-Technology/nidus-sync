@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 import { apiClient } from "@/client";
-import { SSEManager, SSEMessage } from "@/SSEManager";
+import { SSEManager, SSEMessageResource } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
 import { Communication, CommunicationDTO } from "@/type/api";
 
@@ -13,7 +13,7 @@ export const useCommunicationStore = defineStore("communication", () => {
 	const error = ref(null);
 
 	// Subscription
-	SSEManager.subscribe((msg: SSEMessage) => {
+	SSEManager.subscribe((msg: SSEMessageResource) => {
 		if (msg.resource.startsWith("rmo:")) {
 			fetchAll();
 		}

@@ -8,7 +8,7 @@ import { onMounted } from "vue";
 import { apiClient } from "@/client";
 import router from "@/route/config";
 
-import { SSEManager, type SSEMessage } from "@/SSEManager";
+import { SSEManager, type SSEMessageResource } from "@/SSEManager";
 
 async function sentryInit() {
 	const config = await apiClient.JSONGet("/api");
@@ -23,7 +23,7 @@ async function sentryInit() {
 }
 onMounted(() => {
 	SSEManager.connect("/api/events");
-	SSEManager.subscribe((msg: SSEMessage) => {
+	SSEManager.subscribe((msg: SSEMessageResource) => {
 		if (msg.type != "heartbeat") {
 			console.log("SSE", msg);
 		}

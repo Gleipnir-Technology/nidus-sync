@@ -33,6 +33,7 @@ type Status struct {
 	IsModified bool      `json:"is_modified"`
 	Revision   string    `json:"revision"`
 	Status     string    `json:"status"`
+	Type       string    `json:"type"`
 }
 
 func (c *ConnectionSSE) SendEvent(w http.ResponseWriter, m platform.Event) error {
@@ -113,6 +114,7 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 		IsModified: v.IsModified,
 		Revision:   v.Revision,
 		Status:     "connected",
+		Type:       "status",
 	}
 	body, err := json.Marshal(status)
 	if err != nil {
@@ -121,7 +123,7 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 		return
 	}
 
-	w.Write(body)
+	fmt.Fprintf(w, "data: %s\n\n", body)
 	w.(http.Flusher).Flush()
 
 	// Keep the connection open with a ticker sending periodic events

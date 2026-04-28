@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { Signal } from "@/type/api";
-import { SSEManager, type SSEMessage } from "@/SSEManager";
+import { SSEManager, type SSEMessageResource } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
 
 export const useSignalStore = defineStore("signal", () => {
@@ -11,7 +11,7 @@ export const useSignalStore = defineStore("signal", () => {
 	const error = ref(null);
 
 	// Subscription
-	SSEManager.subscribe((msg: SSEMessage) => {
+	SSEManager.subscribe((msg: SSEMessageResource) => {
 		if (msg.resource.startsWith("sync:signal")) {
 			fetchAll();
 		}

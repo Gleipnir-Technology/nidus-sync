@@ -1,17 +1,27 @@
 // Define types for the SSE data structure
-export interface SSEMessage {
+export interface SSEMessageBase {
+	type: string;
+}
+export interface SSEMessageResource extends SSEMessageBase {
 	resource: string;
 	time: string;
-	type: string;
 	uri: string;
 }
 
-type SSEHandler = (data: SSEMessage) => void;
+export interface SSEMessageStatus extends SSEMessageBase {
+	build_time: Date;
+	is_modified: boolean;
+	revision: string;
+	status: string;
+}
+type SSEHandlerResource = (data: SSEMessageResource) => void;
+type SSEHandlerStatus = (data: SSEMessageStatus) => void;
 
 interface SSEManagerType {
 	connect: (url: string) => Promise<EventSource>;
 	disconnect: () => void;
-	subscribe: (handler: SSEHandler) => string;
+	subscribe: (handler: SSEHandlerResource) => string;
+	subscribeStatus: (handler: SSEHandlerStatus) => string;
 	unsubscribe: (uuid: string) => void;
 	ready: (callback: (eventSource: EventSource) => void) => void;
 }
@@ -26,7 +36,8 @@ declare global {
 
 export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 	let eventSource: EventSource | null = null;
-	let subscribers: Map<string, SSEHandler> = new Map();
+	let subscribersResource: Map<string, SSEHandlerResource> = new Map();
+	let subscribersStatus: Map<string, SSEHandlerStatus> = new Map();
 	let isConnected: boolean = false;
 	let connectionPromise: Promise<EventSource> | null = null;
 
@@ -42,7 +53,7 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 				isConnected = true;
 
 				eventSource!.addEventListener("message", (message: MessageEvent) => {
-					const data: SSEMessage = JSON.parse(message.data);
+					const data: SSEMessageBase = JSON.parse(message.data);
 					handleMessage(data);
 				});
 
@@ -85,13 +96,18 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 		}
 	}
 
-	function handleMessage(msg: SSEMessage) {
+	function handleMessage(msg: SSEMessageBase) {
 		if (msg.type == "heartbeat") {
 			return;
+		} else if (msg.type == "status") {
+			subscribersStatus.forEach((handler: SSEHandlerStatus, _: string) => {
+				handler(msg as SSEMessageStatus);
+			});
+		} else {
+			subscribersResource.forEach((handler: SSEHandlerResource, _: string) => {
+				handler(msg as SSEMessageResource);
+			});
 		}
-		subscribers.forEach((handler: SSEHandler, _: string) => {
-			handler(msg);
-		});
 	}
 
 	function ready(callback: (eventSource: EventSource) => void): void {
@@ -108,15 +124,24 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 		}
 	}
 
-	function subscribe(handler: SSEHandler): string {
+	function subscribe(handler: SSEHandlerResource): string {
 		const uuid = crypto.randomUUID();
-		subscribers.set(uuid.toString(), handler);
+		subscribersResource.set(uuid.toString(), handler);
+		return uuid;
+	}
+
+	function subscribeStatus(handler: SSEHandlerStatus): string {
+		const uuid = crypto.randomUUID();
+		subscribersStatus.set(uuid.toString(), handler);
 		return uuid;
 	}
 
 	function unsubscribe(uuid: string): void {
-		if (subscribers.has(uuid)) {
-			subscribers.delete(uuid);
+		if (subscribersResource.has(uuid)) {
+			subscribersResource.delete(uuid);
+		}
+		if (subscribersStatus.has(uuid)) {
+			subscribersStatus.delete(uuid);
 		}
 	}
 
@@ -124,6 +149,7 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 		connect,
 		disconnect,
 		subscribe,
+		subscribeStatus,
 		unsubscribe,
 		ready,
 	};

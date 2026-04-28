@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { Upload } from "@/type/api";
-import { SSEManager, type SSEMessage } from "@/SSEManager";
+import { SSEManager, type SSEMessageResource } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
 
 export const useUploadStore = defineStore("upload", () => {
@@ -12,7 +12,7 @@ export const useUploadStore = defineStore("upload", () => {
 	const error = ref(null);
 
 	// Subscription
-	SSEManager.subscribe((msg: SSEMessage) => {
+	SSEManager.subscribe((msg: SSEMessageResource) => {
 		if (msg.resource.startsWith("sync:upload")) {
 			fetchAll();
 		}

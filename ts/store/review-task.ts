@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { SSEManager, SSEMessage } from "@/SSEManager";
+import { SSEManager, SSEMessageResource } from "@/SSEManager";
 import { ReviewTask, ReviewTaskListResponse } from "@/type/api";
 import { useSessionStore } from "@/store/session";
 
@@ -11,7 +11,7 @@ export const useStoreReviewTask = defineStore("review-task", () => {
 	const error = ref<string | null>(null);
 
 	// Subscription
-	SSEManager.subscribe((msg: SSEMessage) => {
+	SSEManager.subscribe((msg: SSEMessageResource) => {
 		if (msg.resource.startsWith("sync:review-task")) {
 			fetchAll();
 		}

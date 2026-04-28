@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { ServiceRequest } from "@/type/api";
-import { SSEManager, SSEMessage } from "@/SSEManager";
+import { SSEManager, SSEMessageResource } from "@/SSEManager";
 import { useSessionStore } from "@/store/session";
 
 export const useStoreServiceRequest = defineStore("service-request", () => {
@@ -11,7 +11,7 @@ export const useStoreServiceRequest = defineStore("service-request", () => {
 	const error = ref(null);
 
 	// Subscription
-	SSEManager.subscribe((msg: SSEMessage) => {
+	SSEManager.subscribe((msg: SSEMessageResource) => {
 		if (msg.resource.startsWith("sync:service-request")) {
 			fetchAll();
 		}
