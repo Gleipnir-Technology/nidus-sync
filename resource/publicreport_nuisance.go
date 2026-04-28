@@ -147,7 +147,7 @@ func (res *nuisanceR) byID(ctx context.Context, r *http.Request, is_public bool)
 	if public_id == "" {
 		return nil, nhttp.NewBadRequest("You must provid an ID")
 	}
-	report, err := platform.PublicReportByIDNuisance(ctx, public_id, true)
+	report, err := platform.PublicReportByIDNuisance(ctx, public_id, is_public)
 	if err != nil {
 		return nil, nhttp.NewError("get report: %w", err)
 	}
