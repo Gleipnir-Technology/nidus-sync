@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/resource"
+	"github.com/Gleipnir-Technology/nidus-sync/version"
 	//"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -273,10 +274,10 @@ func parseTime(x string) (*time.Time, error) {
 }
 
 type about struct {
-	Environment string     `json:"environment"`
-	SentryDSN   string     `json:"sentry_dsn"`
-	Tegola      tegolaURLs `json:"tegola"`
-	Version     string     `json:"version"`
+	Environment string              `json:"environment"`
+	SentryDSN   string              `json:"sentry_dsn"`
+	Tegola      tegolaURLs          `json:"tegola"`
+	Version     version.VersionInfo `json:"version"`
 }
 type tegolaURLs struct {
 	Nidus string `json:"nidus"`
@@ -284,6 +285,7 @@ type tegolaURLs struct {
 }
 
 func getRoot(ctx context.Context, r *http.Request, q resource.QueryParams) (*about, *nhttp.ErrorWithStatus) {
+	v := version.Get()
 	return &about{
 		Environment: config.Environment,
 		SentryDSN:   config.SentryDSNFrontend,
@@ -291,6 +293,6 @@ func getRoot(ctx context.Context, r *http.Request, q resource.QueryParams) (*abo
 			Nidus: config.MakeURLTegola("/maps/nidus/{z}/{x}/{y}?id={organization_id}"),
 			RMO:   config.MakeURLTegola("/maps/rmo/{z}/{x}/{y}"),
 		},
-		Version: version,
+		Version: v,
 	}, nil
 }

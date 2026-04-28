@@ -19,9 +19,9 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/middleware"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/resource"
 	"github.com/Gleipnir-Technology/nidus-sync/rmo"
 	nidussync "github.com/Gleipnir-Technology/nidus-sync/sync"
+	"github.com/Gleipnir-Technology/nidus-sync/version"
 	"github.com/getsentry/sentry-go"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"github.com/getsentry/sentry-go/zerolog"
@@ -43,7 +43,8 @@ func main() {
 		log.Warn().Msg("Forcing production mode for testing templates")
 		config.Environment = "PRODUCTION"
 	}
-	log.Info().Str("environment", config.Environment).Bool("is-prod", config.IsProductionEnvironment()).Str("version", Version).Str("commit", Commit).Msg("Starting")
+	v := version.Get()
+	log.Info().Str("environment", config.Environment).Bool("is-prod", config.IsProductionEnvironment()).Str("revision", v.Revision).Str("build_time", v.BuildTime.String()).Bool("is modified", v.IsModified).Msg("Starting")
 	err = sentry.Init(sentry.ClientOptions{
 		Debug:            false, //!config.IsProductionEnvironment(),
 		Dsn:              config.SentryDSN,
@@ -157,8 +158,6 @@ func main() {
 	}()
 
 	chan_envelope := make(chan platform.Envelope, 10)
-	api.SetVersion(Version)
-	resource.SetVersion(Version)
 	platform.SetEventChannel(chan_envelope)
 	api.SetEventChannel(chan_envelope)
 

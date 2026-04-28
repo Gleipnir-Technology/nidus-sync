@@ -116,9 +116,3 @@ func (res *sessionR) Get(ctx context.Context, r *http.Request, user platform.Use
 		},
 	}, nil
 }
-
-var version string = "unknown"
-
-func SetVersion(v string) {
-	version = v
-}

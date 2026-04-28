@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/version"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
@@ -25,6 +26,13 @@ type Message struct {
 	Time     time.Time `json:"time"`
 	Type     string    `json:"type"`
 	URI      string    `json:"uri"`
+}
+
+type Status struct {
+	BuildTime  time.Time `json:"build_time"`
+	IsModified bool      `json:"is_modified"`
+	Revision   string    `json:"revision"`
+	Status     string    `json:"status"`
 }
 
 func (c *ConnectionSSE) SendEvent(w http.ResponseWriter, m platform.Event) error {
@@ -62,11 +70,6 @@ func SetEventChannel(chan_envelopes <-chan platform.Envelope) {
 	}()
 }
 
-var version string = "unknown"
-
-func SetVersion(v string) {
-	version = v
-}
 func send[T any](w http.ResponseWriter, msg T) error {
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
@@ -91,6 +94,8 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create uuid")
+		http.Error(w, "failed to create uuid", http.StatusInternalServerError)
+		return
 	}
 	connection := ConnectionSSE{
 		chanEvent:      make(chan platform.Event),
@@ -102,7 +107,21 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 	log.Debug().Int32("org", u.Organization.ID).Int("user", u.ID).Str("id", uid.String()).Msg("connected SSE client")
 
 	// Send an initial connected event
-	fmt.Fprintf(w, "event: connected\ndata: {\"status\": \"connected\", \"version\": \"%s\", \"time\": \"%s\"}\n\n", version, time.Now().Format(time.RFC3339))
+	v := version.Get()
+	status := Status{
+		BuildTime:  v.BuildTime,
+		IsModified: v.IsModified,
+		Revision:   v.Revision,
+		Status:     "connected",
+	}
+	body, err := json.Marshal(status)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to marshal connect status")
+		http.Error(w, "failed to marshal connect status", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(body)
 	w.(http.Flusher).Flush()
 
 	// Keep the connection open with a ticker sending periodic events
