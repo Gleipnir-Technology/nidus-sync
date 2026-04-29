@@ -20,21 +20,30 @@ func ByIDCompliance(ctx context.Context, public_id string, is_public bool) (*typ
 	if err != nil {
 		return nil, fmt.Errorf("base report byid: %w", err)
 	}
-	return compliance(ctx, public_id, report)
+	if report == nil {
+		return nil, nil
+	}
+	return compliance(ctx, public_id, *report)
 }
 func ByIDNuisance(ctx context.Context, public_id string, is_public bool) (*types.PublicReportNuisance, error) {
 	report, err := byID(ctx, public_id, is_public)
 	if err != nil {
 		return nil, fmt.Errorf("base report byid: %w", err)
 	}
-	return nuisance(ctx, public_id, report)
+	if report == nil {
+		return nil, nil
+	}
+	return nuisance(ctx, public_id, *report)
 }
 func ByIDWater(ctx context.Context, public_id string, is_public bool) (*types.PublicReportWater, error) {
 	report, err := byID(ctx, public_id, is_public)
 	if err != nil {
 		return nil, fmt.Errorf("base report byid: %w", err)
 	}
-	return water(ctx, public_id, report)
+	if report == nil {
+		return nil, nil
+	}
+	return water(ctx, public_id, *report)
 }
 func ReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
 	query := reportQuery()
@@ -119,7 +128,7 @@ func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error
 	}
 	return row.Count, nil
 }
-func copyReportContent(src *types.PublicReport, dst *types.PublicReport) {
+func copyReportContent(src types.PublicReport, dst *types.PublicReport) {
 	dst.Address = src.Address
 	dst.Created = src.Created
 	dst.ID = src.ID

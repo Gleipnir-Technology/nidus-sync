@@ -15,7 +15,7 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-func nuisance(ctx context.Context, public_id string, report *types.PublicReport) (*types.PublicReportNuisance, error) {
+func nuisance(ctx context.Context, public_id string, report types.PublicReport) (*types.PublicReportNuisance, error) {
 	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"additional_info",

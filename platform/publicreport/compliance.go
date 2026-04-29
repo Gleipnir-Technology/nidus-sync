@@ -16,7 +16,7 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-func compliance(ctx context.Context, public_id string, report *types.PublicReport) (*types.PublicReportCompliance, error) {
+func compliance(ctx context.Context, public_id string, report types.PublicReport) (*types.PublicReportCompliance, error) {
 	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			models.PublicreportCompliances.Columns.AccessInstructions,

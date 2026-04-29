@@ -16,7 +16,7 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-func water(ctx context.Context, public_id string, report *types.PublicReport) (*types.PublicReportWater, error) {
+func water(ctx context.Context, public_id string, report types.PublicReport) (*types.PublicReportWater, error) {
 	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			"access_comments",
