@@ -6,6 +6,7 @@ import "@/gen/custom-icons.scss";
 import "@/style/rmo.scss";
 import router from "@/rmo/route/config";
 import App from "@/rmo/App.vue";
+import * as sentry from "@/sentry";
 
 const app = createApp(App);
 const head = createHead();
@@ -15,3 +16,5 @@ app.use(head);
 app.use(pinia);
 app.use(router);
 app.mount("#app");
+
+sentry.Init(app, pinia);

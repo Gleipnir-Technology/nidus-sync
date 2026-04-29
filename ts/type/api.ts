@@ -35,11 +35,16 @@ export interface TegolaURLs {
 	nidus: string;
 	rmo: string;
 }
+export interface Version {
+	build_time: string;
+	is_modified: boolean;
+	revision: string;
+}
 export interface APIProperties {
 	environment: string;
 	sentry_dsn: string;
 	tegola: TegolaURLs;
-	version: string;
+	version: Version;
 }
 export interface BoundsDTO {
 	min: Location;

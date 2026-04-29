@@ -6,9 +6,9 @@ import (
 )
 
 type VersionInfo struct {
-	BuildTime  time.Time
-	IsModified bool
-	Revision   string
+	BuildTime  time.Time `json:"build_time"`
+	IsModified bool      `json:"is_modified"`
+	Revision   string    `json:"revision"`
 }
 
 func Get() VersionInfo {

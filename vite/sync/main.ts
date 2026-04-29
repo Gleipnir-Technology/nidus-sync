@@ -1,8 +1,9 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "@/AppSync.vue";
-import router from "@/route/config";
 import * as config from "@/config";
+import router from "@/route/config";
+import * as sentry from "@/sentry";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -22,3 +23,4 @@ const app = createApp(App);
 app.use(pinia);
 app.use(router);
 app.mount("#app");
+sentry.Init(app, pinia);
