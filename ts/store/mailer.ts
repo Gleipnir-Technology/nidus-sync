@@ -5,7 +5,7 @@ import { useSessionStore } from "@/store/session";
 import { apiClient } from "@/client";
 import { Mailer, type MailerDTO } from "@/type/api";
 
-export const useStoreMailer = defineStore("publicreport", () => {
+export const useStoreMailer = defineStore("mailer", () => {
 	// State
 	const _all = ref<Mailer[] | null>(null);
 	const _byID = ref<Map<string, Mailer>>(new Map());
