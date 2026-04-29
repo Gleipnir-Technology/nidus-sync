@@ -104,6 +104,7 @@ select.tall {
 			<!-- Report Form -->
 			<form
 				enctype="multipart/form-data"
+				@keydown.enter.prevent=""
 				ref="formElement"
 				@submit.prevent="doSubmit"
 			>
