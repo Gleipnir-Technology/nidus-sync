@@ -146,22 +146,32 @@ func main() {
 		log.Error().Err(err).Msg("Failed to start openAI client")
 		os.Exit(8)
 	}
-	listeners, _ := activation.Listeners()
-	if len(listeners) != 1 {
-		log.Error().Int("len", len(listeners)).Msg("Unexpected number of socket activation FDs")
-		os.Exit(1)
-	}
 	server := &http.Server{
 		Addr:    config.Bind,
 		Handler: r,
 	}
-	go func() {
-		log.Info().Str("address", config.Bind).Msg("Serving HTTP requests")
-		if err := server.Serve(listeners[0]); err != nil && err != http.ErrServerClosed {
-			log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
+	if config.IsProductionEnvironment() {
+		listeners, _ := activation.Listeners()
+		if len(listeners) != 1 {
+			log.Error().Int("len", len(listeners)).Msg("Unexpected number of socket activation FDs")
+			os.Exit(1)
 		}
-		log.Debug().Msg("Exiting listen-and-serve goroutine")
-	}()
+		go func() {
+			log.Info().Str("address", config.Bind).Msg("Serving HTTP requests")
+			if err := server.Serve(listeners[0]); err != nil && err != http.ErrServerClosed {
+				log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
+			}
+			log.Debug().Msg("Exiting listen-and-serve goroutine")
+		}()
+	} else {
+		go func() {
+			log.Info().Str("address", config.Bind).Msg("Serving HTTP requests")
+			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Error().Str("err", err.Error()).Msg("HTTP Server Error")
+			}
+			log.Debug().Msg("Exiting listen-and-serve goroutine")
+		}()
+	}
 
 	chan_envelope := make(chan platform.Envelope, 10)
 	platform.SetEventChannel(chan_envelope)
