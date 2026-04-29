@@ -36,14 +36,21 @@ const session = useSessionStore();
 const updateDate = ref<Date | null>(null);
 onMounted(() => {
 	SSEManager.subscribeStatus((msg: SSEMessageStatus) => {
+		console.log("status update:", msg);
 		if (msg.status == "connected") {
 			if (revision.value == "") {
 				revision.value = msg.revision;
 			} else {
 				updateDate.value = new Date();
 			}
+		} else if (msg.status == "shutdown") {
+			console.log(
+				"server is shutting down, waiting a bit and re-initiating connection",
+			);
+			SSEManager.reconnect(5);
+		} else {
+			console.error("unrecognized server status", msg.status);
 		}
-		console.log("status update:", msg);
 	});
 	session
 		.get()

@@ -20,10 +20,11 @@ type SSEHandlerStatus = (data: SSEMessageStatus) => void;
 interface SSEManagerType {
 	connect: (url: string) => Promise<EventSource>;
 	disconnect: () => void;
+	ready: (callback: (eventSource: EventSource) => void) => void;
+	reconnect: (delay: number) => void;
 	subscribe: (handler: SSEHandlerResource) => string;
 	subscribeStatus: (handler: SSEHandlerStatus) => string;
 	unsubscribe: (uuid: string) => void;
-	ready: (callback: (eventSource: EventSource) => void) => void;
 }
 
 /*
@@ -35,11 +36,12 @@ declare global {
 */
 
 export const SSEManager: SSEManagerType = (function (): SSEManagerType {
+	let connectionPromise: Promise<EventSource> | null = null;
+	let isConnected: boolean = false;
 	let eventSource: EventSource | null = null;
+	let serverUrl: string = "";
 	let subscribersResource: Map<string, SSEHandlerResource> = new Map();
 	let subscribersStatus: Map<string, SSEHandlerStatus> = new Map();
-	let isConnected: boolean = false;
-	let connectionPromise: Promise<EventSource> | null = null;
 
 	function connect(url: string): Promise<EventSource> {
 		if (connectionPromise) {
@@ -48,6 +50,7 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 
 		connectionPromise = new Promise((resolve, reject) => {
 			eventSource = new EventSource(url);
+			serverUrl = url;
 
 			eventSource.onopen = function (): void {
 				isConnected = true;
@@ -124,6 +127,12 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 		}
 	}
 
+	function reconnect(delay: number) {
+		disconnect();
+		setTimeout(() => {
+			connect(serverUrl);
+		}, delay);
+	}
 	function subscribe(handler: SSEHandlerResource): string {
 		const uuid = crypto.randomUUID();
 		subscribersResource.set(uuid.toString(), handler);
@@ -148,9 +157,10 @@ export const SSEManager: SSEManagerType = (function (): SSEManagerType {
 	return {
 		connect,
 		disconnect,
+		ready,
+		reconnect,
 		subscribe,
 		subscribeStatus,
 		unsubscribe,
-		ready,
 	};
 })();
