@@ -305,11 +305,23 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	}
 
 	var addr *models.Address
-	if address != nil && address.GID != "" {
-		a := *address
-		addr, err = geocode.EnsureAddress(ctx, txn, a)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to ensure address: %w", err)
+	if address != nil {
+		if address.GID != "" {
+			addr, err = geocode.EnsureAddress(ctx, txn, *address)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to ensure address: %w", err)
+			}
+		} else if address.Raw != "" {
+			geo_res, err := geocode.GeocodeRaw(ctx, nil, address.Raw)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to geocode raw: %w", err)
+			}
+			addr, err = models.FindAddress(ctx, txn, *geo_res.Address.ID)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to lookup address: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("empty address")
 		}
 	}
 
