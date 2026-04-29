@@ -26,7 +26,7 @@ func ByID(ctx context.Context, public_id string, is_public bool) (*types.PublicR
 	}
 	log.Debug().Str("public_id", public_id).Int("len", len(reports)).Msg("querying for publicreport by ID")
 	if len(reports) != 1 {
-		return nil, fmt.Errorf("reports returned: %d", len(reports))
+		return nil, nil
 	}
 	return reports[0], nil
 }
