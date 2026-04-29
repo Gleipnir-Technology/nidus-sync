@@ -41,11 +41,11 @@ export function useRoutes() {
 			},
 		};
 	};
-	const StatusByID = (publicID: string): RouteLocationRaw => {
+	const StatusByID = (id: string): RouteLocationRaw => {
 		return {
 			name: ROUTE_NAMES.STATUS_BY_ID,
 			params: {
-				public_id: publicID,
+				id: id,
 			},
 		};
 	};
