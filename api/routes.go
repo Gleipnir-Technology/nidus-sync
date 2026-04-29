@@ -20,6 +20,7 @@ func AddRoutesRMO(r *mux.Router) {
 	qrcode := resource.QRCode(router)
 	water := resource.Water(router)
 
+	r.HandleFunc("", handlerJSON(getRoot))
 	r.HandleFunc("/compliance-request/image/pool/{public_id}", compliance_request.ImagePoolGet).Methods("GET").Name("compliance-request.image.pool.ByIDGet")
 	r.Handle("/district", handlerJSONSlice(district.List)).Methods("GET")
 	r.Handle("/district/{id}", handlerJSON(district.GetByID)).Methods("GET").Name("district.ByIDGet")
