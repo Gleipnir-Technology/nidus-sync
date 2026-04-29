@@ -191,7 +191,6 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 // Refs
-const clickTimeout = ref<number | null>(null);
 const isLoaded = ref<boolean>(false);
 const map: Ref<maplibregl.Map | null> = shallowRef(null);
 const mapContainer = ref<HTMLDivElement | null>(null);
@@ -301,21 +300,14 @@ function initializeMap() {
 			return;
 		}
 
-		// Use timeout to distinguish between click and drag
-		if (clickTimeout.value) {
-			clearTimeout(clickTimeout.value);
-		}
-
-		clickTimeout.value = window.setTimeout(() => {
-			emit("click", {
-				location: {
-					latitude: e.lngLat.lat,
-					longitude: e.lngLat.lng,
-				},
-				map: _map,
-				point: e.point,
-			});
-		}, 100);
+		emit("click", {
+			location: {
+				latitude: e.lngLat.lat,
+				longitude: e.lngLat.lng,
+			},
+			map: _map,
+			point: e.point,
+		});
 	});
 
 	_map.on("load", () => {
@@ -545,10 +537,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-	if (clickTimeout.value) {
-		clearTimeout(clickTimeout.value);
-	}
-
 	// Remove all markers
 	mapMarkers.value.forEach((marker) => marker.remove());
 	mapMarkers.value.clear();
