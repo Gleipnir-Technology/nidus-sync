@@ -58,6 +58,9 @@ func PublicReportByIDCompliance(ctx context.Context, report_id string, is_public
 	if err != nil {
 		return nil, fmt.Errorf("byidcompliance: %w", err)
 	}
+	if result == nil {
+		return nil, nil
+	}
 	// Check for evidence if this is a mailer-based compliance request
 	crr, err := ComplianceReportRequestFromPublicID(ctx, result.PublicID)
 	if err != nil {
