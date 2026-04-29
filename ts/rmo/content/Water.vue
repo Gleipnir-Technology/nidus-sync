@@ -564,11 +564,6 @@ select.tall {
 						If you see small creatures moving in standing water, there's a good
 						chance they're mosquito larvae or pupae.
 					</p>
-					<div class="text-center">
-						<a href="#" class="btn btn-outline-primary"
-							>View Detailed Identification Guide</a
-						>
-					</div>
 				</div>
 				<div class="modal-footer">
 					<button
