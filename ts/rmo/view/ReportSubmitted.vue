@@ -134,12 +134,12 @@
 									/>
 									<label class="form-check-label" for="can_sms">
 										This phone number can receive text messages
-										<i
-											class="bi bi-info-circle-fill text-primary ms-1"
-											data-bs-toggle="tooltip"
-											data-bs-placement="top"
+										<Tooltip
+											placement="top"
 											title="By 'text messages' we specifically mean SMS/MMS messages. If it's a mobile or cellular phone, it should work. If it's a home or office phone, it may not."
-										></i>
+										>
+											<i class="bi bi-info-circle-fill text-primary ms-1"></i>
+										</Tooltip>
 									</label>
 								</div>
 
@@ -153,12 +153,12 @@
 									<label class="form-check-label" for="consent">
 										I consent to being contacted at my email address or phone
 										number above just for the purposes of this report.
-										<i
-											class="bi bi-info-circle-fill text-primary ms-1"
-											data-bs-toggle="tooltip"
-											data-bs-placement="top"
+										<Tooltip
+											placement="top"
 											title="We will never sell your information. We'll send you notifications, but only if you ask us to. We'll share your information with the district that is in change of mosquito control in the area you've reported, but not with anybody else."
-										></i>
+										>
+											<i class="bi bi-info-circle-fill text-primary ms-1"></i>
+										</Tooltip>
 									</label>
 								</div>
 
@@ -279,6 +279,7 @@ import { ref, onMounted } from "vue";
 import { computedAsync } from "@vueuse/core";
 import { useRouter } from "vue-router";
 
+import Tooltip from "@/components/Tooltip.vue";
 import { formatReportID } from "@/format";
 import { useRoutes } from "@/rmo/route/use";
 import { useStoreDistrict } from "@/rmo/store/district";
