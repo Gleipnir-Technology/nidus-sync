@@ -110,6 +110,15 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 		public_id := n.MailerID.MustGet()
 		setter_report.PublicID = omit.From(public_id)
 
+		// If it already exists, just return it
+		report, err := platform.PublicReportByIDCompliance(ctx, public_id, true)
+		if err != nil {
+			return nil, nhttp.NewError("check existing report: %w", err)
+		}
+		if report != nil {
+			return res.complianceHydrate(report, true)
+		}
+
 		org_id, err = platform.OrganizationIDForComplianceReportRequest(ctx, public_id)
 		if err != nil {
 			return nil, nhttp.NewBadRequest("no such mailer")
