@@ -90,6 +90,7 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 		if row.Location.Latitude == 0.0 || row.Location.Longitude == 0.0 {
 			row.Location = nil
 		}
+		row.Address.Raw = types.AddressToRaw(row.Address)
 		results[i] = &row
 	}
 	return results, nil

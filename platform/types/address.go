@@ -44,7 +44,7 @@ func AddressFromModel(m *models.Address) Address {
 		},
 		Number:     m.Number,
 		PostalCode: m.PostalCode,
-		Raw:        fmt.Sprintf("%s %s, %s, %s", m.Number, m.Street, m.Locality, m.Region),
+		Raw:        addressToRaw(*m),
 		Region:     m.Region,
 		Street:     m.Street,
 		Unit:       m.Unit,
@@ -78,4 +78,10 @@ func AddressList(ctx context.Context, ids []int32) (map[int32]*Address, error) {
 	}
 
 	return addresses_by_id, err
+}
+func AddressToRaw(a Address) string {
+	return fmt.Sprintf("%s %s, %s, %s", a.Number, a.Street, a.Locality, a.Region)
+}
+func addressToRaw(m models.Address) string {
+	return fmt.Sprintf("%s %s, %s, %s", m.Number, m.Street, m.Locality, m.Region)
 }
