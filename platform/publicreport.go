@@ -53,9 +53,6 @@ func GenerateReportID() (string, error) {
 	return builder.String(), nil
 }
 
-func PublicReportByID(ctx context.Context, report_id string, is_public bool) (*types.PublicReport, error) {
-	return publicreport.ByID(ctx, report_id, is_public)
-}
 func PublicReportByIDCompliance(ctx context.Context, report_id string, is_public bool) (*types.PublicReportCompliance, error) {
 	result, err := publicreport.ByIDCompliance(ctx, report_id, is_public)
 	if err != nil {

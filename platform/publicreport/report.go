@@ -15,7 +15,36 @@ import (
 	"github.com/stephenafamo/scan"
 )
 
-func ByID(ctx context.Context, public_id string, is_public bool) (*types.PublicReport, error) {
+func ByIDCompliance(ctx context.Context, public_id string, is_public bool) (*types.PublicReportCompliance, error) {
+	report, err := byID(ctx, public_id, is_public)
+	if err != nil {
+		return nil, fmt.Errorf("base report byid: %w", err)
+	}
+	return compliance(ctx, public_id, report)
+}
+func ByIDNuisance(ctx context.Context, public_id string, is_public bool) (*types.PublicReportNuisance, error) {
+	report, err := byID(ctx, public_id, is_public)
+	if err != nil {
+		return nil, fmt.Errorf("base report byid: %w", err)
+	}
+	return nuisance(ctx, public_id, report)
+}
+func ByIDWater(ctx context.Context, public_id string, is_public bool) (*types.PublicReportWater, error) {
+	report, err := byID(ctx, public_id, is_public)
+	if err != nil {
+		return nil, fmt.Errorf("base report byid: %w", err)
+	}
+	return water(ctx, public_id, report)
+}
+func ReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
+	query := reportQuery()
+	query.Apply(
+		sm.Where(psql.Quote("r", "organization_id").EQ(psql.Arg(org_id))),
+		sm.Where(psql.Quote("r", "reviewed").IsNull()),
+	)
+	return reportQueryToRows(ctx, query, is_public)
+}
+func byID(ctx context.Context, public_id string, is_public bool) (*types.PublicReport, error) {
 	query := reportQuery()
 	query.Apply(
 		sm.Where(psql.Quote("r", "public_id").EQ(psql.Arg(public_id))),
@@ -29,35 +58,6 @@ func ByID(ctx context.Context, public_id string, is_public bool) (*types.PublicR
 		return nil, nil
 	}
 	return reports[0], nil
-}
-func ByIDCompliance(ctx context.Context, public_id string, is_public bool) (*types.PublicReportCompliance, error) {
-	report, err := ByID(ctx, public_id, is_public)
-	if err != nil {
-		return nil, fmt.Errorf("base report byid: %w", err)
-	}
-	return compliance(ctx, public_id, report)
-}
-func ByIDNuisance(ctx context.Context, public_id string, is_public bool) (*types.PublicReportNuisance, error) {
-	report, err := ByID(ctx, public_id, is_public)
-	if err != nil {
-		return nil, fmt.Errorf("base report byid: %w", err)
-	}
-	return nuisance(ctx, public_id, report)
-}
-func ByIDWater(ctx context.Context, public_id string, is_public bool) (*types.PublicReportWater, error) {
-	report, err := ByID(ctx, public_id, is_public)
-	if err != nil {
-		return nil, fmt.Errorf("base report byid: %w", err)
-	}
-	return water(ctx, public_id, report)
-}
-func ReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
-	query := reportQuery()
-	query.Apply(
-		sm.Where(psql.Quote("r", "organization_id").EQ(psql.Arg(org_id))),
-		sm.Where(psql.Quote("r", "reviewed").IsNull()),
-	)
-	return reportQueryToRows(ctx, query, is_public)
 }
 func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQuery], is_public bool) ([]*types.PublicReport, error) {
 	rows, err := bob.All(ctx, db.PGInstance.BobDB, query, scan.StructMapper[types.PublicReport]())
