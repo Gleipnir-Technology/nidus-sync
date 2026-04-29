@@ -8,7 +8,7 @@ import { useRouter } from "vue-router";
 
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStoreLocal } from "@/store/local";
-import { useStorePublicReport } from "@/store/publicreport";
+import { useStorePublicReport } from "@/rmo/store/publicreport";
 import PublicReportLoading from "@/rmo/components/PublicReportLoading.vue";
 
 interface Props {

@@ -13,25 +13,25 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 	// State
 	const _byID = ref<Map<string, PublicReport>>(new Map());
 	const loading = ref(false);
-	//const ongoingFetch = ref<Promise<PublicReport[]> | null>(null);
+	const ongoingFetches = ref<Map<string, Promise<PublicReport> | null>>(
+		new Map(),
+	);
 
 	function add(pr: PublicReport) {
 		_byID.value.set(pr.public_id, pr);
 	}
-	// Actions
 	async function byID(id: string): Promise<PublicReport> {
-		const r = _byID.value.get(id);
-		if (r) {
-			return r;
-		}
-		return fetchByID(id);
+		const uri = "/api/rmo/publicreport/" + id;
+		return byURI(uri);
 	}
 	async function byURI(uri: string): Promise<PublicReport> {
-		const id = uri.split("/").pop() || "";
-		if (!id) {
-			throw new Error(`${uri} is not a recognized public report URI`);
-		}
-		return byID(id);
+		let ongoing = ongoingFetches.value.get(uri);
+		if (ongoing) return ongoing;
+		ongoing = fetchByURI(uri).finally(() => {
+			ongoingFetches.value.set(uri, null);
+		});
+		ongoingFetches.value.set(uri, ongoing);
+		return ongoing;
 	}
 	async function createCompliance(
 		data: PublicReportComplianceCreateRequest,
@@ -43,10 +43,6 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		const result = PublicReport.fromJSON(resp);
 		_byID.value.set(result.public_id, result);
 		return result;
-	}
-	async function fetchByID(id: string): Promise<PublicReport> {
-		const uri = `/api/rmo/publicreport/${id}`;
-		return fetchByURI(uri);
 	}
 	async function fetchByURI(uri: string): Promise<PublicReport> {
 		loading.value = true;
@@ -73,7 +69,6 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		byID,
 		byURI,
 		createCompliance,
-		fetchByID,
 		fetchByURI,
 		update,
 	};
