@@ -50,11 +50,13 @@ export const useSessionStore = defineStore("session", () => {
 		username: string,
 	): Promise<SigninResult> {
 		try {
+			console.log("begin signin request");
 			await apiClient.JSONPost("/api/signin", {
 				password: password,
 				username: username,
 			});
-			isAuthenticated.value = false;
+			isAuthenticated.value = true;
+			console.log("set authenticated to true after signin request");
 			return {
 				is_success: true,
 				status: 200,
