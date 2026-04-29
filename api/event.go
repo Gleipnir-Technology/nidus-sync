@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/version"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
 
 var connectionsSSE map[*ConnectionSSE]bool = make(map[*ConnectionSSE]bool, 0)
+var TYPE_STATUS string = "status"
 
 type ConnectionSSE struct {
 	chanEvent      chan platform.Event
@@ -37,6 +39,16 @@ type Status struct {
 }
 
 func (c *ConnectionSSE) SendEvent(w http.ResponseWriter, m platform.Event) error {
+	if m.Type == event.EventTypeShutdown {
+		v := version.Get()
+		return send(w, Status{
+			BuildTime:  v.BuildTime,
+			IsModified: v.IsModified,
+			Revision:   v.Revision,
+			Status:     m.Type.String(),
+			Type:       TYPE_STATUS,
+		})
+	}
 	return send(w, Message{
 		Resource: m.Resource,
 		Time:     m.Time,
@@ -114,7 +126,7 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 		IsModified: v.IsModified,
 		Revision:   v.Revision,
 		Status:     "connected",
-		Type:       "status",
+		Type:       TYPE_STATUS,
 	}
 	body, err := json.Marshal(status)
 	if err != nil {
