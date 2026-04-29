@@ -125,9 +125,13 @@
 				>
 					Back
 				</RouterLink>
-				<button class="btn btn-primary flex-grow-1" @click="doContinue()">
-					Continue
-				</button>
+				<ButtonLoading
+					class="flex-grow-1"
+					@click="doContinue"
+					icon="bi-caret-right-fill"
+					:loading="isUploading"
+					text="Continue"
+				/>
 			</div>
 		</main>
 	</div>
@@ -135,6 +139,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 
+import ButtonLoading from "@/components/common/ButtonLoading.vue";
 import { router } from "@/rmo/route/config";
 import type { Contact, District, PublicReport } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
@@ -147,6 +152,7 @@ interface Emits {
 }
 interface Props {
 	district: District;
+	isUploading: boolean;
 	modelValue: PublicReport;
 	publicID: string;
 }

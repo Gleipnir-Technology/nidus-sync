@@ -145,7 +145,7 @@
 				<RouterLink
 					class="btn btn-primary flex-grow-1"
 					:to="routes.ComplianceSubmit(publicID)"
-				>
+					><i class="bi bi-caret-right-fill"></i>
 					Continue
 				</RouterLink>
 			</div>

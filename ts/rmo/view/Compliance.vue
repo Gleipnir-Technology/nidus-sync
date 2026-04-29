@@ -31,6 +31,7 @@ body > .container-fluid {
 					@doEvidence="doEvidence"
 					@doPermission="doPermission"
 					@doSubmit="doSubmit"
+					:isUploading="isUploading"
 					:publicID="report?.public_id ?? 'unset'"
 					v-model="report"
 				/>
@@ -111,8 +112,11 @@ function doAddress() {
 		return;
 	}
 	console.log("address done", report.value.address);
+	isUploading.value = true;
 	updateReport({
 		address: report.value.address,
+	}).finally(() => {
+		isUploading.value = false;
 	});
 }
 function doEvidence(images: Image[]) {
@@ -120,12 +124,19 @@ function doEvidence(images: Image[]) {
 		console.log("can't do evidence, null report");
 		return;
 	}
-	uploadImages(images);
-	if (report.value.comments) {
-		updateReport({
-			comments: report.value.comments,
-		});
-	}
+	(async () => {
+		isUploading.value = true;
+		let todo = [uploadImages(images)];
+		if (report.value && report.value.comments) {
+			todo.push(
+				updateReport({
+					comments: report.value.comments,
+				}),
+			);
+		}
+		await Promise.all(todo);
+		isUploading.value = false;
+	})();
 }
 function doContact() {
 	if (!report.value) {
@@ -137,8 +148,11 @@ function doContact() {
 		JSON.stringify(report.value.reporter),
 		report.value.reporter,
 	);
+	isUploading.value = true;
 	updateReport({
 		reporter: report.value.reporter,
+	}).finally(() => {
+		isUploading.value = false;
 	});
 }
 async function doMounted() {
@@ -154,6 +168,7 @@ function doPermission() {
 		return;
 	}
 	console.log("report.value.has_dog", report.value.has_dog);
+	isUploading.value = true;
 	updateReport({
 		access_instructions: report.value.access_instructions,
 		availability_notes: report.value.availability_notes,
@@ -161,6 +176,8 @@ function doPermission() {
 		has_dog: report.value.has_dog,
 		permission_type: report.value.permission_type,
 		wants_scheduled: report.value.wants_scheduled,
+	}).finally(() => {
+		isUploading.value = false;
 	});
 }
 function doSubmit() {

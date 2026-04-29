@@ -274,15 +274,21 @@
 				>
 					Back
 				</RouterLink>
-				<button class="btn btn-primary flex-grow-1" @click="doContinue">
-					Continue
-				</button>
+				<ButtonLoading
+					class="flex-grow-1"
+					@click="doContinue"
+					icon="bi-caret-right-fill"
+					:loading="isUploading"
+					text="Continue"
+				/>
 			</div>
 		</main>
 	</div>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+
+import ButtonLoading from "@/components/common/ButtonLoading.vue";
 import { router } from "@/rmo/route/config";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
@@ -299,6 +305,7 @@ interface Emits {
 }
 interface Props {
 	district: District;
+	isUploading: boolean;
 	modelValue: PublicReportCompliance;
 	publicID: string;
 }

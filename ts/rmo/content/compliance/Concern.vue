@@ -91,9 +91,13 @@
 				>
 					Back
 				</RouterLink>
-				<button class="btn btn-primary flex-grow-1" @click="doContinue">
-					Continue
-				</button>
+				<ButtonLoading
+					class="flex-grow-1"
+					@click="doContinue"
+					icon="bi-caret-right-fill"
+					:loading="isUploading"
+					text="Continue"
+				/>
 			</div>
 		</main>
 	</div>
@@ -106,6 +110,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 
+import ButtonLoading from "@/components/common/ButtonLoading.vue";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
 import ImageViewerModal, { Image } from "@/rmo/components/ImageViewerModal.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
@@ -119,6 +124,7 @@ interface Emits {
 }
 interface Props {
 	district: District;
+	isUploading: boolean;
 	modelValue: PublicReportCompliance;
 	publicID: string;
 }

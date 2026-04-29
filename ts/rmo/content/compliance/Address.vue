@@ -19,9 +19,13 @@
 				>
 					Back
 				</RouterLink>
-				<button class="btn btn-primary flex-grow-1" @click="doContinue">
-					Continue
-				</button>
+				<ButtonLoading
+					class="flex-grow-1"
+					@click="doContinue"
+					icon="bi-caret-right-fill"
+					:loading="isUploading"
+					text="Continue"
+				/>
 			</div>
 		</main>
 	</div>
@@ -32,6 +36,7 @@ import { computed, onMounted, ref } from "vue";
 import { router } from "@/rmo/route/config";
 import type { District, PublicReportCompliance } from "@/type/api";
 import HeaderCompliance from "@/rmo/components/HeaderCompliance.vue";
+import ButtonLoading from "@/components/common/ButtonLoading.vue";
 import ProgressBarCompliance from "@/rmo/components/ProgressBarCompliance.vue";
 import AddressAndMapLocator from "@/rmo/components/AddressAndMapLocator.vue";
 import { Camera, Locator } from "@/type/map";
@@ -43,6 +48,7 @@ interface Emits {
 }
 interface Props {
 	district: District;
+	isUploading: boolean;
 	modelValue: PublicReportCompliance;
 	publicID: string;
 }
