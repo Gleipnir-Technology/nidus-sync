@@ -45,3 +45,21 @@ func AddressFromComplianceReportRequestID(ctx context.Context, public_id string)
 	}
 	return row, nil
 }
+
+func AddressLocation(ctx context.Context, address *models.Address) (*types.Location, error) {
+	if address == nil {
+		return nil, fmt.Errorf("nil address")
+	}
+	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
+		sm.Columns(
+			models.Addresses.Columns.LocationLatitude.As("latitude"),
+			models.Addresses.Columns.LocationLongitude.As("longitude"),
+		),
+		sm.From(models.Addresses.NameAs()),
+		sm.Where(models.Addresses.Columns.ID.EQ(psql.Arg(address.ID))),
+	), scan.StructMapper[*types.Location]())
+	if err != nil {
+		return nil, fmt.Errorf("query address: %w", err)
+	}
+	return row, nil
+}
