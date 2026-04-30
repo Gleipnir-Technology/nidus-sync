@@ -22,3 +22,4 @@ stadia/cmd/tile-raster/tile-raster
 static/gen/
 temp/
 ts/gen
+vite/*/.vite/
