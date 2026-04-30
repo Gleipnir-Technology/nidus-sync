@@ -55,4 +55,11 @@ pkgs.buildGoModule rec {
     pnpm build-rmo
     pnpm build-sync
   '';
+
+  postInstall = ''
+    # Copy frontend build output to artifacts so we can upload them to sentry
+    mkdir -p $out/share/frontend/
+    cp -r vite/rmo/static/gen/rmo $out/share/frontend/
+    cp -r vite/rmo/static/gen/sync $out/share/frontend/
+  '';
 }
