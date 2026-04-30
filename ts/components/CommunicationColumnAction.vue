@@ -77,10 +77,11 @@
 									@change="handleTemplateChange"
 								>
 									<option value="">Select a template...</option>
+									<option value="completed">Completed</option>
+									<option value="need_info">Need More Information</option>
 									<option value="received">Report Received</option>
 									<option value="scheduled">Service Scheduled</option>
-									<option value="completed">Service Completed</option>
-									<option value="need_info">Need More Information</option>
+									<option value="thanks">Thanks</option>
 								</select>
 							</div>
 							<textarea
@@ -150,10 +151,11 @@ const messageText = ref("");
 const props = withDefaults(defineProps<Props>(), {});
 function applyMessageTemplate(template: string) {
 	const templates = {
-		received: `Dear ${props.selectedReport?.reporter.name || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
-		scheduled: `Dear ${props.selectedReport?.reporter.name || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
 		completed: `Dear ${props.selectedReport?.reporter.name || "Resident"},\n\nWe wanted to let you know that our team has completed mosquito control operations in your area based on your recent report.\n\nIf you continue to experience issues, please don't hesitate to submit a new report.\n\nBest regards,\nMosquito Control District`,
 		need_info: `Dear ${props.selectedReport?.reporter.name || "Resident"},\n\nThank you for your recent report. In order to better assist you, we need some additional information:\n\n- [Specify what information is needed]\n\nPlease reply to this message with the requested details.\n\nBest regards,\nMosquito Control District`,
+		received: `Dear ${props.selectedReport?.reporter.name || "Resident"},\n\nThank you for submitting your report to the Mosquito Control District. We have received your communication and it has been assigned to our team for review.\n\nWe will be in touch if we need any additional information.\n\nBest regards,\nMosquito Control District`,
+		scheduled: `Dear ${props.selectedReport?.reporter.name || "Resident"},\n\nGood news! Based on your report, we have scheduled a service visit to your area. Our technicians will be conducting mosquito control operations within the next 3-5 business days.\n\nNo action is required on your part.\n\nBest regards,\nMosquito Control District`,
+		thanks: `Thank you for submitting your pool report, we will be in touch if needed.`,
 	};
 
 	if (template in templates) {
