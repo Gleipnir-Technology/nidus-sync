@@ -100,12 +100,12 @@
 				/>
 			</div>
 		</main>
+		<ImageViewerModal
+			@close="showImageModal = false"
+			:image="currentImage"
+			:show="showImageModal"
+		/>
 	</div>
-	<ImageViewerModal
-		@close="showImageModal = false"
-		:image="currentImage"
-		:show="showImageModal"
-	/>
 </template>
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
