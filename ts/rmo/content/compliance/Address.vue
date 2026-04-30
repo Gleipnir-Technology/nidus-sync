@@ -13,12 +13,12 @@
 			<AddressAndMapLocator :initialCamera="initialCamera" v-model="locator" />
 
 			<div class="d-flex gap-2 mt-4">
-				<RouterLink
-					class="btn btn-outline-secondary"
-					:to="routes.ComplianceIntro(props.publicID)"
-				>
-					Back
-				</RouterLink>
+				<ButtonLoading
+					@click="doBack"
+					:loading="isUploading"
+					text="Back"
+					variant="outline-secondary"
+				/>
 				<ButtonLoading
 					class="flex-grow-1"
 					@click="doContinue"
@@ -67,16 +67,23 @@ const initialCamera = computed((): Camera | undefined => {
 	return undefined;
 });
 const routes = useRoutes();
+function doBack() {
+	doUpdate();
+	router.push(routes.ComplianceIntro(props.publicID));
+}
 function doContinue() {
-	props.modelValue.address = locator.value.address;
-	props.modelValue.location = locator.value.location;
-	emit("update:modelValue", props.modelValue);
-	emit("doAddress");
+	doUpdate();
 	if (props.modelValue.concerns.length > 0) {
 		router.push(routes.ComplianceConcern(props.publicID));
 	} else {
 		router.push(routes.ComplianceEvidence(props.publicID));
 	}
+}
+function doUpdate() {
+	props.modelValue.address = locator.value.address;
+	props.modelValue.location = locator.value.location;
+	emit("update:modelValue", props.modelValue);
+	emit("doAddress");
 }
 onMounted(() => {
 	locator.value.address = props.modelValue.address;
