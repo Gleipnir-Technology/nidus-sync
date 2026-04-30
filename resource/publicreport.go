@@ -75,7 +75,10 @@ func (res *publicreportR) ImageCreate(ctx context.Context, r *http.Request, n nu
 		return nil, nhttp.NewError("Failed to extract image uploads: %w", err)
 	}
 
-	platform.PublicReportImageCreate(ctx, public_id, uploads)
+	err = platform.PublicReportImageCreate(ctx, public_id, uploads)
+	if err != nil {
+		return nil, nhttp.NewError("Failed to created image: %w", err)
+	}
 	return &image{Status: "ok"}, nil
 }
 
