@@ -10,6 +10,7 @@ import (
 	_ "image/jpeg" // register JPEG format
 	_ "image/png"  // register PNG format
 	"io"
+	"math"
 	"time"
 
 	"github.com/Gleipnir-Technology/bob"
@@ -107,7 +108,7 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 
 		// TODO: figure out how to do this via the setter...?
 		if u.Exif != nil {
-			if u.Exif.GPS != nil {
+			if u.Exif.GPS != nil && !(math.IsNaN(u.Exif.GPS.Longitude) || math.IsNaN(u.Exif.GPS.Latitude)) {
 				_, err = psql.Update(
 					um.Table("publicreport.image"),
 					um.SetCol("location").To(fmt.Sprintf("ST_Point(%f, %f, 4326)", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
