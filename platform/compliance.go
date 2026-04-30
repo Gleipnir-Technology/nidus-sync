@@ -33,6 +33,13 @@ func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int32
 	if site.OrganizationID != user.Organization.ID {
 		return 0, fmt.Errorf("permission denied")
 	}
+	address, err := models.FindAddress(ctx, txn, site.AddressID)
+	if err != nil {
+		return 0, fmt.Errorf("find address %d: %w", site.AddressID, err)
+	}
+	if address.PostalCode == "" {
+		return 0, fmt.Errorf("address %d does not have a postal code", address.ID)
+	}
 	features, err := models.Features.Query(
 		models.SelectWhere.Features.SiteID.EQ(site.ID),
 	).All(ctx, txn)

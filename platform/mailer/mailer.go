@@ -17,6 +17,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// This is the entrypoint for the backend job of sending a compliance mailer
+// It should only return errors for programmer-level errors we want retried on restart
+// Not for normal issues
 func ComplianceSend(ctx context.Context, row_id int32) error {
 	bxn := db.PGInstance.BobDB
 	compliance_req, err := models.FindComplianceReportRequest(ctx, bxn, row_id)
@@ -46,6 +49,10 @@ func ComplianceSend(ctx context.Context, row_id int32) error {
 	address, err := models.FindAddress(ctx, bxn, site.AddressID)
 	if err != nil {
 		return fmt.Errorf("find address: %w", err)
+	}
+	if address.PostalCode == "" {
+		log.Warn().Int32("id", address.ID).Msg("dropping mailer job because the address has no postal code")
+		return nil
 	}
 
 	organization, err := models.FindOrganization(ctx, bxn, site.OrganizationID)
