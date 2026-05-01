@@ -7,7 +7,8 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/model"
+	queryarcgis "github.com/Gleipnir-Technology/nidus-sync/db/query/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -25,9 +26,9 @@ type contentSettingOrganization struct {
 }
 
 type contentSettingIntegration struct {
-	ArcGISAccount *models.ArcgisAccount
-	ArcGISOAuth   *models.ArcgisOauthToken
-	ServiceMaps   []*models.ArcgisServiceMap
+	ArcGISAccount *model.Account
+	ArcGISOAuth   *model.OAuthToken
+	ServiceMaps   []*model.ServiceMap
 }
 
 func getConfigurationOrganization(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentSettingOrganization], *nhttp.ErrorWithStatus) {
@@ -82,17 +83,15 @@ func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, u p
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
-	var account *models.ArcgisAccount
-	var service_maps []*models.ArcgisServiceMap
+	var account *model.Account
+	var service_maps []*model.ServiceMap
 	account_id := u.Organization.ArcgisAccountID()
 	if account_id != "" {
-		account, err = models.FindArcgisAccount(ctx, db.PGInstance.BobDB, account_id)
+		account, err = queryarcgis.AccountFromID(ctx, account_id)
 		if err != nil {
 			return nil, nhttp.NewError("Failed to get arcgis: %w", err)
 		}
-		service_maps, err = models.ArcgisServiceMaps.Query(
-			models.SelectWhere.ArcgisServiceMaps.AccountID.EQ(account.ID),
-		).All(ctx, db.PGInstance.BobDB)
+		service_maps, err = queryarcgis.ServiceMapsFromAccountID(ctx, account.ID)
 		if err != nil {
 			return nil, nhttp.NewError("Failed to get map services: %w", err)
 		}

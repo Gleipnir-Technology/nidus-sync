@@ -114,6 +114,9 @@ func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (mo
 					um.SetCol("location").To(fmt.Sprintf("ST_Point(%f, %f, 4326)", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
 					um.Where(psql.Quote("id").EQ(psql.Arg(image.ID))),
 				).Exec(ctx, tx)
+				if err != nil {
+					return images, fmt.Errorf("set location: %w", err)
+				}
 			}
 
 			exif_setters := make([]*models.PublicreportImageExifSetter, 0)

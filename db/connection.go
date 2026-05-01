@@ -18,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog/log"
+	"github.com/stephenafamo/scan"
 )
 
 //go:embed migrations/*.sql
@@ -33,13 +34,41 @@ var (
 	pgOnce     sync.Once
 )
 
-func Execute[T any](ctx context.Context, stmt postgres.Statement) (*T, error) {
+func ExecuteNone(ctx context.Context, stmt postgres.Statement) error {
 	query, args := stmt.Sql()
 
-	row, _ := PGInstance.PGXPool.Query(ctx, query, args...)
-	data, err := pgx.CollectOneRow(row, pgx.RowToAddrOfStructByPos[T])
+	_, err := PGInstance.PGXPool.Query(ctx, query, args...)
+	return err
+}
+func ExecuteNoneTx(ctx context.Context, txn bob.Tx, stmt postgres.Statement) error {
+	query, args := stmt.Sql()
 
-	return data, err
+	_, err := txn.QueryContext(ctx, query, args...)
+	return err
+}
+func ExecuteOne[T any](ctx context.Context, stmt postgres.Statement) (*T, error) {
+	query, args := stmt.Sql()
+
+	row, err := PGInstance.PGXPool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("execute query: %w", err)
+	}
+	return pgx.CollectOneRow(row, pgx.RowToAddrOfStructByPos[T])
+}
+func ExecuteOneTx[T any](ctx context.Context, txn bob.Tx, stmt postgres.Statement) (*T, error) {
+	query, args := stmt.Sql()
+
+	result, err := scan.One(ctx, txn, scan.StructMapper[T](), query, args...)
+	return &result, err
+}
+func ExecuteMany[T any](ctx context.Context, stmt postgres.Statement) ([]*T, error) {
+	query, args := stmt.Sql()
+
+	rows, err := PGInstance.PGXPool.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("execute query: %w", err)
+	}
+	return pgx.CollectRows(rows, pgx.RowToAddrOfStructByPos[T])
 }
 func doMigrations(connection_string string) error {
 	log.Debug().Str("dsn", connection_string).Msg("Connecting to database")

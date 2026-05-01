@@ -18,16 +18,6 @@ var Preload = getPreloaders()
 
 type preloaders struct {
 	Address                            addressPreloader
-	ArcgisAccount                      arcgisAccountPreloader
-	ArcgisAddressMapping               arcgisAddressMappingPreloader
-	ArcgisLayer                        arcgisLayerPreloader
-	ArcgisLayerField                   arcgisLayerFieldPreloader
-	ArcgisOauthToken                   arcgisOauthTokenPreloader
-	ArcgisParcelMapping                arcgisParcelMappingPreloader
-	ArcgisServiceFeature               arcgisServiceFeaturePreloader
-	ArcgisServiceMap                   arcgisServiceMapPreloader
-	ArcgisUser                         arcgisuserPreloader
-	ArcgisUserPrivilege                arcgisUserPrivilegePreloader
 	CommsEmailContact                  commsEmailContactPreloader
 	CommsEmailLog                      commsEmailLogPreloader
 	CommsEmailTemplate                 commsEmailTemplatePreloader
@@ -122,16 +112,6 @@ type preloaders struct {
 func getPreloaders() preloaders {
 	return preloaders{
 		Address:                            buildAddressPreloader(),
-		ArcgisAccount:                      buildArcgisAccountPreloader(),
-		ArcgisAddressMapping:               buildArcgisAddressMappingPreloader(),
-		ArcgisLayer:                        buildArcgisLayerPreloader(),
-		ArcgisLayerField:                   buildArcgisLayerFieldPreloader(),
-		ArcgisOauthToken:                   buildArcgisOauthTokenPreloader(),
-		ArcgisParcelMapping:                buildArcgisParcelMappingPreloader(),
-		ArcgisServiceFeature:               buildArcgisServiceFeaturePreloader(),
-		ArcgisServiceMap:                   buildArcgisServiceMapPreloader(),
-		ArcgisUser:                         buildArcgisUserPreloader(),
-		ArcgisUserPrivilege:                buildArcgisUserPrivilegePreloader(),
 		CommsEmailContact:                  buildCommsEmailContactPreloader(),
 		CommsEmailLog:                      buildCommsEmailLogPreloader(),
 		CommsEmailTemplate:                 buildCommsEmailTemplatePreloader(),
@@ -232,16 +212,6 @@ var (
 
 type thenLoaders[Q orm.Loadable] struct {
 	Address                            addressThenLoader[Q]
-	ArcgisAccount                      arcgisAccountThenLoader[Q]
-	ArcgisAddressMapping               arcgisAddressMappingThenLoader[Q]
-	ArcgisLayer                        arcgisLayerThenLoader[Q]
-	ArcgisLayerField                   arcgisLayerFieldThenLoader[Q]
-	ArcgisOauthToken                   arcgisOauthTokenThenLoader[Q]
-	ArcgisParcelMapping                arcgisParcelMappingThenLoader[Q]
-	ArcgisServiceFeature               arcgisServiceFeatureThenLoader[Q]
-	ArcgisServiceMap                   arcgisServiceMapThenLoader[Q]
-	ArcgisUser                         arcgisuserThenLoader[Q]
-	ArcgisUserPrivilege                arcgisUserPrivilegeThenLoader[Q]
 	CommsEmailContact                  commsEmailContactThenLoader[Q]
 	CommsEmailLog                      commsEmailLogThenLoader[Q]
 	CommsEmailTemplate                 commsEmailTemplateThenLoader[Q]
@@ -336,16 +306,6 @@ type thenLoaders[Q orm.Loadable] struct {
 func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 	return thenLoaders[Q]{
 		Address:                            buildAddressThenLoader[Q](),
-		ArcgisAccount:                      buildArcgisAccountThenLoader[Q](),
-		ArcgisAddressMapping:               buildArcgisAddressMappingThenLoader[Q](),
-		ArcgisLayer:                        buildArcgisLayerThenLoader[Q](),
-		ArcgisLayerField:                   buildArcgisLayerFieldThenLoader[Q](),
-		ArcgisOauthToken:                   buildArcgisOauthTokenThenLoader[Q](),
-		ArcgisParcelMapping:                buildArcgisParcelMappingThenLoader[Q](),
-		ArcgisServiceFeature:               buildArcgisServiceFeatureThenLoader[Q](),
-		ArcgisServiceMap:                   buildArcgisServiceMapThenLoader[Q](),
-		ArcgisUser:                         buildArcgisUserThenLoader[Q](),
-		ArcgisUserPrivilege:                buildArcgisUserPrivilegeThenLoader[Q](),
 		CommsEmailContact:                  buildCommsEmailContactThenLoader[Q](),
 		CommsEmailLog:                      buildCommsEmailLogThenLoader[Q](),
 		CommsEmailTemplate:                 buildCommsEmailTemplateThenLoader[Q](),

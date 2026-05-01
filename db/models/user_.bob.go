@@ -60,8 +60,6 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 
 // userR is where relationships are stored.
 type userR struct {
-	UserOauthTokens                 ArcgisOauthTokenSlice        // arcgis.oauth_token.oauth_token_user_id_fkey
-	PublicUserUser                  ArcgisUserSlice              // arcgis.user_.user__public_user_id_fkey
 	CreatorTextJobs                 CommsTextJobSlice            // comms.text_job.text_job_creator_id_fkey
 	ClosedByCommunications          CommunicationSlice           // communication.communication_closed_by_fkey
 	InvalidatedByCommunications     CommunicationSlice           // communication.communication_invalidated_by_fkey
@@ -746,54 +744,6 @@ func (o UserSlice) ReloadAll(ctx context.Context, exec bob.Executor) error {
 	o.copyMatchingRows(o2...)
 
 	return nil
-}
-
-// UserOauthTokens starts a query for related objects on arcgis.oauth_token
-func (o *User) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisOauthTokensQuery {
-	return ArcgisOauthTokens.Query(append(mods,
-		sm.Where(ArcgisOauthTokens.Columns.UserID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os UserSlice) UserOauthTokens(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisOauthTokensQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return ArcgisOauthTokens.Query(append(mods,
-		sm.Where(psql.Group(ArcgisOauthTokens.Columns.UserID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// PublicUserUser starts a query for related objects on arcgis.user_
-func (o *User) PublicUserUser(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisUsersQuery {
-	return ArcgisUsers.Query(append(mods,
-		sm.Where(ArcgisUsers.Columns.PublicUserID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os UserSlice) PublicUserUser(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisUsersQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return ArcgisUsers.Query(append(mods,
-		sm.Where(psql.Group(ArcgisUsers.Columns.PublicUserID).OP("IN", PKArgExpr)),
-	)...)
 }
 
 // CreatorTextJobs starts a query for related objects on comms.text_job
@@ -1514,142 +1464,6 @@ func (os UserSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) Organiza
 	return Organizations.Query(append(mods,
 		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
 	)...)
-}
-
-func insertUserUserOauthTokens0(ctx context.Context, exec bob.Executor, arcgisOauthTokens1 []*ArcgisOauthTokenSetter, user0 *User) (ArcgisOauthTokenSlice, error) {
-	for i := range arcgisOauthTokens1 {
-		arcgisOauthTokens1[i].UserID = omit.From(user0.ID)
-	}
-
-	ret, err := ArcgisOauthTokens.Insert(bob.ToMods(arcgisOauthTokens1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertUserUserOauthTokens0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachUserUserOauthTokens0(ctx context.Context, exec bob.Executor, count int, arcgisOauthTokens1 ArcgisOauthTokenSlice, user0 *User) (ArcgisOauthTokenSlice, error) {
-	setter := &ArcgisOauthTokenSetter{
-		UserID: omit.From(user0.ID),
-	}
-
-	err := arcgisOauthTokens1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachUserUserOauthTokens0: %w", err)
-	}
-
-	return arcgisOauthTokens1, nil
-}
-
-func (user0 *User) InsertUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*ArcgisOauthTokenSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	arcgisOauthTokens1, err := insertUserUserOauthTokens0(ctx, exec, related, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, arcgisOauthTokens1...)
-
-	for _, rel := range arcgisOauthTokens1 {
-		rel.R.UserUser = user0
-	}
-	return nil
-}
-
-func (user0 *User) AttachUserOauthTokens(ctx context.Context, exec bob.Executor, related ...*ArcgisOauthToken) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	arcgisOauthTokens1 := ArcgisOauthTokenSlice(related)
-
-	_, err = attachUserUserOauthTokens0(ctx, exec, len(related), arcgisOauthTokens1, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.UserOauthTokens = append(user0.R.UserOauthTokens, arcgisOauthTokens1...)
-
-	for _, rel := range related {
-		rel.R.UserUser = user0
-	}
-
-	return nil
-}
-
-func insertUserPublicUserUser0(ctx context.Context, exec bob.Executor, arcgisusers1 []*ArcgisUserSetter, user0 *User) (ArcgisUserSlice, error) {
-	for i := range arcgisusers1 {
-		arcgisusers1[i].PublicUserID = omit.From(user0.ID)
-	}
-
-	ret, err := ArcgisUsers.Insert(bob.ToMods(arcgisusers1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertUserPublicUserUser0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachUserPublicUserUser0(ctx context.Context, exec bob.Executor, count int, arcgisusers1 ArcgisUserSlice, user0 *User) (ArcgisUserSlice, error) {
-	setter := &ArcgisUserSetter{
-		PublicUserID: omit.From(user0.ID),
-	}
-
-	err := arcgisusers1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachUserPublicUserUser0: %w", err)
-	}
-
-	return arcgisusers1, nil
-}
-
-func (user0 *User) InsertPublicUserUser(ctx context.Context, exec bob.Executor, related ...*ArcgisUserSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	arcgisusers1, err := insertUserPublicUserUser0(ctx, exec, related, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.PublicUserUser = append(user0.R.PublicUserUser, arcgisusers1...)
-
-	for _, rel := range arcgisusers1 {
-		rel.R.PublicUserUser = user0
-	}
-	return nil
-}
-
-func (user0 *User) AttachPublicUserUser(ctx context.Context, exec bob.Executor, related ...*ArcgisUser) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	arcgisusers1 := ArcgisUserSlice(related)
-
-	_, err = attachUserPublicUserUser0(ctx, exec, len(related), arcgisusers1, user0)
-	if err != nil {
-		return err
-	}
-
-	user0.R.PublicUserUser = append(user0.R.PublicUserUser, arcgisusers1...)
-
-	for _, rel := range related {
-		rel.R.PublicUserUser = user0
-	}
-
-	return nil
 }
 
 func insertUserCreatorTextJobs0(ctx context.Context, exec bob.Executor, commsTextJobs1 []*CommsTextJobSetter, user0 *User) (CommsTextJobSlice, error) {
@@ -3724,34 +3538,6 @@ func (o *User) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "UserOauthTokens":
-		rels, ok := retrieved.(ArcgisOauthTokenSlice)
-		if !ok {
-			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.UserOauthTokens = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.UserUser = o
-			}
-		}
-		return nil
-	case "PublicUserUser":
-		rels, ok := retrieved.(ArcgisUserSlice)
-		if !ok {
-			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.PublicUserUser = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.PublicUserUser = o
-			}
-		}
-		return nil
 	case "CreatorTextJobs":
 		rels, ok := retrieved.(CommsTextJobSlice)
 		if !ok {
@@ -4198,8 +3984,6 @@ func buildUserPreloader() userPreloader {
 }
 
 type userThenLoader[Q orm.Loadable] struct {
-	UserOauthTokens                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	PublicUserUser                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	CreatorTextJobs                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	ClosedByCommunications          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	InvalidatedByCommunications     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -4233,12 +4017,6 @@ type userThenLoader[Q orm.Loadable] struct {
 }
 
 func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
-	type UserOauthTokensLoadInterface interface {
-		LoadUserOauthTokens(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type PublicUserUserLoadInterface interface {
-		LoadPublicUserUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
 	type CreatorTextJobsLoadInterface interface {
 		LoadCreatorTextJobs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -4331,18 +4109,6 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 
 	return userThenLoader[Q]{
-		UserOauthTokens: thenLoadBuilder[Q](
-			"UserOauthTokens",
-			func(ctx context.Context, exec bob.Executor, retrieved UserOauthTokensLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadUserOauthTokens(ctx, exec, mods...)
-			},
-		),
-		PublicUserUser: thenLoadBuilder[Q](
-			"PublicUserUser",
-			func(ctx context.Context, exec bob.Executor, retrieved PublicUserUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadPublicUserUser(ctx, exec, mods...)
-			},
-		),
 		CreatorTextJobs: thenLoadBuilder[Q](
 			"CreatorTextJobs",
 			func(ctx context.Context, exec bob.Executor, retrieved CreatorTextJobsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -4524,128 +4290,6 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			},
 		),
 	}
-}
-
-// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
-func (o *User) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.UserOauthTokens = nil
-
-	related, err := o.UserOauthTokens(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.UserUser = o
-	}
-
-	o.R.UserOauthTokens = related
-	return nil
-}
-
-// LoadUserOauthTokens loads the user's UserOauthTokens into the .R struct
-func (os UserSlice) LoadUserOauthTokens(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisOauthTokens, err := os.UserOauthTokens(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.UserOauthTokens = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisOauthTokens {
-
-			if !(o.ID == rel.UserID) {
-				continue
-			}
-
-			rel.R.UserUser = o
-
-			o.R.UserOauthTokens = append(o.R.UserOauthTokens, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadPublicUserUser loads the user's PublicUserUser into the .R struct
-func (o *User) LoadPublicUserUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.PublicUserUser = nil
-
-	related, err := o.PublicUserUser(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.PublicUserUser = o
-	}
-
-	o.R.PublicUserUser = related
-	return nil
-}
-
-// LoadPublicUserUser loads the user's PublicUserUser into the .R struct
-func (os UserSlice) LoadPublicUserUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisusers, err := os.PublicUserUser(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.PublicUserUser = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisusers {
-
-			if !(o.ID == rel.PublicUserID) {
-				continue
-			}
-
-			rel.R.PublicUserUser = o
-
-			o.R.PublicUserUser = append(o.R.PublicUserUser, rel)
-		}
-	}
-
-	return nil
 }
 
 // LoadCreatorTextJobs loads the user's CreatorTextJobs into the .R struct

@@ -5,17 +5,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/Gleipnir-Technology/nidus-sync/db/types"
 	"github.com/go-jet/jet/v2/generator/metadata"
 	genpostgres "github.com/go-jet/jet/v2/generator/postgres"
 	"github.com/go-jet/jet/v2/generator/template"
 	"github.com/go-jet/jet/v2/postgres"
 	_ "github.com/lib/pq"
 )
-
-type Box2D struct {
-	X float64
-	Y float64
-}
 
 var schemas []string = []string{
 	"arcgis",
@@ -29,7 +25,7 @@ func customTemplate() template.Template {
 				defaultTableModelField := template.DefaultTableModelField(column)
 				//log.Printf("'%s' '%s' '%s'", table.Name, column.Name, column.DataType.Name)
 				if column.Name == "extent" && column.DataType.Name == "box2d" {
-					defaultTableModelField.Type = template.NewType(Box2D{})
+					defaultTableModelField.Type = template.NewType(types.Box2D{})
 				}
 				return defaultTableModelField
 			})

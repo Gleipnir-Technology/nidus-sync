@@ -27,13 +27,14 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/dm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	queryarcgis "github.com/Gleipnir-Technology/nidus-sync/db/query/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
+	"github.com/Gleipnir-Technology/nidus-sync/db/types"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
@@ -51,27 +52,23 @@ var syncStatusByOrg map[int32]bool
 var CodeVerifier string = "random_secure_string_min_43_chars_long_should_be_stored_in_session"
 
 func HasFieldseekerConnection(ctx context.Context, user_id int32) (bool, error) {
-	result, err := models.ArcgisOauthTokens.Query(
-		sm.Where(
-			models.ArcgisOauthTokens.Columns.UserID.EQ(psql.Arg(user_id)),
-		),
-	).Exists(ctx, db.PGInstance.BobDB)
+	result, err := queryarcgis.OAuthTokenForUserExists(ctx, int64(user_id))
 	if err != nil {
 		return false, err
 	}
-	return result, nil
+	return *result, nil
 }
 
 func IsSyncOngoing(org_id int32) bool {
 	return syncStatusByOrg[org_id]
 }
-func getOAuthForOrg(ctx context.Context, org *models.Organization) (*models.ArcgisOauthToken, error) {
+func getOAuthForOrg(ctx context.Context, org *models.Organization) (*model.OAuthToken, error) {
 	users, err := org.User().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query all users for org: %w", err)
 	}
 	for _, user := range users {
-		oauths, err := user.UserOauthTokens(models.SelectWhere.ArcgisOauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
+		oauths, err := queryarcgis.OAuthTokensForUser(ctx, int64(user.ID))
 		if err != nil {
 			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
 		}
@@ -90,7 +87,7 @@ func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan st
 		workerCtx, cancel := context.WithCancel(context.Background())
 		var wg sync.WaitGroup
 
-		oauths, err := models.ArcgisOauthTokens.Query(models.SelectWhere.ArcgisOauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
+		oauths, err := queryarcgis.OAuthTokensValid(ctx)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get oauths")
 			return
@@ -220,7 +217,7 @@ func generateCodeVerifier() string {
 }
 
 // Find out what we can about this user
-func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.ArcgisOauthToken) {
+func updateArcgisUserData(ctx context.Context, user *models.User, oauth *model.OAuthToken) {
 	client, err := arcgis.NewArcGISAuth(
 		ctx,
 		&arcgis.AuthenticatorOAuth{
@@ -254,13 +251,11 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 		return
 	}
 
-	_, err = models.ArcgisOauthTokens.Update(
-		//um.SetCol(string(models.ArcgisOauthTokens.Columns.ArcgisID)).ToArg(portal.User.ID),
-		//um.SetCol(string(models.ArcgisOauthTokens.Columns.ArcgisLicenseTypeID)).ToArg(portal.User.UserLicenseTypeID),
-		um.SetCol("arcgis_id").ToArg(ag_user.ID),
-		um.SetCol("arcgis_license_type_id").ToArg(ag_user.UserLicenseTypeID),
-		um.Where(models.ArcgisOauthTokens.Columns.RefreshToken.EQ(psql.Arg(oauth.RefreshToken))),
-	).Exec(ctx, db.PGInstance.BobDB)
+	model := model.OAuthToken{
+		ArcgisID:            &ag_user.ID,
+		ArcgisLicenseTypeID: &ag_user.UserLicenseTypeID,
+	}
+	err = queryarcgis.OAuthTokenUpdateLicense(ctx, oauth.RefreshToken, &model)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update oauth token portal data")
 		return
@@ -287,9 +282,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 	// Ensure the fieldseeker service is saved on the account
 	// Why yes, we do get 'ArcGIS' and 'arcgis' from the API, why do you ask?
 	url_corrected := strings.Replace(fssync.ServiceFeature.URL.String(), "/arcgis/", "/ArcGIS/", 1)
-	service_account, err := models.ArcgisServiceFeatures.Query(
-		models.SelectWhere.ArcgisServiceFeatures.URL.EQ(url_corrected),
-	).One(ctx, txn)
+	service_account, err := queryarcgis.ServiceFeatureFromURL(ctx, url_corrected)
 	if err != nil {
 		log.Error().Err(err).Str("url", fssync.ServiceFeature.URL.String()).Str("url_corrected", url_corrected).Msg("no fieldseeker service to link, it should have been created before")
 		return
@@ -308,7 +301,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *models.
 	newOAuthTokenChannel <- struct{}{}
 }
 
-func newFieldSeeker(ctx context.Context, oa *models.ArcgisOauthToken) (*fieldseeker.FieldSeeker, error) {
+func newFieldSeeker(ctx context.Context, oa *model.OAuthToken) (*fieldseeker.FieldSeeker, error) {
 	if oa == nil {
 		return nil, fmt.Errorf("no oath token")
 	}
@@ -351,7 +344,7 @@ func newFieldSeeker(ctx context.Context, oa *models.ArcgisOauthToken) (*fieldsee
 	}
 	return fssync, nil
 }
-func updateArcgisAccount(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, user *models.User) (*models.ArcgisAccount, *models.ArcgisUser, error) {
+func updateArcgisAccount(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, user *models.User) (*model.Account, *model.User, error) {
 	p, err := client.PortalsSelf(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to get ArcGIS user data: %w", err)
@@ -359,27 +352,27 @@ func updateArcgisAccount(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS,
 
 	// Ensure that an arcgis account exists to attach to
 	account, err := ensureArcgisAccount(ctx, txn, p, user)
-	ag_user, err := models.FindArcgisUser(ctx, txn, p.User.ID)
+	ag_user, err := queryarcgis.UserFromID(ctx, p.User.ID)
 	if err != nil {
 		log.Warn().Err(err).Msg("need arcgis user account?")
 		if err.Error() == "sql: no rows in result set" {
-			setter := models.ArcgisUserSetter{
-				Access:            omit.From(p.Access),
-				Created:           omit.From(time.Unix(p.User.Created, 0)),
-				Email:             omit.From(p.User.Email),
-				FullName:          omit.From(p.User.FullName),
-				ID:                omit.From(p.User.ID),
-				Level:             omit.From(p.User.Level),
-				OrgID:             omit.From(p.User.OrgID),
-				PublicUserID:      omit.From(user.ID),
-				Region:            omit.From(p.Region),
-				Role:              omit.From(p.User.Role),
-				RoleID:            omit.From(p.User.RoleId),
-				Username:          omit.From(p.User.Username),
-				UserLicenseTypeID: omit.From(p.User.UserLicenseTypeID),
-				UserType:          omit.From(p.User.UserType),
+			setter := model.User{
+				Access:            p.Access,
+				Created:           time.Unix(p.User.Created, 0),
+				Email:             p.User.Email,
+				FullName:          p.User.FullName,
+				ID:                p.User.ID,
+				Level:             p.User.Level,
+				OrgID:             p.User.OrgID,
+				PublicUserID:      user.ID,
+				Region:            p.Region,
+				Role:              p.User.Role,
+				RoleID:            p.User.RoleId,
+				Username:          p.User.Username,
+				UserLicenseTypeID: p.User.UserLicenseTypeID,
+				UserType:          p.User.UserType,
 			}
-			ag_user, err = models.ArcgisUsers.Insert(&setter).One(ctx, txn)
+			ag_user, err = queryarcgis.UserInsert(ctx, txn, &setter)
 			if err != nil {
 				return nil, nil, fmt.Errorf("Failed to add arcgis user data: %w", err)
 			}
@@ -388,22 +381,18 @@ func updateArcgisAccount(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS,
 		}
 	}
 
-	_, err = models.ArcgisUserPrivileges.Delete(
-		dm.Where(
-			models.ArcgisUserPrivileges.Columns.UserID.EQ(psql.Arg(p.User.ID)),
-		),
-	).Exec(ctx, txn)
+	err = queryarcgis.UserPrivilegesDeleteByUserID(ctx, txn, p.User.ID)
 
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to delete previous user privilege data: %w", err)
 	}
 
 	for _, priv := range p.User.Privileges {
-		s := models.ArcgisUserPrivilegeSetter{
-			Privilege: omit.From(priv),
-			UserID:    omit.From(p.User.ID),
+		s := model.UserPrivilege{
+			Privilege: priv,
+			UserID:    p.User.ID,
 		}
-		_, err := models.ArcgisUserPrivileges.Insert(&s).One(ctx, txn)
+		err := queryarcgis.UserPrivilegeInsert(ctx, txn, &s)
 		if err != nil {
 			return nil, nil, fmt.Errorf("Failed to add arcgis user privilege data: %w", err)
 		}
@@ -411,24 +400,24 @@ func updateArcgisAccount(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS,
 	log.Info().Str("username", p.User.Username).Str("user_id", p.User.ID).Str("org_id", p.User.OrgID).Str("org_name", p.Name).Str("license_type_id", p.User.UserLicenseTypeID).Msg("Updated portals data")
 	return account, ag_user, nil
 }
-func updateServiceData(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, user *models.User, account *models.ArcgisAccount) error {
+func updateServiceData(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, user *models.User, account *model.Account) error {
 	service_maps, err := client.MapServices(ctx)
 	if err != nil {
 		return fmt.Errorf("list map services: %w", err)
 	}
 	for _, sm := range service_maps {
 		log.Info().Str("account-id", account.ID).Str("arcgis-id", sm.ID).Str("name", sm.Name).Str("title", sm.Title).Str("url", sm.URL.String()).Msg("inserting map service")
-		_, err := models.FindArcgisServiceMap(ctx, txn, sm.ID)
+		_, err := queryarcgis.ServiceMapFromID(ctx, sm.ID)
 		if err != nil {
 			if err.Error() == "sql: no rows in result set" {
-				setter := models.ArcgisServiceMapSetter{
-					AccountID: omit.From(account.ID),
-					ArcgisID:  omit.From(sm.ID),
-					Name:      omit.From(sm.Name),
-					Title:     omit.From(sm.Title),
-					URL:       omit.From(sm.URL.String()),
+				setter := model.ServiceMap{
+					AccountID: account.ID,
+					ArcgisID:  sm.ID,
+					Name:      sm.Name,
+					Title:     sm.Title,
+					URL:       sm.URL.String(),
 				}
-				_, err := models.ArcgisServiceMaps.Insert(&setter).One(ctx, txn)
+				err := queryarcgis.ServiceMapInsert(ctx, txn, &setter)
 				if err != nil {
 					return fmt.Errorf("save map service: %w", err)
 				}
@@ -443,21 +432,6 @@ func updateServiceData(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, u
 				return err
 			}
 		}
-		/*
-
-			// Created this after (maybe mistakenly) marking the above as:
-			// TODO: No idea why this isn't working, but it's mixing up the inputs
-			_, err = psql.Insert(
-				im.Into("arcgis.service_map", "account_id", "arcgis_id", "name", "title", "url"),
-				im.Values(
-					psql.Arg(account.ID),
-					psql.Arg(sm.ID),
-					psql.Arg(sm.Name),
-					psql.Arg(sm.Title),
-					psql.Arg(sm.URL.String()),
-				),
-			).Exec(ctx, txn)
-		*/
 	}
 
 	services, err := client.Services(ctx)
@@ -469,10 +443,8 @@ func updateServiceData(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, u
 	}
 	return nil
 }
-func ensureServiceFeature(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, user *models.User, account *models.ArcgisAccount, service *arcgis.ServiceFeature) error {
-	_, err := models.ArcgisServiceFeatures.Query(
-		models.SelectWhere.ArcgisServiceFeatures.URL.EQ(service.URL.String()),
-	).One(ctx, txn)
+func ensureServiceFeature(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, user *models.User, account *model.Account, service *arcgis.ServiceFeature) error {
+	_, err := queryarcgis.ServiceFeatureFromURL(ctx, service.URL.String())
 	if err == nil {
 		return nil
 	}
@@ -484,28 +456,19 @@ func ensureServiceFeature(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS
 		return fmt.Errorf("populate metadata: %w", err)
 	}
 
-	/*
-		TODO: figure out how to do this without raw insert
-		setter := models.ArcgisServiceFeatureSetter{
-			AccountID:        omitnull.From(account.ID),
-			Extent:           omit.From(metadata.FullExtent),
-			ItemID:           omit.From(metadata.ServiceItemId),
-			SpatialReference: omit.From(metadata.SpatialReference.LatestWKID),
-			URL:              omit.From(service.URL.String()),
-		}
-		_, err = models.ArcgisServiceFeatures.Insert(&setter).One(ctx, txn)
-	*/
-	_, err = psql.Insert(
-		im.Into("arcgis.service_feature", "account_id", "extent", "item_id", "spatial_reference", "url"),
-		im.Values(
-			psql.Arg(account.ID),
-			psql.Raw("Box2D(ST_GeomFromText('LINESTRING(1 2, 3 4, 5 6)'))"),
-			psql.Arg(metadata.ServiceItemId),
-			psql.Arg(metadata.SpatialReference.LatestWKID),
-			psql.Arg(service.URL.String()),
-		),
-	).Exec(ctx, txn)
-	return err
+	setter := model.ServiceFeature{
+		AccountID: &account.ID,
+		Extent: types.Box2D{
+			XMax: 180,
+			YMax: 90,
+			XMin: -180,
+			YMin: -90,
+		},
+		ItemID:           metadata.ServiceItemId,
+		SpatialReference: int32(*metadata.SpatialReference.LatestWKID),
+		URL:              service.URL.String(),
+	}
+	return queryarcgis.ServiceFeatureInsert(ctx, txn, &setter)
 }
 
 func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
@@ -646,10 +609,10 @@ func logPermissions(ctx context.Context, fssync *fieldseeker.FieldSeeker) {
 	}
 }
 
-func maintainOAuth(ctx context.Context, aot *models.ArcgisOauthToken) error {
+func maintainOAuth(ctx context.Context, aot *model.OAuthToken) error {
 	for {
 		// Refresh from the database
-		oa, err := models.FindArcgisOauthToken(ctx, db.PGInstance.BobDB, aot.ID)
+		oa, err := queryarcgis.OAuthTokenFromID(ctx, int64(aot.ID))
 		if err != nil {
 			return fmt.Errorf("Failed to update oauth token from database: %w", err)
 		}
@@ -689,11 +652,8 @@ func maintainOAuth(ctx context.Context, aot *models.ArcgisOauthToken) error {
 
 // Mark that a given oauth token has failed. This includes a notification to
 // the user.
-func markTokenFailed(ctx context.Context, oauth *models.ArcgisOauthToken) {
-	oauthSetter := models.ArcgisOauthTokenSetter{
-		InvalidatedAt: omitnull.From(time.Now()),
-	}
-	err := oauth.Update(ctx, db.PGInstance.BobDB, &oauthSetter)
+func markTokenFailed(ctx context.Context, oauth *model.OAuthToken) {
+	err := queryarcgis.OAuthTokenInvalidate(ctx, int64(oauth.ID))
 	if err != nil {
 		log.Error().Str("err", err.Error()).Msg("Failed to mark token failed")
 	}
@@ -1602,22 +1562,22 @@ func exportFieldseekerLayer(ctx context.Context, group pond.ResultTaskGroup[Sync
 	*/
 }
 
-func ensureArcgisAccount(ctx context.Context, txn bob.Tx, portal *response.Portal, user *models.User) (*models.ArcgisAccount, error) {
-	account, err := models.FindArcgisAccount(ctx, txn, portal.User.OrgID)
+func ensureArcgisAccount(ctx context.Context, txn bob.Tx, portal *response.Portal, user *models.User) (*model.Account, error) {
+	account, err := queryarcgis.AccountFromID(ctx, portal.User.OrgID)
 	if err != nil {
 		log.Warn().Err(err).Msg("need arcgis account?")
 		if err.Error() == "sql: no rows in result set" {
-			setter := models.ArcgisAccountSetter{
-				ID:             omit.From(portal.User.OrgID),
-				Name:           omit.From(portal.Name),
-				OrganizationID: omit.From(user.OrganizationID),
-				URLFeatures:    omitnull.FromPtr[string](nil),
-				URLInsights:    omitnull.FromPtr[string](nil),
-				URLGeometry:    omitnull.FromPtr[string](nil),
-				URLNotebooks:   omitnull.FromPtr[string](nil),
-				URLTiles:       omitnull.FromPtr[string](nil),
+			setter := model.Account{
+				ID:             portal.User.OrgID,
+				Name:           portal.Name,
+				OrganizationID: user.OrganizationID,
+				URLFeatures:    nil,
+				URLInsights:    nil,
+				URLGeometry:    nil,
+				URLNotebooks:   nil,
+				URLTiles:       nil,
 			}
-			account, err = models.ArcgisAccounts.Insert(&setter).One(ctx, txn)
+			account, err = queryarcgis.AccountInsert(ctx, txn, &setter)
 			if err != nil {
 				return nil, fmt.Errorf("create arcgis account: %w", err)
 			}

@@ -68,7 +68,7 @@ func restyMiddleware(rclient *resty.Client, response *resty.Response) error {
 			Request:   u,
 			Response:  string(resp_bytes),
 		}).RETURNING(table.APIRequest.AllColumns)
-	data, err := db.Execute[model.APIRequest](ctx, statement)
+	data, err := db.ExecuteOne[model.APIRequest](ctx, statement)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to insert stadia request")
 	} else {

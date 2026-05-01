@@ -6,13 +6,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/model"
+	queryarcgis "github.com/Gleipnir-Technology/nidus-sync/db/query/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 )
 
 // When there is no oauth for an organization
@@ -20,7 +17,7 @@ type NoOAuthForOrg struct{}
 
 func (e NoOAuthForOrg) Error() string { return "No oauth available for organization" }
 
-func GetOAuthForOrg(ctx context.Context, org Organization) (*models.ArcgisOauthToken, error) {
+func GetOAuthForOrg(ctx context.Context, org Organization) (*model.OAuthToken, error) {
 	result, err := oauth.GetOAuthForOrg(ctx, org.model)
 	if result == nil && err == nil {
 		return nil, &NoOAuthForOrg{}
@@ -28,10 +25,8 @@ func GetOAuthForOrg(ctx context.Context, org Organization) (*models.ArcgisOauthT
 	return result, err
 }
 
-func GetOAuthForUser(ctx context.Context, user User) (*models.ArcgisOauthToken, error) {
-	oauth, err := user.model.UserOauthTokens(
-		sm.OrderBy("created").Desc(),
-	).One(ctx, db.PGInstance.BobDB)
+func GetOAuthForUser(ctx context.Context, user User) (*model.OAuthToken, error) {
+	oauth, err := queryarcgis.OAuthTokenForUser(ctx, int64(user.ID))
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			return nil, nil
@@ -54,20 +49,20 @@ func HandleOauthAccessCode(ctx context.Context, user User, code string) error {
 	}
 	accessExpires := oauth.FutureUTCTimestamp(token.ExpiresIn)
 	refreshExpires := oauth.FutureUTCTimestamp(token.RefreshTokenExpiresIn)
-	setter := models.ArcgisOauthTokenSetter{
-		AccessToken:        omit.From(token.AccessToken),
-		AccessTokenExpires: omit.From(accessExpires),
-		//ArcgisAccountID:     omit.From(
-		ArcgisID:            omitnull.FromPtr[string](nil),
-		ArcgisLicenseTypeID: omitnull.FromPtr[string](nil),
-		Created:             omit.From(time.Now()),
-		InvalidatedAt:       omitnull.FromPtr[time.Time](nil),
-		RefreshToken:        omit.From(token.RefreshToken),
-		RefreshTokenExpires: omit.From(refreshExpires),
-		UserID:              omit.From(int32(user.ID)),
-		Username:            omit.From(token.Username),
+	setter := model.OAuthToken{
+		AccessToken:         token.AccessToken,
+		AccessTokenExpires:  accessExpires,
+		ArcgisAccountID:     nil,
+		ArcgisID:            nil,
+		ArcgisLicenseTypeID: nil,
+		Created:             time.Now(),
+		InvalidatedAt:       nil,
+		RefreshToken:        token.RefreshToken,
+		RefreshTokenExpires: refreshExpires,
+		UserID:              int32(user.ID),
+		Username:            token.Username,
 	}
-	oauth, err := models.ArcgisOauthTokens.Insert(&setter).One(ctx, db.PGInstance.BobDB)
+	oauth, err := queryarcgis.OAuthTokenInsert(ctx, &setter)
 	if err != nil {
 		return fmt.Errorf("Failed to save token to database: %w", err)
 	}

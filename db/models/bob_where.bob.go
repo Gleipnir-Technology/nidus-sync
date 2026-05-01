@@ -18,16 +18,6 @@ var (
 
 func Where[Q psql.Filterable]() struct {
 	Addresses                            addressWhere[Q]
-	ArcgisAccounts                       arcgisAccountWhere[Q]
-	ArcgisAddressMappings                arcgisAddressMappingWhere[Q]
-	ArcgisLayers                         arcgisLayerWhere[Q]
-	ArcgisLayerFields                    arcgisLayerFieldWhere[Q]
-	ArcgisOauthTokens                    arcgisOauthTokenWhere[Q]
-	ArcgisParcelMappings                 arcgisParcelMappingWhere[Q]
-	ArcgisServiceFeatures                arcgisServiceFeatureWhere[Q]
-	ArcgisServiceMaps                    arcgisServiceMapWhere[Q]
-	ArcgisUsers                          arcgisuserWhere[Q]
-	ArcgisUserPrivileges                 arcgisUserPrivilegeWhere[Q]
 	CommsEmailContacts                   commsEmailContactWhere[Q]
 	CommsEmailLogs                       commsEmailLogWhere[Q]
 	CommsEmailTemplates                  commsEmailTemplateWhere[Q]
@@ -130,16 +120,6 @@ func Where[Q psql.Filterable]() struct {
 } {
 	return struct {
 		Addresses                            addressWhere[Q]
-		ArcgisAccounts                       arcgisAccountWhere[Q]
-		ArcgisAddressMappings                arcgisAddressMappingWhere[Q]
-		ArcgisLayers                         arcgisLayerWhere[Q]
-		ArcgisLayerFields                    arcgisLayerFieldWhere[Q]
-		ArcgisOauthTokens                    arcgisOauthTokenWhere[Q]
-		ArcgisParcelMappings                 arcgisParcelMappingWhere[Q]
-		ArcgisServiceFeatures                arcgisServiceFeatureWhere[Q]
-		ArcgisServiceMaps                    arcgisServiceMapWhere[Q]
-		ArcgisUsers                          arcgisuserWhere[Q]
-		ArcgisUserPrivileges                 arcgisUserPrivilegeWhere[Q]
 		CommsEmailContacts                   commsEmailContactWhere[Q]
 		CommsEmailLogs                       commsEmailLogWhere[Q]
 		CommsEmailTemplates                  commsEmailTemplateWhere[Q]
@@ -241,16 +221,6 @@ func Where[Q psql.Filterable]() struct {
 		Users                                userWhere[Q]
 	}{
 		Addresses:                            buildAddressWhere[Q](Addresses.Columns),
-		ArcgisAccounts:                       buildArcgisAccountWhere[Q](ArcgisAccounts.Columns),
-		ArcgisAddressMappings:                buildArcgisAddressMappingWhere[Q](ArcgisAddressMappings.Columns),
-		ArcgisLayers:                         buildArcgisLayerWhere[Q](ArcgisLayers.Columns),
-		ArcgisLayerFields:                    buildArcgisLayerFieldWhere[Q](ArcgisLayerFields.Columns),
-		ArcgisOauthTokens:                    buildArcgisOauthTokenWhere[Q](ArcgisOauthTokens.Columns),
-		ArcgisParcelMappings:                 buildArcgisParcelMappingWhere[Q](ArcgisParcelMappings.Columns),
-		ArcgisServiceFeatures:                buildArcgisServiceFeatureWhere[Q](ArcgisServiceFeatures.Columns),
-		ArcgisServiceMaps:                    buildArcgisServiceMapWhere[Q](ArcgisServiceMaps.Columns),
-		ArcgisUsers:                          buildArcgisUserWhere[Q](ArcgisUsers.Columns),
-		ArcgisUserPrivileges:                 buildArcgisUserPrivilegeWhere[Q](ArcgisUserPrivileges.Columns),
 		CommsEmailContacts:                   buildCommsEmailContactWhere[Q](CommsEmailContacts.Columns),
 		CommsEmailLogs:                       buildCommsEmailLogWhere[Q](CommsEmailLogs.Columns),
 		CommsEmailTemplates:                  buildCommsEmailTemplateWhere[Q](CommsEmailTemplates.Columns),

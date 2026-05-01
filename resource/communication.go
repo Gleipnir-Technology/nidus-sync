@@ -28,6 +28,7 @@ type communication struct {
 	Created      time.Time `json:"created"`
 	ID           string    `json:"id"`
 	PublicReport string    `json:"public_report"`
+	Source       string    `json:"source"`
 	Type         string    `json:"type"`
 }
 type communicationList struct {

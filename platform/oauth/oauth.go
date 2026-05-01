@@ -13,8 +13,9 @@ import (
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/aarondl/opt/omit"
+	queryarcgis "github.com/Gleipnir-Technology/nidus-sync/db/query/arcgis"
 	"github.com/rs/zerolog/log"
 )
 
@@ -90,13 +91,13 @@ func FutureUTCTimestamp(secondsFromNow int) time.Time {
 	return time.Now().UTC().Add(time.Duration(secondsFromNow) * time.Second)
 }
 
-func GetOAuthForOrg(ctx context.Context, org *models.Organization) (*models.ArcgisOauthToken, error) {
+func GetOAuthForOrg(ctx context.Context, org *models.Organization) (*model.OAuthToken, error) {
 	users, err := org.User().All(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query all users for org: %w", err)
 	}
 	for _, user := range users {
-		oauths, err := user.UserOauthTokens(models.SelectWhere.ArcgisOauthTokens.InvalidatedAt.IsNull()).All(ctx, db.PGInstance.BobDB)
+		oauths, err := queryarcgis.OAuthTokensForUser(ctx, int64(user.ID))
 		if err != nil {
 			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
 		}
@@ -108,7 +109,7 @@ func GetOAuthForOrg(ctx context.Context, org *models.Organization) (*models.Arcg
 }
 
 // Update the access token to keep it fresh and alive
-func RefreshAccessToken(ctx context.Context, oauth *models.ArcgisOauthToken) error {
+func RefreshAccessToken(ctx context.Context, oauth *model.OAuthToken) error {
 	form := url.Values{
 		"grant_type":    []string{"refresh_token"},
 		"client_id":     []string{config.ClientID},
@@ -119,12 +120,12 @@ func RefreshAccessToken(ctx context.Context, oauth *models.ArcgisOauthToken) err
 		return fmt.Errorf("Failed to handle request: %w", err)
 	}
 	accessExpires := FutureUTCTimestamp(token.ExpiresIn)
-	setter := models.ArcgisOauthTokenSetter{
-		AccessToken:        omit.From(token.AccessToken),
-		AccessTokenExpires: omit.From(accessExpires),
-		Username:           omit.From(token.Username),
+	model := model.OAuthToken{
+		AccessToken:        token.AccessToken,
+		AccessTokenExpires: accessExpires,
+		Username:           token.Username,
 	}
-	err = oauth.Update(ctx, db.PGInstance.BobDB, &setter)
+	err = queryarcgis.OAuthTokenUpdateAccessToken(ctx, int64(oauth.ID), &model)
 	if err != nil {
 		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}
@@ -133,7 +134,7 @@ func RefreshAccessToken(ctx context.Context, oauth *models.ArcgisOauthToken) err
 }
 
 // Update the refresh token to keep it fresh and alive
-func RefreshRefreshToken(ctx context.Context, oauth *models.ArcgisOauthToken) error {
+func RefreshRefreshToken(ctx context.Context, oauth *model.OAuthToken) error {
 
 	form := url.Values{
 		"grant_type":    []string{"exchange_refresh_token"},
@@ -146,12 +147,12 @@ func RefreshRefreshToken(ctx context.Context, oauth *models.ArcgisOauthToken) er
 		return fmt.Errorf("Failed to handle request: %w", err)
 	}
 	refreshExpires := FutureUTCTimestamp(token.ExpiresIn)
-	setter := models.ArcgisOauthTokenSetter{
-		RefreshToken:        omit.From(token.RefreshToken),
-		RefreshTokenExpires: omit.From(refreshExpires),
-		Username:            omit.From(token.Username),
+	model := model.OAuthToken{
+		RefreshToken:        token.RefreshToken,
+		RefreshTokenExpires: refreshExpires,
+		Username:            token.Username,
 	}
-	err = oauth.Update(ctx, db.PGInstance.BobDB, &setter)
+	err = queryarcgis.OAuthTokenUpdateRefreshToken(ctx, int64(oauth.ID), &model)
 	if err != nil {
 		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}

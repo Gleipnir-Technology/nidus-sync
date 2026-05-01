@@ -78,54 +78,48 @@ type OrganizationsQuery = *psql.ViewQuery[*Organization, OrganizationSlice]
 
 // organizationR is where relationships are stored.
 type organizationR struct {
-	Accounts                                    ArcgisAccountSlice                     // arcgis.account.account_organization_id_fkey
-	AddressMappings                             ArcgisAddressMappingSlice              // arcgis.address_mapping.address_mapping_organization_id_fkey
-	ParcelMappings                              ArcgisParcelMappingSlice               // arcgis.parcel_mapping.parcel_mapping_organization_id_fkey
-	EmailContacts                               CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
-	Phones                                      CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
-	Features                                    FeatureSlice                           // feature.feature_organization_id_fkey
-	Containerrelates                            FieldseekerContainerrelateSlice        // fieldseeker.containerrelate.containerrelate_organization_id_fkey
-	Fieldscoutinglogs                           FieldseekerFieldscoutinglogSlice       // fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey
-	Habitatrelates                              FieldseekerHabitatrelateSlice          // fieldseeker.habitatrelate.habitatrelate_organization_id_fkey
-	Inspectionsamples                           FieldseekerInspectionsampleSlice       // fieldseeker.inspectionsample.inspectionsample_organization_id_fkey
-	Inspectionsampledetails                     FieldseekerInspectionsampledetailSlice // fieldseeker.inspectionsampledetail.inspectionsampledetail_organization_id_fkey
-	Linelocations                               FieldseekerLinelocationSlice           // fieldseeker.linelocation.linelocation_organization_id_fkey
-	Locationtrackings                           FieldseekerLocationtrackingSlice       // fieldseeker.locationtracking.locationtracking_organization_id_fkey
-	Mosquitoinspections                         FieldseekerMosquitoinspectionSlice     // fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey
-	Pointlocations                              FieldseekerPointlocationSlice          // fieldseeker.pointlocation.pointlocation_organization_id_fkey
-	Polygonlocations                            FieldseekerPolygonlocationSlice        // fieldseeker.polygonlocation.polygonlocation_organization_id_fkey
-	FieldseekerPool                             FieldseekerPoolSlice                   // fieldseeker.pool.pool_organization_id_fkey
-	Pooldetails                                 FieldseekerPooldetailSlice             // fieldseeker.pooldetail.pooldetail_organization_id_fkey
-	Proposedtreatmentareas                      FieldseekerProposedtreatmentareaSlice  // fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey
-	Qamosquitoinspections                       FieldseekerQamosquitoinspectionSlice   // fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey
-	Rodentlocations                             FieldseekerRodentlocationSlice         // fieldseeker.rodentlocation.rodentlocation_organization_id_fkey
-	Samplecollections                           FieldseekerSamplecollectionSlice       // fieldseeker.samplecollection.samplecollection_organization_id_fkey
-	Samplelocations                             FieldseekerSamplelocationSlice         // fieldseeker.samplelocation.samplelocation_organization_id_fkey
-	Servicerequests                             FieldseekerServicerequestSlice         // fieldseeker.servicerequest.servicerequest_organization_id_fkey
-	Speciesabundances                           FieldseekerSpeciesabundanceSlice       // fieldseeker.speciesabundance.speciesabundance_organization_id_fkey
-	Stormdrains                                 FieldseekerStormdrainSlice             // fieldseeker.stormdrain.stormdrain_organization_id_fkey
-	Timecards                                   FieldseekerTimecardSlice               // fieldseeker.timecard.timecard_organization_id_fkey
-	Trapdata                                    FieldseekerTrapdatumSlice              // fieldseeker.trapdata.trapdata_organization_id_fkey
-	Traplocations                               FieldseekerTraplocationSlice           // fieldseeker.traplocation.traplocation_organization_id_fkey
-	Treatments                                  FieldseekerTreatmentSlice              // fieldseeker.treatment.treatment_organization_id_fkey
-	Treatmentareas                              FieldseekerTreatmentareaSlice          // fieldseeker.treatmentarea.treatmentarea_organization_id_fkey
-	Zones                                       FieldseekerZoneSlice                   // fieldseeker.zones.zones_organization_id_fkey
-	Zones2s                                     FieldseekerZones2Slice                 // fieldseeker.zones2.zones2_organization_id_fkey
-	FieldseekerSyncs                            FieldseekerSyncSlice                   // fieldseeker_sync.fieldseeker_sync_organization_id_fkey
-	Files                                       FileuploadFileSlice                    // fileupload.file.file_organization_id_fkey
-	H3Aggregations                              H3AggregationSlice                     // h3_aggregation.h3_aggregation_organization_id_fkey
-	Leads                                       LeadSlice                              // lead.lead_organization_id_fkey
-	NoteAudios                                  NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
-	NoteImages                                  NoteImageSlice                         // note_image.note_image_organization_id_fkey
-	ArcgisAccountAccount                        *ArcgisAccount                         // organization.organization_arcgis_account_id_fkey
-	ArcgisMapServiceServiceMap                  *ArcgisServiceMap                      // organization.organization_arcgis_map_service_id_fkey
-	FieldseekerServiceFeatureItemServiceFeature *ArcgisServiceFeature                  // organization.organization_fieldseeker_service_feature_item_id_fkey
-	NuisanceOlds                                PublicreportNuisanceOldSlice           // publicreport.nuisance_old.nuisance_organization_id_fkey
-	Reports                                     PublicreportReportSlice                // publicreport.report.report_organization_id_fkey
-	WaterOlds                                   PublicreportWaterOldSlice              // publicreport.water_old.pool_organization_id_fkey
-	ReviewTasks                                 ReviewTaskSlice                        // review_task.review_task_organization_id_fkey
-	Signals                                     SignalSlice                            // signal.signal_organization_id_fkey
-	User                                        UserSlice                              // user_.user__organization_id_fkey
+	EmailContacts           CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
+	Phones                  CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
+	Features                FeatureSlice                           // feature.feature_organization_id_fkey
+	Containerrelates        FieldseekerContainerrelateSlice        // fieldseeker.containerrelate.containerrelate_organization_id_fkey
+	Fieldscoutinglogs       FieldseekerFieldscoutinglogSlice       // fieldseeker.fieldscoutinglog.fieldscoutinglog_organization_id_fkey
+	Habitatrelates          FieldseekerHabitatrelateSlice          // fieldseeker.habitatrelate.habitatrelate_organization_id_fkey
+	Inspectionsamples       FieldseekerInspectionsampleSlice       // fieldseeker.inspectionsample.inspectionsample_organization_id_fkey
+	Inspectionsampledetails FieldseekerInspectionsampledetailSlice // fieldseeker.inspectionsampledetail.inspectionsampledetail_organization_id_fkey
+	Linelocations           FieldseekerLinelocationSlice           // fieldseeker.linelocation.linelocation_organization_id_fkey
+	Locationtrackings       FieldseekerLocationtrackingSlice       // fieldseeker.locationtracking.locationtracking_organization_id_fkey
+	Mosquitoinspections     FieldseekerMosquitoinspectionSlice     // fieldseeker.mosquitoinspection.mosquitoinspection_organization_id_fkey
+	Pointlocations          FieldseekerPointlocationSlice          // fieldseeker.pointlocation.pointlocation_organization_id_fkey
+	Polygonlocations        FieldseekerPolygonlocationSlice        // fieldseeker.polygonlocation.polygonlocation_organization_id_fkey
+	FieldseekerPool         FieldseekerPoolSlice                   // fieldseeker.pool.pool_organization_id_fkey
+	Pooldetails             FieldseekerPooldetailSlice             // fieldseeker.pooldetail.pooldetail_organization_id_fkey
+	Proposedtreatmentareas  FieldseekerProposedtreatmentareaSlice  // fieldseeker.proposedtreatmentarea.proposedtreatmentarea_organization_id_fkey
+	Qamosquitoinspections   FieldseekerQamosquitoinspectionSlice   // fieldseeker.qamosquitoinspection.qamosquitoinspection_organization_id_fkey
+	Rodentlocations         FieldseekerRodentlocationSlice         // fieldseeker.rodentlocation.rodentlocation_organization_id_fkey
+	Samplecollections       FieldseekerSamplecollectionSlice       // fieldseeker.samplecollection.samplecollection_organization_id_fkey
+	Samplelocations         FieldseekerSamplelocationSlice         // fieldseeker.samplelocation.samplelocation_organization_id_fkey
+	Servicerequests         FieldseekerServicerequestSlice         // fieldseeker.servicerequest.servicerequest_organization_id_fkey
+	Speciesabundances       FieldseekerSpeciesabundanceSlice       // fieldseeker.speciesabundance.speciesabundance_organization_id_fkey
+	Stormdrains             FieldseekerStormdrainSlice             // fieldseeker.stormdrain.stormdrain_organization_id_fkey
+	Timecards               FieldseekerTimecardSlice               // fieldseeker.timecard.timecard_organization_id_fkey
+	Trapdata                FieldseekerTrapdatumSlice              // fieldseeker.trapdata.trapdata_organization_id_fkey
+	Traplocations           FieldseekerTraplocationSlice           // fieldseeker.traplocation.traplocation_organization_id_fkey
+	Treatments              FieldseekerTreatmentSlice              // fieldseeker.treatment.treatment_organization_id_fkey
+	Treatmentareas          FieldseekerTreatmentareaSlice          // fieldseeker.treatmentarea.treatmentarea_organization_id_fkey
+	Zones                   FieldseekerZoneSlice                   // fieldseeker.zones.zones_organization_id_fkey
+	Zones2s                 FieldseekerZones2Slice                 // fieldseeker.zones2.zones2_organization_id_fkey
+	FieldseekerSyncs        FieldseekerSyncSlice                   // fieldseeker_sync.fieldseeker_sync_organization_id_fkey
+	Files                   FileuploadFileSlice                    // fileupload.file.file_organization_id_fkey
+	H3Aggregations          H3AggregationSlice                     // h3_aggregation.h3_aggregation_organization_id_fkey
+	Leads                   LeadSlice                              // lead.lead_organization_id_fkey
+	NoteAudios              NoteAudioSlice                         // note_audio.note_audio_organization_id_fkey
+	NoteImages              NoteImageSlice                         // note_image.note_image_organization_id_fkey
+	NuisanceOlds            PublicreportNuisanceOldSlice           // publicreport.nuisance_old.nuisance_organization_id_fkey
+	Reports                 PublicreportReportSlice                // publicreport.report.report_organization_id_fkey
+	WaterOlds               PublicreportWaterOldSlice              // publicreport.water_old.pool_organization_id_fkey
+	ReviewTasks             ReviewTaskSlice                        // review_task.review_task_organization_id_fkey
+	Signals                 SignalSlice                            // signal.signal_organization_id_fkey
+	User                    UserSlice                              // user_.user__organization_id_fkey
 }
 
 func buildOrganizationColumns(alias string) organizationColumns {
@@ -976,78 +970,6 @@ func (o OrganizationSlice) ReloadAll(ctx context.Context, exec bob.Executor) err
 	o.copyMatchingRows(o2...)
 
 	return nil
-}
-
-// Accounts starts a query for related objects on arcgis.account
-func (o *Organization) Accounts(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAccountsQuery {
-	return ArcgisAccounts.Query(append(mods,
-		sm.Where(ArcgisAccounts.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os OrganizationSlice) Accounts(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAccountsQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return ArcgisAccounts.Query(append(mods,
-		sm.Where(psql.Group(ArcgisAccounts.Columns.OrganizationID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// AddressMappings starts a query for related objects on arcgis.address_mapping
-func (o *Organization) AddressMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAddressMappingsQuery {
-	return ArcgisAddressMappings.Query(append(mods,
-		sm.Where(ArcgisAddressMappings.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os OrganizationSlice) AddressMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAddressMappingsQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return ArcgisAddressMappings.Query(append(mods,
-		sm.Where(psql.Group(ArcgisAddressMappings.Columns.OrganizationID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// ParcelMappings starts a query for related objects on arcgis.parcel_mapping
-func (o *Organization) ParcelMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisParcelMappingsQuery {
-	return ArcgisParcelMappings.Query(append(mods,
-		sm.Where(ArcgisParcelMappings.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
-	)...)
-}
-
-func (os OrganizationSlice) ParcelMappings(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisParcelMappingsQuery {
-	pkID := make(pgtypes.Array[int32], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkID = append(pkID, o.ID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
-	))
-
-	return ArcgisParcelMappings.Query(append(mods,
-		sm.Where(psql.Group(ArcgisParcelMappings.Columns.OrganizationID).OP("IN", PKArgExpr)),
-	)...)
 }
 
 // EmailContacts starts a query for related objects on comms.email_contact
@@ -1924,78 +1846,6 @@ func (os OrganizationSlice) NoteImages(mods ...bob.Mod[*dialect.SelectQuery]) No
 	)...)
 }
 
-// ArcgisAccountAccount starts a query for related objects on arcgis.account
-func (o *Organization) ArcgisAccountAccount(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAccountsQuery {
-	return ArcgisAccounts.Query(append(mods,
-		sm.Where(ArcgisAccounts.Columns.ID.EQ(psql.Arg(o.ArcgisAccountID))),
-	)...)
-}
-
-func (os OrganizationSlice) ArcgisAccountAccount(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisAccountsQuery {
-	pkArcgisAccountID := make(pgtypes.Array[null.Val[string]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkArcgisAccountID = append(pkArcgisAccountID, o.ArcgisAccountID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkArcgisAccountID), "text[]")),
-	))
-
-	return ArcgisAccounts.Query(append(mods,
-		sm.Where(psql.Group(ArcgisAccounts.Columns.ID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// ArcgisMapServiceServiceMap starts a query for related objects on arcgis.service_map
-func (o *Organization) ArcgisMapServiceServiceMap(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceMapsQuery {
-	return ArcgisServiceMaps.Query(append(mods,
-		sm.Where(ArcgisServiceMaps.Columns.ArcgisID.EQ(psql.Arg(o.ArcgisMapServiceID))),
-	)...)
-}
-
-func (os OrganizationSlice) ArcgisMapServiceServiceMap(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceMapsQuery {
-	pkArcgisMapServiceID := make(pgtypes.Array[null.Val[string]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkArcgisMapServiceID = append(pkArcgisMapServiceID, o.ArcgisMapServiceID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkArcgisMapServiceID), "text[]")),
-	))
-
-	return ArcgisServiceMaps.Query(append(mods,
-		sm.Where(psql.Group(ArcgisServiceMaps.Columns.ArcgisID).OP("IN", PKArgExpr)),
-	)...)
-}
-
-// FieldseekerServiceFeatureItemServiceFeature starts a query for related objects on arcgis.service_feature
-func (o *Organization) FieldseekerServiceFeatureItemServiceFeature(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceFeaturesQuery {
-	return ArcgisServiceFeatures.Query(append(mods,
-		sm.Where(ArcgisServiceFeatures.Columns.ItemID.EQ(psql.Arg(o.FieldseekerServiceFeatureItemID))),
-	)...)
-}
-
-func (os OrganizationSlice) FieldseekerServiceFeatureItemServiceFeature(mods ...bob.Mod[*dialect.SelectQuery]) ArcgisServiceFeaturesQuery {
-	pkFieldseekerServiceFeatureItemID := make(pgtypes.Array[null.Val[string]], 0, len(os))
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-		pkFieldseekerServiceFeatureItemID = append(pkFieldseekerServiceFeatureItemID, o.FieldseekerServiceFeatureItemID)
-	}
-	PKArgExpr := psql.Select(sm.Columns(
-		psql.F("unnest", psql.Cast(psql.Arg(pkFieldseekerServiceFeatureItemID), "text[]")),
-	))
-
-	return ArcgisServiceFeatures.Query(append(mods,
-		sm.Where(psql.Group(ArcgisServiceFeatures.Columns.ItemID).OP("IN", PKArgExpr)),
-	)...)
-}
-
 // NuisanceOlds starts a query for related objects on publicreport.nuisance_old
 func (o *Organization) NuisanceOlds(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportNuisanceOldsQuery {
 	return PublicreportNuisanceOlds.Query(append(mods,
@@ -2138,210 +1988,6 @@ func (os OrganizationSlice) User(mods ...bob.Mod[*dialect.SelectQuery]) UsersQue
 	return Users.Query(append(mods,
 		sm.Where(psql.Group(Users.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
-}
-
-func insertOrganizationAccounts0(ctx context.Context, exec bob.Executor, arcgisAccounts1 []*ArcgisAccountSetter, organization0 *Organization) (ArcgisAccountSlice, error) {
-	for i := range arcgisAccounts1 {
-		arcgisAccounts1[i].OrganizationID = omit.From(organization0.ID)
-	}
-
-	ret, err := ArcgisAccounts.Insert(bob.ToMods(arcgisAccounts1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertOrganizationAccounts0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachOrganizationAccounts0(ctx context.Context, exec bob.Executor, count int, arcgisAccounts1 ArcgisAccountSlice, organization0 *Organization) (ArcgisAccountSlice, error) {
-	setter := &ArcgisAccountSetter{
-		OrganizationID: omit.From(organization0.ID),
-	}
-
-	err := arcgisAccounts1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationAccounts0: %w", err)
-	}
-
-	return arcgisAccounts1, nil
-}
-
-func (organization0 *Organization) InsertAccounts(ctx context.Context, exec bob.Executor, related ...*ArcgisAccountSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	arcgisAccounts1, err := insertOrganizationAccounts0(ctx, exec, related, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.Accounts = append(organization0.R.Accounts, arcgisAccounts1...)
-
-	for _, rel := range arcgisAccounts1 {
-		rel.R.Organization = organization0
-	}
-	return nil
-}
-
-func (organization0 *Organization) AttachAccounts(ctx context.Context, exec bob.Executor, related ...*ArcgisAccount) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	arcgisAccounts1 := ArcgisAccountSlice(related)
-
-	_, err = attachOrganizationAccounts0(ctx, exec, len(related), arcgisAccounts1, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.Accounts = append(organization0.R.Accounts, arcgisAccounts1...)
-
-	for _, rel := range related {
-		rel.R.Organization = organization0
-	}
-
-	return nil
-}
-
-func insertOrganizationAddressMappings0(ctx context.Context, exec bob.Executor, arcgisAddressMappings1 []*ArcgisAddressMappingSetter, organization0 *Organization) (ArcgisAddressMappingSlice, error) {
-	for i := range arcgisAddressMappings1 {
-		arcgisAddressMappings1[i].OrganizationID = omit.From(organization0.ID)
-	}
-
-	ret, err := ArcgisAddressMappings.Insert(bob.ToMods(arcgisAddressMappings1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertOrganizationAddressMappings0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachOrganizationAddressMappings0(ctx context.Context, exec bob.Executor, count int, arcgisAddressMappings1 ArcgisAddressMappingSlice, organization0 *Organization) (ArcgisAddressMappingSlice, error) {
-	setter := &ArcgisAddressMappingSetter{
-		OrganizationID: omit.From(organization0.ID),
-	}
-
-	err := arcgisAddressMappings1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationAddressMappings0: %w", err)
-	}
-
-	return arcgisAddressMappings1, nil
-}
-
-func (organization0 *Organization) InsertAddressMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisAddressMappingSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	arcgisAddressMappings1, err := insertOrganizationAddressMappings0(ctx, exec, related, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.AddressMappings = append(organization0.R.AddressMappings, arcgisAddressMappings1...)
-
-	for _, rel := range arcgisAddressMappings1 {
-		rel.R.Organization = organization0
-	}
-	return nil
-}
-
-func (organization0 *Organization) AttachAddressMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisAddressMapping) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	arcgisAddressMappings1 := ArcgisAddressMappingSlice(related)
-
-	_, err = attachOrganizationAddressMappings0(ctx, exec, len(related), arcgisAddressMappings1, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.AddressMappings = append(organization0.R.AddressMappings, arcgisAddressMappings1...)
-
-	for _, rel := range related {
-		rel.R.Organization = organization0
-	}
-
-	return nil
-}
-
-func insertOrganizationParcelMappings0(ctx context.Context, exec bob.Executor, arcgisParcelMappings1 []*ArcgisParcelMappingSetter, organization0 *Organization) (ArcgisParcelMappingSlice, error) {
-	for i := range arcgisParcelMappings1 {
-		arcgisParcelMappings1[i].OrganizationID = omit.From(organization0.ID)
-	}
-
-	ret, err := ArcgisParcelMappings.Insert(bob.ToMods(arcgisParcelMappings1...)).All(ctx, exec)
-	if err != nil {
-		return ret, fmt.Errorf("insertOrganizationParcelMappings0: %w", err)
-	}
-
-	return ret, nil
-}
-
-func attachOrganizationParcelMappings0(ctx context.Context, exec bob.Executor, count int, arcgisParcelMappings1 ArcgisParcelMappingSlice, organization0 *Organization) (ArcgisParcelMappingSlice, error) {
-	setter := &ArcgisParcelMappingSetter{
-		OrganizationID: omit.From(organization0.ID),
-	}
-
-	err := arcgisParcelMappings1.UpdateAll(ctx, exec, *setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationParcelMappings0: %w", err)
-	}
-
-	return arcgisParcelMappings1, nil
-}
-
-func (organization0 *Organization) InsertParcelMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisParcelMappingSetter) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-
-	arcgisParcelMappings1, err := insertOrganizationParcelMappings0(ctx, exec, related, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ParcelMappings = append(organization0.R.ParcelMappings, arcgisParcelMappings1...)
-
-	for _, rel := range arcgisParcelMappings1 {
-		rel.R.Organization = organization0
-	}
-	return nil
-}
-
-func (organization0 *Organization) AttachParcelMappings(ctx context.Context, exec bob.Executor, related ...*ArcgisParcelMapping) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	arcgisParcelMappings1 := ArcgisParcelMappingSlice(related)
-
-	_, err = attachOrganizationParcelMappings0(ctx, exec, len(related), arcgisParcelMappings1, organization0)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ParcelMappings = append(organization0.R.ParcelMappings, arcgisParcelMappings1...)
-
-	for _, rel := range related {
-		rel.R.Organization = organization0
-	}
-
-	return nil
 }
 
 func attachOrganizationEmailContacts0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, commsEmailContacts2 CommsEmailContactSlice) (DistrictSubscriptionEmailSlice, error) {
@@ -4786,150 +4432,6 @@ func (organization0 *Organization) AttachNoteImages(ctx context.Context, exec bo
 	return nil
 }
 
-func attachOrganizationArcgisAccountAccount0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, arcgisAccount1 *ArcgisAccount) (*Organization, error) {
-	setter := &OrganizationSetter{
-		ArcgisAccountID: omitnull.From(arcgisAccount1.ID),
-	}
-
-	err := organization0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationArcgisAccountAccount0: %w", err)
-	}
-
-	return organization0, nil
-}
-
-func (organization0 *Organization) InsertArcgisAccountAccount(ctx context.Context, exec bob.Executor, related *ArcgisAccountSetter) error {
-	var err error
-
-	arcgisAccount1, err := ArcgisAccounts.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachOrganizationArcgisAccountAccount0(ctx, exec, 1, organization0, arcgisAccount1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ArcgisAccountAccount = arcgisAccount1
-
-	arcgisAccount1.R.ArcgisAccountOrganizations = append(arcgisAccount1.R.ArcgisAccountOrganizations, organization0)
-
-	return nil
-}
-
-func (organization0 *Organization) AttachArcgisAccountAccount(ctx context.Context, exec bob.Executor, arcgisAccount1 *ArcgisAccount) error {
-	var err error
-
-	_, err = attachOrganizationArcgisAccountAccount0(ctx, exec, 1, organization0, arcgisAccount1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ArcgisAccountAccount = arcgisAccount1
-
-	arcgisAccount1.R.ArcgisAccountOrganizations = append(arcgisAccount1.R.ArcgisAccountOrganizations, organization0)
-
-	return nil
-}
-
-func attachOrganizationArcgisMapServiceServiceMap0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, arcgisServiceMap1 *ArcgisServiceMap) (*Organization, error) {
-	setter := &OrganizationSetter{
-		ArcgisMapServiceID: omitnull.From(arcgisServiceMap1.ArcgisID),
-	}
-
-	err := organization0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationArcgisMapServiceServiceMap0: %w", err)
-	}
-
-	return organization0, nil
-}
-
-func (organization0 *Organization) InsertArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, related *ArcgisServiceMapSetter) error {
-	var err error
-
-	arcgisServiceMap1, err := ArcgisServiceMaps.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachOrganizationArcgisMapServiceServiceMap0(ctx, exec, 1, organization0, arcgisServiceMap1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ArcgisMapServiceServiceMap = arcgisServiceMap1
-
-	arcgisServiceMap1.R.ArcgisMapServiceOrganizations = append(arcgisServiceMap1.R.ArcgisMapServiceOrganizations, organization0)
-
-	return nil
-}
-
-func (organization0 *Organization) AttachArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, arcgisServiceMap1 *ArcgisServiceMap) error {
-	var err error
-
-	_, err = attachOrganizationArcgisMapServiceServiceMap0(ctx, exec, 1, organization0, arcgisServiceMap1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.ArcgisMapServiceServiceMap = arcgisServiceMap1
-
-	arcgisServiceMap1.R.ArcgisMapServiceOrganizations = append(arcgisServiceMap1.R.ArcgisMapServiceOrganizations, organization0)
-
-	return nil
-}
-
-func attachOrganizationFieldseekerServiceFeatureItemServiceFeature0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, arcgisServiceFeature1 *ArcgisServiceFeature) (*Organization, error) {
-	setter := &OrganizationSetter{
-		FieldseekerServiceFeatureItemID: omitnull.From(arcgisServiceFeature1.ItemID),
-	}
-
-	err := organization0.Update(ctx, exec, setter)
-	if err != nil {
-		return nil, fmt.Errorf("attachOrganizationFieldseekerServiceFeatureItemServiceFeature0: %w", err)
-	}
-
-	return organization0, nil
-}
-
-func (organization0 *Organization) InsertFieldseekerServiceFeatureItemServiceFeature(ctx context.Context, exec bob.Executor, related *ArcgisServiceFeatureSetter) error {
-	var err error
-
-	arcgisServiceFeature1, err := ArcgisServiceFeatures.Insert(related).One(ctx, exec)
-	if err != nil {
-		return fmt.Errorf("inserting related objects: %w", err)
-	}
-
-	_, err = attachOrganizationFieldseekerServiceFeatureItemServiceFeature0(ctx, exec, 1, organization0, arcgisServiceFeature1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.FieldseekerServiceFeatureItemServiceFeature = arcgisServiceFeature1
-
-	arcgisServiceFeature1.R.FieldseekerServiceFeatureItemOrganizations = append(arcgisServiceFeature1.R.FieldseekerServiceFeatureItemOrganizations, organization0)
-
-	return nil
-}
-
-func (organization0 *Organization) AttachFieldseekerServiceFeatureItemServiceFeature(ctx context.Context, exec bob.Executor, arcgisServiceFeature1 *ArcgisServiceFeature) error {
-	var err error
-
-	_, err = attachOrganizationFieldseekerServiceFeatureItemServiceFeature0(ctx, exec, 1, organization0, arcgisServiceFeature1)
-	if err != nil {
-		return err
-	}
-
-	organization0.R.FieldseekerServiceFeatureItemServiceFeature = arcgisServiceFeature1
-
-	arcgisServiceFeature1.R.FieldseekerServiceFeatureItemOrganizations = append(arcgisServiceFeature1.R.FieldseekerServiceFeatureItemOrganizations, organization0)
-
-	return nil
-}
-
 func insertOrganizationNuisanceOlds0(ctx context.Context, exec bob.Executor, publicreportNuisanceOlds1 []*PublicreportNuisanceOldSetter, organization0 *Organization) (PublicreportNuisanceOldSlice, error) {
 	for i := range publicreportNuisanceOlds1 {
 		publicreportNuisanceOlds1[i].OrganizationID = omit.From(organization0.ID)
@@ -5426,48 +4928,6 @@ func (o *Organization) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
-	case "Accounts":
-		rels, ok := retrieved.(ArcgisAccountSlice)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.Accounts = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Organization = o
-			}
-		}
-		return nil
-	case "AddressMappings":
-		rels, ok := retrieved.(ArcgisAddressMappingSlice)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.AddressMappings = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Organization = o
-			}
-		}
-		return nil
-	case "ParcelMappings":
-		rels, ok := retrieved.(ArcgisParcelMappingSlice)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.ParcelMappings = rels
-
-		for _, rel := range rels {
-			if rel != nil {
-				rel.R.Organization = o
-			}
-		}
-		return nil
 	case "EmailContacts":
 		rels, ok := retrieved.(CommsEmailContactSlice)
 		if !ok {
@@ -5972,42 +5432,6 @@ func (o *Organization) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
-	case "ArcgisAccountAccount":
-		rel, ok := retrieved.(*ArcgisAccount)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.ArcgisAccountAccount = rel
-
-		if rel != nil {
-			rel.R.ArcgisAccountOrganizations = OrganizationSlice{o}
-		}
-		return nil
-	case "ArcgisMapServiceServiceMap":
-		rel, ok := retrieved.(*ArcgisServiceMap)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.ArcgisMapServiceServiceMap = rel
-
-		if rel != nil {
-			rel.R.ArcgisMapServiceOrganizations = OrganizationSlice{o}
-		}
-		return nil
-	case "FieldseekerServiceFeatureItemServiceFeature":
-		rel, ok := retrieved.(*ArcgisServiceFeature)
-		if !ok {
-			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
-		}
-
-		o.R.FieldseekerServiceFeatureItemServiceFeature = rel
-
-		if rel != nil {
-			rel.R.FieldseekerServiceFeatureItemOrganizations = OrganizationSlice{o}
-		}
-		return nil
 	case "NuisanceOlds":
 		rels, ok := retrieved.(PublicreportNuisanceOldSlice)
 		if !ok {
@@ -6097,117 +5521,58 @@ func (o *Organization) Preload(name string, retrieved any) error {
 	}
 }
 
-type organizationPreloader struct {
-	ArcgisAccountAccount                        func(...psql.PreloadOption) psql.Preloader
-	ArcgisMapServiceServiceMap                  func(...psql.PreloadOption) psql.Preloader
-	FieldseekerServiceFeatureItemServiceFeature func(...psql.PreloadOption) psql.Preloader
-}
+type organizationPreloader struct{}
 
 func buildOrganizationPreloader() organizationPreloader {
-	return organizationPreloader{
-		ArcgisAccountAccount: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*ArcgisAccount, ArcgisAccountSlice](psql.PreloadRel{
-				Name: "ArcgisAccountAccount",
-				Sides: []psql.PreloadSide{
-					{
-						From:        Organizations,
-						To:          ArcgisAccounts,
-						FromColumns: []string{"arcgis_account_id"},
-						ToColumns:   []string{"id"},
-					},
-				},
-			}, ArcgisAccounts.Columns.Names(), opts...)
-		},
-		ArcgisMapServiceServiceMap: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*ArcgisServiceMap, ArcgisServiceMapSlice](psql.PreloadRel{
-				Name: "ArcgisMapServiceServiceMap",
-				Sides: []psql.PreloadSide{
-					{
-						From:        Organizations,
-						To:          ArcgisServiceMaps,
-						FromColumns: []string{"arcgis_map_service_id"},
-						ToColumns:   []string{"arcgis_id"},
-					},
-				},
-			}, ArcgisServiceMaps.Columns.Names(), opts...)
-		},
-		FieldseekerServiceFeatureItemServiceFeature: func(opts ...psql.PreloadOption) psql.Preloader {
-			return psql.Preload[*ArcgisServiceFeature, ArcgisServiceFeatureSlice](psql.PreloadRel{
-				Name: "FieldseekerServiceFeatureItemServiceFeature",
-				Sides: []psql.PreloadSide{
-					{
-						From:        Organizations,
-						To:          ArcgisServiceFeatures,
-						FromColumns: []string{"fieldseeker_service_feature_item_id"},
-						ToColumns:   []string{"item_id"},
-					},
-				},
-			}, ArcgisServiceFeatures.Columns.Names(), opts...)
-		},
-	}
+	return organizationPreloader{}
 }
 
 type organizationThenLoader[Q orm.Loadable] struct {
-	Accounts                                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	AddressMappings                             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ParcelMappings                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	EmailContacts                               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Phones                                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Features                                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Containerrelates                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Fieldscoutinglogs                           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Habitatrelates                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Inspectionsamples                           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Inspectionsampledetails                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Linelocations                               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Locationtrackings                           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Mosquitoinspections                         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pointlocations                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Polygonlocations                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FieldseekerPool                             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Pooldetails                                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Proposedtreatmentareas                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Qamosquitoinspections                       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Rodentlocations                             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Samplecollections                           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Samplelocations                             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Servicerequests                             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Speciesabundances                           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Stormdrains                                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Timecards                                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Trapdata                                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Traplocations                               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Treatments                                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Treatmentareas                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Zones                                       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Zones2s                                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FieldseekerSyncs                            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Files                                       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	H3Aggregations                              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Leads                                       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NoteAudios                                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NoteImages                                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ArcgisAccountAccount                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ArcgisMapServiceServiceMap                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FieldseekerServiceFeatureItemServiceFeature func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NuisanceOlds                                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Reports                                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	WaterOlds                                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewTasks                                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Signals                                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	User                                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Phones                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Features                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Containerrelates        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Fieldscoutinglogs       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Habitatrelates          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Inspectionsamples       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Inspectionsampledetails func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Linelocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Locationtrackings       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Mosquitoinspections     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pointlocations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Polygonlocations        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FieldseekerPool         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Pooldetails             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Proposedtreatmentareas  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Qamosquitoinspections   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Rodentlocations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Samplecollections       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Samplelocations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Servicerequests         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Speciesabundances       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Stormdrains             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Timecards               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Trapdata                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Traplocations           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Treatments              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Treatmentareas          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Zones                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Zones2s                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FieldseekerSyncs        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Files                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	H3Aggregations          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Leads                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NoteAudios              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NoteImages              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NuisanceOlds            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Reports                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	WaterOlds               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewTasks             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Signals                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	User                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
-	type AccountsLoadInterface interface {
-		LoadAccounts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type AddressMappingsLoadInterface interface {
-		LoadAddressMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ParcelMappingsLoadInterface interface {
-		LoadParcelMappings(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
 	type EmailContactsLoadInterface interface {
 		LoadEmailContacts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -6316,15 +5681,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	type NoteImagesLoadInterface interface {
 		LoadNoteImages(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
-	type ArcgisAccountAccountLoadInterface interface {
-		LoadArcgisAccountAccount(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type ArcgisMapServiceServiceMapLoadInterface interface {
-		LoadArcgisMapServiceServiceMap(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
-	type FieldseekerServiceFeatureItemServiceFeatureLoadInterface interface {
-		LoadFieldseekerServiceFeatureItemServiceFeature(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
-	}
 	type NuisanceOldsLoadInterface interface {
 		LoadNuisanceOlds(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -6345,24 +5701,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 
 	return organizationThenLoader[Q]{
-		Accounts: thenLoadBuilder[Q](
-			"Accounts",
-			func(ctx context.Context, exec bob.Executor, retrieved AccountsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadAccounts(ctx, exec, mods...)
-			},
-		),
-		AddressMappings: thenLoadBuilder[Q](
-			"AddressMappings",
-			func(ctx context.Context, exec bob.Executor, retrieved AddressMappingsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadAddressMappings(ctx, exec, mods...)
-			},
-		),
-		ParcelMappings: thenLoadBuilder[Q](
-			"ParcelMappings",
-			func(ctx context.Context, exec bob.Executor, retrieved ParcelMappingsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadParcelMappings(ctx, exec, mods...)
-			},
-		),
 		EmailContacts: thenLoadBuilder[Q](
 			"EmailContacts",
 			func(ctx context.Context, exec bob.Executor, retrieved EmailContactsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -6579,24 +5917,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 				return retrieved.LoadNoteImages(ctx, exec, mods...)
 			},
 		),
-		ArcgisAccountAccount: thenLoadBuilder[Q](
-			"ArcgisAccountAccount",
-			func(ctx context.Context, exec bob.Executor, retrieved ArcgisAccountAccountLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadArcgisAccountAccount(ctx, exec, mods...)
-			},
-		),
-		ArcgisMapServiceServiceMap: thenLoadBuilder[Q](
-			"ArcgisMapServiceServiceMap",
-			func(ctx context.Context, exec bob.Executor, retrieved ArcgisMapServiceServiceMapLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadArcgisMapServiceServiceMap(ctx, exec, mods...)
-			},
-		),
-		FieldseekerServiceFeatureItemServiceFeature: thenLoadBuilder[Q](
-			"FieldseekerServiceFeatureItemServiceFeature",
-			func(ctx context.Context, exec bob.Executor, retrieved FieldseekerServiceFeatureItemServiceFeatureLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
-				return retrieved.LoadFieldseekerServiceFeatureItemServiceFeature(ctx, exec, mods...)
-			},
-		),
 		NuisanceOlds: thenLoadBuilder[Q](
 			"NuisanceOlds",
 			func(ctx context.Context, exec bob.Executor, retrieved NuisanceOldsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -6634,189 +5954,6 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			},
 		),
 	}
-}
-
-// LoadAccounts loads the organization's Accounts into the .R struct
-func (o *Organization) LoadAccounts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.Accounts = nil
-
-	related, err := o.Accounts(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Organization = o
-	}
-
-	o.R.Accounts = related
-	return nil
-}
-
-// LoadAccounts loads the organization's Accounts into the .R struct
-func (os OrganizationSlice) LoadAccounts(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisAccounts, err := os.Accounts(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.Accounts = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisAccounts {
-
-			if !(o.ID == rel.OrganizationID) {
-				continue
-			}
-
-			rel.R.Organization = o
-
-			o.R.Accounts = append(o.R.Accounts, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadAddressMappings loads the organization's AddressMappings into the .R struct
-func (o *Organization) LoadAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.AddressMappings = nil
-
-	related, err := o.AddressMappings(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Organization = o
-	}
-
-	o.R.AddressMappings = related
-	return nil
-}
-
-// LoadAddressMappings loads the organization's AddressMappings into the .R struct
-func (os OrganizationSlice) LoadAddressMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisAddressMappings, err := os.AddressMappings(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.AddressMappings = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisAddressMappings {
-
-			if !(o.ID == rel.OrganizationID) {
-				continue
-			}
-
-			rel.R.Organization = o
-
-			o.R.AddressMappings = append(o.R.AddressMappings, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadParcelMappings loads the organization's ParcelMappings into the .R struct
-func (o *Organization) LoadParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.ParcelMappings = nil
-
-	related, err := o.ParcelMappings(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, rel := range related {
-		rel.R.Organization = o
-	}
-
-	o.R.ParcelMappings = related
-	return nil
-}
-
-// LoadParcelMappings loads the organization's ParcelMappings into the .R struct
-func (os OrganizationSlice) LoadParcelMappings(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisParcelMappings, err := os.ParcelMappings(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		o.R.ParcelMappings = nil
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisParcelMappings {
-
-			if !(o.ID == rel.OrganizationID) {
-				continue
-			}
-
-			rel.R.Organization = o
-
-			o.R.ParcelMappings = append(o.R.ParcelMappings, rel)
-		}
-	}
-
-	return nil
 }
 
 // LoadEmailContacts loads the organization's EmailContacts into the .R struct
@@ -9049,171 +8186,6 @@ func (os OrganizationSlice) LoadNoteImages(ctx context.Context, exec bob.Executo
 			rel.R.Organization = o
 
 			o.R.NoteImages = append(o.R.NoteImages, rel)
-		}
-	}
-
-	return nil
-}
-
-// LoadArcgisAccountAccount loads the organization's ArcgisAccountAccount into the .R struct
-func (o *Organization) LoadArcgisAccountAccount(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.ArcgisAccountAccount = nil
-
-	related, err := o.ArcgisAccountAccount(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.ArcgisAccountOrganizations = OrganizationSlice{o}
-
-	o.R.ArcgisAccountAccount = related
-	return nil
-}
-
-// LoadArcgisAccountAccount loads the organization's ArcgisAccountAccount into the .R struct
-func (os OrganizationSlice) LoadArcgisAccountAccount(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisAccounts, err := os.ArcgisAccountAccount(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisAccounts {
-			if !o.ArcgisAccountID.IsValue() {
-				continue
-			}
-
-			if !(o.ArcgisAccountID.IsValue() && o.ArcgisAccountID.MustGet() == rel.ID) {
-				continue
-			}
-
-			rel.R.ArcgisAccountOrganizations = append(rel.R.ArcgisAccountOrganizations, o)
-
-			o.R.ArcgisAccountAccount = rel
-			break
-		}
-	}
-
-	return nil
-}
-
-// LoadArcgisMapServiceServiceMap loads the organization's ArcgisMapServiceServiceMap into the .R struct
-func (o *Organization) LoadArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.ArcgisMapServiceServiceMap = nil
-
-	related, err := o.ArcgisMapServiceServiceMap(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.ArcgisMapServiceOrganizations = OrganizationSlice{o}
-
-	o.R.ArcgisMapServiceServiceMap = related
-	return nil
-}
-
-// LoadArcgisMapServiceServiceMap loads the organization's ArcgisMapServiceServiceMap into the .R struct
-func (os OrganizationSlice) LoadArcgisMapServiceServiceMap(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisServiceMaps, err := os.ArcgisMapServiceServiceMap(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisServiceMaps {
-			if !o.ArcgisMapServiceID.IsValue() {
-				continue
-			}
-
-			if !(o.ArcgisMapServiceID.IsValue() && o.ArcgisMapServiceID.MustGet() == rel.ArcgisID) {
-				continue
-			}
-
-			rel.R.ArcgisMapServiceOrganizations = append(rel.R.ArcgisMapServiceOrganizations, o)
-
-			o.R.ArcgisMapServiceServiceMap = rel
-			break
-		}
-	}
-
-	return nil
-}
-
-// LoadFieldseekerServiceFeatureItemServiceFeature loads the organization's FieldseekerServiceFeatureItemServiceFeature into the .R struct
-func (o *Organization) LoadFieldseekerServiceFeatureItemServiceFeature(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if o == nil {
-		return nil
-	}
-
-	// Reset the relationship
-	o.R.FieldseekerServiceFeatureItemServiceFeature = nil
-
-	related, err := o.FieldseekerServiceFeatureItemServiceFeature(mods...).One(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	related.R.FieldseekerServiceFeatureItemOrganizations = OrganizationSlice{o}
-
-	o.R.FieldseekerServiceFeatureItemServiceFeature = related
-	return nil
-}
-
-// LoadFieldseekerServiceFeatureItemServiceFeature loads the organization's FieldseekerServiceFeatureItemServiceFeature into the .R struct
-func (os OrganizationSlice) LoadFieldseekerServiceFeatureItemServiceFeature(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
-	if len(os) == 0 {
-		return nil
-	}
-
-	arcgisServiceFeatures, err := os.FieldseekerServiceFeatureItemServiceFeature(mods...).All(ctx, exec)
-	if err != nil {
-		return err
-	}
-
-	for _, o := range os {
-		if o == nil {
-			continue
-		}
-
-		for _, rel := range arcgisServiceFeatures {
-			if !o.FieldseekerServiceFeatureItemID.IsValue() {
-				continue
-			}
-
-			if !(o.FieldseekerServiceFeatureItemID.IsValue() && o.FieldseekerServiceFeatureItemID.MustGet() == rel.ItemID) {
-				continue
-			}
-
-			rel.R.FieldseekerServiceFeatureItemOrganizations = append(rel.R.FieldseekerServiceFeatureItemOrganizations, o)
-
-			o.R.FieldseekerServiceFeatureItemServiceFeature = rel
-			break
 		}
 	}
 
