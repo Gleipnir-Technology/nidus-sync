@@ -5,21 +5,37 @@ import (
 	"log"
 	"os"
 
-	"github.com/go-jet/jet/generator/postgres"
+	"github.com/go-jet/jet/v2/generator/metadata"
+	genpostgres "github.com/go-jet/jet/v2/generator/postgres"
+	"github.com/go-jet/jet/v2/generator/template"
+	"github.com/go-jet/jet/v2/postgres"
 	_ "github.com/lib/pq"
 )
 
+type Box2D struct {
+	X float64
+	Y float64
+}
+
 func main() {
-	err := postgres.Generate("../gen",
-		postgres.DBConnection{
-			Host:       "/var/run/postgresql",
-			Port:       5432,
-			User:       "eliribble",
-			Password:   "none",
-			DBName:     "nidus-sync",
-			SchemaName: "stadia",
-			SslMode:    "disable",
-		})
+	err := genpostgres.GenerateDSN(
+		"postgresql://?host=/var/run/postgresql&sslmode=disable&dbname=nidus-sync",
+		"arcgis",
+		"../gen",
+		template.Default(postgres.Dialect).UseSchema(func(schema metadata.Schema) template.Schema {
+			return template.DefaultSchema(schema).UseModel(template.DefaultModel().UseTable(func(table metadata.Table) template.TableModel {
+				return template.DefaultTableModel(table).UseField(func(column metadata.Column) template.TableModelField {
+					defaultTableModelField := template.DefaultTableModelField(column)
+					//log.Printf("'%s' '%s' '%s'", table.Name, column.Name, column.DataType.Name)
+					if column.Name == "extent" && column.DataType.Name == "box2d" {
+						defaultTableModelField.Type = template.NewType(Box2D{})
+					}
+					return defaultTableModelField
+				})
+			}),
+			)
+		}),
+	)
 	if err != nil {
 		log.Printf("Failed: %v", err)
 		os.Exit(1)
