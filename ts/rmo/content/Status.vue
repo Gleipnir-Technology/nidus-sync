@@ -161,7 +161,10 @@
 			</div>
 			<div class="card-body p-0">
 				<div class="table-responsive">
-					<TableReport :reports="renderedReports" />
+					<TableReport
+						:reports="renderedReports"
+						@rowClicked="doReportClicked"
+					/>
 				</div>
 			</div>
 			<!--
@@ -197,6 +200,8 @@ import { apiClient } from "@/client";
 import Map from "@/map/Map.vue";
 import Layer, { Feature, MouseEvent } from "@/map/Layer.vue";
 import Source from "@/map/Source.vue";
+import { router } from "@/rmo/route/config";
+import { useRoutes } from "@/rmo/route/use";
 import { useStoreAPI } from "@/store/api";
 
 const paintConfigNuisance = {
@@ -212,6 +217,7 @@ const paintConfigWater = {
 	"circle-stroke-width": 2,
 };
 const renderedReportsNuisance = ref<Feature[]>([]);
+const routes = useRoutes();
 const storeAPI = useStoreAPI();
 const tegola = ref<string | null>(null);
 
@@ -229,6 +235,9 @@ const renderedReports = computed((): Report[] => {
 	});
 	return reports;
 });
+function doReportClicked(report_id: string) {
+	router.push(routes.StatusByID(report_id));
+}
 onMounted(() => {
 	const a = storeAPI.get().then((a) => {
 		tegola.value = a.tegola.rmo;

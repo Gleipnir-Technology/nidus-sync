@@ -141,7 +141,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Define emits
 const emit = defineEmits<{
-	(e: "row-clicked", reportId: string): void;
+	(e: "rowClicked", reportId: string): void;
 }>();
 
 /**
@@ -191,7 +191,8 @@ const formatId = (id: string): string => {
 /**
  * Handle row click event
  */
-const handleRowClick = (reportId: string): void => {
-	emit("row-clicked", reportId);
+const handleRowClick = (report_id: string): void => {
+	console.log("row clicked", report_id);
+	emit("rowClicked", report_id);
 };
 </script>
