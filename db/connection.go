@@ -12,9 +12,10 @@ import (
 	//"github.com/georgysavva/scany/v2/pgxscan"
 	//"github.com/jackc/pgx/v5"
 	"github.com/Gleipnir-Technology/bob"
+	"github.com/go-jet/jet/v2/postgres"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog/log"
 )
@@ -22,16 +23,24 @@ import (
 //go:embed migrations/*.sql
 var embedMigrations embed.FS
 
-type postgres struct {
+type pginstance struct {
 	BobDB   bob.DB
 	PGXPool *pgxpool.Pool
 }
 
 var (
-	PGInstance *postgres
+	PGInstance *pginstance
 	pgOnce     sync.Once
 )
 
+func Execute[T any](ctx context.Context, stmt postgres.Statement) (*T, error) {
+	query, args := stmt.Sql()
+
+	row, _ := PGInstance.PGXPool.Query(ctx, query, args...)
+	data, err := pgx.CollectOneRow(row, pgx.RowToAddrOfStructByPos[T])
+
+	return data, err
+}
 func doMigrations(connection_string string) error {
 	log.Debug().Str("dsn", connection_string).Msg("Connecting to database")
 	db, err := sql.Open("pgx", connection_string)
@@ -98,7 +107,7 @@ func InitializeDatabase(ctx context.Context, uri string) error {
 	pgOnce.Do(func() {
 		db, e := pgxpool.New(ctx, uri)
 		bobDB := bob.NewDB(stdlib.OpenDBFromPool(db))
-		PGInstance = &postgres{bobDB, db}
+		PGInstance = &pginstance{bobDB, db}
 		err = e
 	})
 	if err != nil {

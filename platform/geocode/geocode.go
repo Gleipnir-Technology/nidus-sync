@@ -13,11 +13,13 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	bobtypes "github.com/Gleipnir-Technology/bob/types"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/stadia/model"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/stadia/table"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
-	"github.com/aarondl/opt/omit"
+	//"github.com/aarondl/opt/omit"
 	"github.com/rs/zerolog/log"
 	"github.com/uber/h3-go/v4"
 	"resty.dev/v3"
@@ -50,7 +52,8 @@ func restyMiddleware(rclient *resty.Client, response *resty.Response) error {
 	//log.Info().Msg("middleware")
 	ctx := context.Background()
 	var body bobtypes.JSON[json.RawMessage]
-	err := body.UnmarshalJSON(response.Bytes())
+	resp_bytes := response.Bytes()
+	err := body.UnmarshalJSON(resp_bytes)
 	if err != nil {
 		return fmt.Errorf("unmarshal json in middleware: %w", err)
 	}
@@ -59,11 +62,18 @@ func restyMiddleware(rclient *resty.Client, response *resty.Response) error {
 		log.Error().Err(err).Str("url", response.Request.URL).Msg("failed to redact url")
 		return nil
 	}
-	models.StadiaAPIRequests.Insert(&models.StadiaAPIRequestSetter{
-		CreatedAt: omit.From(time.Now()),
-		Request:   omit.From(u),
-		Response:  omit.From(body),
-	}).One(ctx, db.PGInstance.BobDB)
+	statement := table.APIRequest.INSERT(table.APIRequest.MutableColumns).
+		MODEL(model.APIRequest{
+			CreatedAt: time.Now(),
+			Request:   u,
+			Response:  string(resp_bytes),
+		}).RETURNING(table.APIRequest.AllColumns)
+	data, err := db.Execute[model.APIRequest](ctx, statement)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to insert stadia request")
+	} else {
+		log.Debug().Int64("id", data.ID).Msg("Created stadia request cache entry")
+	}
 	return nil
 }
 

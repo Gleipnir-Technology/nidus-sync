@@ -25,7 +25,6 @@ psql:
     - "lob"
     - "public"
     - "publicreport"
-    - "stadia"
     - "tile"
   shared_schema: "public"
   queries:

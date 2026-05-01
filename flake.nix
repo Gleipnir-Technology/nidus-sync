@@ -33,6 +33,7 @@
 						pkgs.dart-sass
 						pkgs.esbuild
 						pkgs.go
+						pkgs.go-jet
 						pkgs.goose
 						pkgs.gotools
 						pkgs.lefthook

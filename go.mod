@@ -48,8 +48,10 @@ require (
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
+	github.com/go-jet/jet/v2 v2.14.1 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250725192818-e39067aee2d2 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
@@ -75,9 +77,11 @@ require (
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/tidwall/geoindex v1.4.4 // indirect
 	github.com/tidwall/gjson v1.12.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
