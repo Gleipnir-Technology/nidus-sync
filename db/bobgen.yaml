@@ -18,7 +18,6 @@ aliases:
 no_tests: true
 psql:
   schemas:
-    - "arcgis"
     - "comms"
     - "fieldseeker"
     - "fileupload"

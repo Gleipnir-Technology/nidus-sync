@@ -17,27 +17,38 @@ type Box2D struct {
 	Y float64
 }
 
-func main() {
-	err := genpostgres.GenerateDSN(
-		"postgresql://?host=/var/run/postgresql&sslmode=disable&dbname=nidus-sync",
-		"arcgis",
-		"../gen",
-		template.Default(postgres.Dialect).UseSchema(func(schema metadata.Schema) template.Schema {
-			return template.DefaultSchema(schema).UseModel(template.DefaultModel().UseTable(func(table metadata.Table) template.TableModel {
-				return template.DefaultTableModel(table).UseField(func(column metadata.Column) template.TableModelField {
-					defaultTableModelField := template.DefaultTableModelField(column)
-					//log.Printf("'%s' '%s' '%s'", table.Name, column.Name, column.DataType.Name)
-					if column.Name == "extent" && column.DataType.Name == "box2d" {
-						defaultTableModelField.Type = template.NewType(Box2D{})
-					}
-					return defaultTableModelField
-				})
-			}),
-			)
+var schemas []string = []string{
+	"arcgis",
+	"stadia",
+}
+
+func customTemplate() template.Template {
+	return template.Default(postgres.Dialect).UseSchema(func(schema metadata.Schema) template.Schema {
+		return template.DefaultSchema(schema).UseModel(template.DefaultModel().UseTable(func(table metadata.Table) template.TableModel {
+			return template.DefaultTableModel(table).UseField(func(column metadata.Column) template.TableModelField {
+				defaultTableModelField := template.DefaultTableModelField(column)
+				//log.Printf("'%s' '%s' '%s'", table.Name, column.Name, column.DataType.Name)
+				if column.Name == "extent" && column.DataType.Name == "box2d" {
+					defaultTableModelField.Type = template.NewType(Box2D{})
+				}
+				return defaultTableModelField
+			})
 		}),
-	)
-	if err != nil {
-		log.Printf("Failed: %v", err)
-		os.Exit(1)
+		)
+	})
+}
+
+func main() {
+	for _, schema := range schemas {
+		err := genpostgres.GenerateDSN(
+			"postgresql://?host=/var/run/postgresql&sslmode=disable&dbname=nidus-sync",
+			schema,
+			"../gen",
+			customTemplate(),
+		)
+		if err != nil {
+			log.Printf("Failed: %v", err)
+			os.Exit(1)
+		}
 	}
 }
