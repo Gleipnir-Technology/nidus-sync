@@ -146,7 +146,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { computedAsync } from "@vueuse/core";
 import Header from "@/rmo/components/Header.vue";
 import HeaderDistrict from "@/components/HeaderDistrict.vue";
@@ -170,12 +170,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const report = ref<PublicReport | null>(null);
 const storeDistrict = useStoreDistrict();
 const storePublicReport = useStorePublicReport();
 // Computed
-const report = computedAsync(async (): Promise<PublicReport | undefined> => {
-	return await storePublicReport.byID(props.id);
-});
 const district = computedAsync(async (): Promise<District | undefined> => {
 	if (!(report.value && report.value.district)) {
 		return undefined;
@@ -199,5 +197,9 @@ const markers = computed((): Marker[] => {
 			location: report.value.address.location,
 		},
 	];
+});
+onMounted(async () => {
+	const r = await storePublicReport.byID(props.id);
+	report.value = r;
 });
 </script>

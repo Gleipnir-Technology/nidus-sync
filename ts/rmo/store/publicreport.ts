@@ -11,20 +11,20 @@ import {
 
 export const useStorePublicReport = defineStore("publicreport", () => {
 	// State
-	const _byID = ref<Map<string, PublicReport>>(new Map());
+	const _byURI = ref<Map<string, PublicReport>>(new Map());
 	const loading = ref(false);
 	const ongoingFetches = ref<Map<string, Promise<PublicReport> | null>>(
 		new Map(),
 	);
 
-	function add(pr: PublicReport) {
-		_byID.value.set(pr.public_id, pr);
-	}
+	function add(pr: PublicReport) {}
 	async function byID(id: string): Promise<PublicReport> {
 		const uri = "/api/rmo/publicreport/" + id;
 		return byURI(uri);
 	}
 	async function byURI(uri: string): Promise<PublicReport> {
+		let result = _byURI.value.get(uri);
+		if (result) return result;
 		let ongoing = ongoingFetches.value.get(uri);
 		if (ongoing) return ongoing;
 		ongoing = fetchByURI(uri).finally(() => {
@@ -41,7 +41,7 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 			data,
 		)) as PublicReportDTO;
 		const result = PublicReport.fromJSON(resp);
-		_byID.value.set(result.public_id, result);
+		_byURI.value.set(result.uri, result);
 		return result;
 	}
 	async function fetchByURI(uri: string): Promise<PublicReport> {
@@ -49,7 +49,7 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 		try {
 			const body = (await apiClient.JSONGet(uri)) as PublicReportDTO;
 			const report = PublicReport.fromJSON(body);
-			_byID.value.set(report.public_id, report);
+			_byURI.value.set(report.uri, report);
 			return report;
 		} catch (err) {
 			console.error("Error loading users:", err);
@@ -65,7 +65,6 @@ export const useStorePublicReport = defineStore("publicreport", () => {
 	}
 	return {
 		// Actions
-		add,
 		byID,
 		byURI,
 		createCompliance,

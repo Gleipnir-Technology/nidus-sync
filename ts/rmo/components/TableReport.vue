@@ -192,7 +192,6 @@ const formatId = (id: string): string => {
  * Handle row click event
  */
 const handleRowClick = (report_id: string): void => {
-	console.log("row clicked", report_id);
 	emit("rowClicked", report_id);
 };
 </script>
