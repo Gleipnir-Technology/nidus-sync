@@ -9,7 +9,7 @@ import {
 	type PublicReportUpdate,
 } from "@/type/api";
 
-export const useStorePublicReport = defineStore("publicreport", () => {
+export const useStorePublicReport = defineStore("rmo-publicreport", () => {
 	// State
 	const _byURI = ref<Map<string, PublicReport>>(new Map());
 	const loading = ref(false);

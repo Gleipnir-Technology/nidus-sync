@@ -47,103 +47,107 @@
 <template>
 	<HeaderDistrict :district="district" v-if="district" />
 	<Header v-else />
-	<div class="container my-4" v-if="report">
-		<!-- Report ID and Status Section -->
-		<div class="card mb-4">
-			<div
-				class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
-			>
-				<h5 class="mb-0">Report {{ formatReportID(id) }}</h5>
-				<span class="badge bg-warning capitalized status-badge text-dark">
-					{{ report.status }}
-				</span>
-			</div>
-			<div class="card-body">
-				<div class="row">
-					<div class="col-md-4 mb-3">
-						<strong><i class="bi bi-tag me-2"></i>Type:</strong>
-						<span class="capitalized">{{ report.type }}</span>
-					</div>
-					<div class="col-md-4 mb-3">
-						<strong><i class="bi bi-calendar me-2"></i>Created:</strong>
-						<span>{{ formatTimeRelative(report.created) }}</span>
-					</div>
-					<div class="col-md-4 mb-3" v-if="district">
-						<strong><i class="bi bi-crosshair me-2"></i>District:</strong>
-						<span>
-							{{ district.name }}
-						</span>
-					</div>
+	<template v-if="report">
+		<div class="container my-4">
+			<!-- Report ID and Status Section -->
+			<div class="card mb-4">
+				<div
+					class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
+				>
+					<h5 class="mb-0">Report {{ formatReportID(id) }}</h5>
+					<span class="badge bg-warning capitalized status-badge text-dark">
+						{{ report.status }}
+					</span>
 				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<strong><i class="bi bi-pin-map me-2"></i>Location:</strong>
-						<span>{{ report.address.raw }}</span>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-md-12">
-						<strong><i class="bi bi-images me-2"></i>Images:</strong>
-						<span>
-							{{
-								report.images.length > 0
-									? report.images.length
-									: "None provided"
-							}}
-						</span>
-					</div>
-				</div>
-				<ReportDetailNuisance
-					:nuisance="report as PublicReportNuisance"
-					v-if="report instanceof PublicReportNuisance"
-				/>
-				<ReportDetailWater
-					:water="report as PublicReportWater"
-					v-if="report instanceof PublicReportWater"
-				/>
-			</div>
-		</div>
-
-		<!-- Map Section -->
-		<div class="card mb-4">
-			<div class="card-header bg-info text-white">
-				<h5 class="mb-0">
-					<i class="bi bi-pin-map-fill me-2"></i>Location Map
-				</h5>
-			</div>
-			<div class="card-body p-0">
-				<div class="map-container">
-					<MapLocatorDisplay id="map" :markers="markers"></MapLocatorDisplay>
-				</div>
-			</div>
-		</div>
-		<!-- History Timeline -->
-		<div class="card">
-			<div class="card-header bg-success text-white">
-				<h5 class="mb-0">
-					<i class="bi bi-clock-history me-2"></i>Request History
-				</h5>
-			</div>
-			<div class="card-body">
-				<div class="timeline">
-					<div
-						v-for="(item, index) in report.log"
-						:key="index"
-						class="timeline-item"
-					>
-						<div class="timeline-date">
-							{{ formatTimeRelative(item.created) }}
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-4 mb-3">
+							<strong><i class="bi bi-tag me-2"></i>Type:</strong>
+							<span class="capitalized">{{ report.type }}</span>
 						</div>
-						<h5 class="capitalized mb-1">{{ item.type }}</h5>
-						<p class="mb-0">{{ item.message }}</p>
+						<div class="col-md-4 mb-3">
+							<strong><i class="bi bi-calendar me-2"></i>Created:</strong>
+							<span>{{ formatTimeRelative(report.created) }}</span>
+						</div>
+						<div class="col-md-4 mb-3" v-if="district">
+							<strong><i class="bi bi-crosshair me-2"></i>District:</strong>
+							<span>
+								{{ district.name }}
+							</span>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<strong><i class="bi bi-pin-map me-2"></i>Location:</strong>
+							<span>{{ report.address.raw }}</span>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<strong><i class="bi bi-images me-2"></i>Images:</strong>
+							<span>
+								{{
+									report.images.length > 0
+										? report.images.length
+										: "None provided"
+								}}
+							</span>
+						</div>
+					</div>
+					<ReportDetailNuisance
+						:nuisance="report as PublicReportNuisance"
+						v-if="report instanceof PublicReportNuisance"
+					/>
+					<ReportDetailWater
+						:water="report as PublicReportWater"
+						v-if="report instanceof PublicReportWater"
+					/>
+				</div>
+			</div>
+
+			<!-- Map Section -->
+			<div class="card mb-4">
+				<div class="card-header bg-info text-white">
+					<h5 class="mb-0">
+						<i class="bi bi-pin-map-fill me-2"></i>Location Map
+					</h5>
+				</div>
+				<div class="card-body p-0">
+					<div class="map-container">
+						<MapLocatorDisplay id="map" :markers="markers"></MapLocatorDisplay>
+					</div>
+				</div>
+			</div>
+			<!-- History Timeline -->
+			<div class="card">
+				<div class="card-header bg-success text-white">
+					<h5 class="mb-0">
+						<i class="bi bi-clock-history me-2"></i>Request History
+					</h5>
+				</div>
+				<div class="card-body">
+					<div class="timeline">
+						<div
+							v-for="(item, index) in report.log"
+							:key="index"
+							class="timeline-item"
+						>
+							<div class="timeline-date">
+								{{ formatTimeRelative(item.created) }}
+							</div>
+							<h5 class="capitalized mb-1">{{ item.type }}</h5>
+							<p class="mb-0">{{ item.message }}</p>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-	<div class="container my-4" v-else>
-		<p>loading...</p>
-	</div>
+	</template>
+	<template v-else>
+		<div class="container my-4">
+			<p>loading...</p>
+		</div>
+	</template>
 </template>
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
@@ -201,5 +205,6 @@ const markers = computed((): Marker[] => {
 onMounted(async () => {
 	const r = await storePublicReport.byID(props.id);
 	report.value = r;
+	console.log("Got report", r);
 });
 </script>
