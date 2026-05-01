@@ -53,9 +53,11 @@ type CommsEmailLogsQuery = *psql.ViewQuery[*CommsEmailLog, CommsEmailLogSlice]
 
 // commsEmailLogR is where relationships are stored.
 type commsEmailLogR struct {
-	DestinationEmailContact *CommsEmailContact         // comms.email_log.email_log_destination_fkey
-	TemplateEmailTemplate   *CommsEmailTemplate        // comms.email_log.email_log_template_id_fkey
-	ReportLogs              PublicreportReportLogSlice // publicreport.report_log.report_log_email_log_id_fkey
+	DestinationEmailContact        *CommsEmailContact         // comms.email_log.email_log_destination_fkey
+	TemplateEmailTemplate          *CommsEmailTemplate        // comms.email_log.email_log_template_id_fkey
+	ResponseEmailLogCommunications CommunicationSlice         // communication.communication_response_email_log_id_fkey
+	SourceEmailLogCommunications   CommunicationSlice         // communication.communication_source_email_log_id_fkey
+	ReportLogs                     PublicreportReportLogSlice // publicreport.report_log.report_log_email_log_id_fkey
 }
 
 func buildCommsEmailLogColumns(alias string) commsEmailLogColumns {
@@ -628,6 +630,54 @@ func (os CommsEmailLogSlice) TemplateEmailTemplate(mods ...bob.Mod[*dialect.Sele
 	)...)
 }
 
+// ResponseEmailLogCommunications starts a query for related objects on communication
+func (o *CommsEmailLog) ResponseEmailLogCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	return Communications.Query(append(mods,
+		sm.Where(Communications.Columns.ResponseEmailLogID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os CommsEmailLogSlice) ResponseEmailLogCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Communications.Query(append(mods,
+		sm.Where(psql.Group(Communications.Columns.ResponseEmailLogID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// SourceEmailLogCommunications starts a query for related objects on communication
+func (o *CommsEmailLog) SourceEmailLogCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	return Communications.Query(append(mods,
+		sm.Where(Communications.Columns.SourceEmailLogID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os CommsEmailLogSlice) SourceEmailLogCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Communications.Query(append(mods,
+		sm.Where(psql.Group(Communications.Columns.SourceEmailLogID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // ReportLogs starts a query for related objects on publicreport.report_log
 func (o *CommsEmailLog) ReportLogs(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportReportLogsQuery {
 	return PublicreportReportLogs.Query(append(mods,
@@ -744,6 +794,142 @@ func (commsEmailLog0 *CommsEmailLog) AttachTemplateEmailTemplate(ctx context.Con
 	commsEmailLog0.R.TemplateEmailTemplate = commsEmailTemplate1
 
 	commsEmailTemplate1.R.TemplateEmailLogs = append(commsEmailTemplate1.R.TemplateEmailLogs, commsEmailLog0)
+
+	return nil
+}
+
+func insertCommsEmailLogResponseEmailLogCommunications0(ctx context.Context, exec bob.Executor, communications1 []*CommunicationSetter, commsEmailLog0 *CommsEmailLog) (CommunicationSlice, error) {
+	for i := range communications1 {
+		communications1[i].ResponseEmailLogID = omitnull.From(commsEmailLog0.ID)
+	}
+
+	ret, err := Communications.Insert(bob.ToMods(communications1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsEmailLogResponseEmailLogCommunications0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsEmailLogResponseEmailLogCommunications0(ctx context.Context, exec bob.Executor, count int, communications1 CommunicationSlice, commsEmailLog0 *CommsEmailLog) (CommunicationSlice, error) {
+	setter := &CommunicationSetter{
+		ResponseEmailLogID: omitnull.From(commsEmailLog0.ID),
+	}
+
+	err := communications1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsEmailLogResponseEmailLogCommunications0: %w", err)
+	}
+
+	return communications1, nil
+}
+
+func (commsEmailLog0 *CommsEmailLog) InsertResponseEmailLogCommunications(ctx context.Context, exec bob.Executor, related ...*CommunicationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	communications1, err := insertCommsEmailLogResponseEmailLogCommunications0(ctx, exec, related, commsEmailLog0)
+	if err != nil {
+		return err
+	}
+
+	commsEmailLog0.R.ResponseEmailLogCommunications = append(commsEmailLog0.R.ResponseEmailLogCommunications, communications1...)
+
+	for _, rel := range communications1 {
+		rel.R.ResponseEmailLogEmailLog = commsEmailLog0
+	}
+	return nil
+}
+
+func (commsEmailLog0 *CommsEmailLog) AttachResponseEmailLogCommunications(ctx context.Context, exec bob.Executor, related ...*Communication) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	communications1 := CommunicationSlice(related)
+
+	_, err = attachCommsEmailLogResponseEmailLogCommunications0(ctx, exec, len(related), communications1, commsEmailLog0)
+	if err != nil {
+		return err
+	}
+
+	commsEmailLog0.R.ResponseEmailLogCommunications = append(commsEmailLog0.R.ResponseEmailLogCommunications, communications1...)
+
+	for _, rel := range related {
+		rel.R.ResponseEmailLogEmailLog = commsEmailLog0
+	}
+
+	return nil
+}
+
+func insertCommsEmailLogSourceEmailLogCommunications0(ctx context.Context, exec bob.Executor, communications1 []*CommunicationSetter, commsEmailLog0 *CommsEmailLog) (CommunicationSlice, error) {
+	for i := range communications1 {
+		communications1[i].SourceEmailLogID = omitnull.From(commsEmailLog0.ID)
+	}
+
+	ret, err := Communications.Insert(bob.ToMods(communications1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertCommsEmailLogSourceEmailLogCommunications0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachCommsEmailLogSourceEmailLogCommunications0(ctx context.Context, exec bob.Executor, count int, communications1 CommunicationSlice, commsEmailLog0 *CommsEmailLog) (CommunicationSlice, error) {
+	setter := &CommunicationSetter{
+		SourceEmailLogID: omitnull.From(commsEmailLog0.ID),
+	}
+
+	err := communications1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommsEmailLogSourceEmailLogCommunications0: %w", err)
+	}
+
+	return communications1, nil
+}
+
+func (commsEmailLog0 *CommsEmailLog) InsertSourceEmailLogCommunications(ctx context.Context, exec bob.Executor, related ...*CommunicationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	communications1, err := insertCommsEmailLogSourceEmailLogCommunications0(ctx, exec, related, commsEmailLog0)
+	if err != nil {
+		return err
+	}
+
+	commsEmailLog0.R.SourceEmailLogCommunications = append(commsEmailLog0.R.SourceEmailLogCommunications, communications1...)
+
+	for _, rel := range communications1 {
+		rel.R.SourceEmailLogEmailLog = commsEmailLog0
+	}
+	return nil
+}
+
+func (commsEmailLog0 *CommsEmailLog) AttachSourceEmailLogCommunications(ctx context.Context, exec bob.Executor, related ...*Communication) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	communications1 := CommunicationSlice(related)
+
+	_, err = attachCommsEmailLogSourceEmailLogCommunications0(ctx, exec, len(related), communications1, commsEmailLog0)
+	if err != nil {
+		return err
+	}
+
+	commsEmailLog0.R.SourceEmailLogCommunications = append(commsEmailLog0.R.SourceEmailLogCommunications, communications1...)
+
+	for _, rel := range related {
+		rel.R.SourceEmailLogEmailLog = commsEmailLog0
+	}
 
 	return nil
 }
@@ -880,6 +1066,34 @@ func (o *CommsEmailLog) Preload(name string, retrieved any) error {
 			rel.R.TemplateEmailLogs = CommsEmailLogSlice{o}
 		}
 		return nil
+	case "ResponseEmailLogCommunications":
+		rels, ok := retrieved.(CommunicationSlice)
+		if !ok {
+			return fmt.Errorf("commsEmailLog cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.ResponseEmailLogCommunications = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.ResponseEmailLogEmailLog = o
+			}
+		}
+		return nil
+	case "SourceEmailLogCommunications":
+		rels, ok := retrieved.(CommunicationSlice)
+		if !ok {
+			return fmt.Errorf("commsEmailLog cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.SourceEmailLogCommunications = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.SourceEmailLogEmailLog = o
+			}
+		}
+		return nil
 	case "ReportLogs":
 		rels, ok := retrieved.(PublicreportReportLogSlice)
 		if !ok {
@@ -936,9 +1150,11 @@ func buildCommsEmailLogPreloader() commsEmailLogPreloader {
 }
 
 type commsEmailLogThenLoader[Q orm.Loadable] struct {
-	DestinationEmailContact func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	TemplateEmailTemplate   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReportLogs              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DestinationEmailContact        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	TemplateEmailTemplate          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ResponseEmailLogCommunications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceEmailLogCommunications   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReportLogs                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommsEmailLogThenLoader[Q orm.Loadable]() commsEmailLogThenLoader[Q] {
@@ -947,6 +1163,12 @@ func buildCommsEmailLogThenLoader[Q orm.Loadable]() commsEmailLogThenLoader[Q] {
 	}
 	type TemplateEmailTemplateLoadInterface interface {
 		LoadTemplateEmailTemplate(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type ResponseEmailLogCommunicationsLoadInterface interface {
+		LoadResponseEmailLogCommunications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SourceEmailLogCommunicationsLoadInterface interface {
+		LoadSourceEmailLogCommunications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ReportLogsLoadInterface interface {
 		LoadReportLogs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -963,6 +1185,18 @@ func buildCommsEmailLogThenLoader[Q orm.Loadable]() commsEmailLogThenLoader[Q] {
 			"TemplateEmailTemplate",
 			func(ctx context.Context, exec bob.Executor, retrieved TemplateEmailTemplateLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadTemplateEmailTemplate(ctx, exec, mods...)
+			},
+		),
+		ResponseEmailLogCommunications: thenLoadBuilder[Q](
+			"ResponseEmailLogCommunications",
+			func(ctx context.Context, exec bob.Executor, retrieved ResponseEmailLogCommunicationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadResponseEmailLogCommunications(ctx, exec, mods...)
+			},
+		),
+		SourceEmailLogCommunications: thenLoadBuilder[Q](
+			"SourceEmailLogCommunications",
+			func(ctx context.Context, exec bob.Executor, retrieved SourceEmailLogCommunicationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSourceEmailLogCommunications(ctx, exec, mods...)
 			},
 		),
 		ReportLogs: thenLoadBuilder[Q](
@@ -1072,6 +1306,134 @@ func (os CommsEmailLogSlice) LoadTemplateEmailTemplate(ctx context.Context, exec
 
 			o.R.TemplateEmailTemplate = rel
 			break
+		}
+	}
+
+	return nil
+}
+
+// LoadResponseEmailLogCommunications loads the commsEmailLog's ResponseEmailLogCommunications into the .R struct
+func (o *CommsEmailLog) LoadResponseEmailLogCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.ResponseEmailLogCommunications = nil
+
+	related, err := o.ResponseEmailLogCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.ResponseEmailLogEmailLog = o
+	}
+
+	o.R.ResponseEmailLogCommunications = related
+	return nil
+}
+
+// LoadResponseEmailLogCommunications loads the commsEmailLog's ResponseEmailLogCommunications into the .R struct
+func (os CommsEmailLogSlice) LoadResponseEmailLogCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	communications, err := os.ResponseEmailLogCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.ResponseEmailLogCommunications = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range communications {
+
+			if !rel.ResponseEmailLogID.IsValue() {
+				continue
+			}
+			if !(rel.ResponseEmailLogID.IsValue() && o.ID == rel.ResponseEmailLogID.MustGet()) {
+				continue
+			}
+
+			rel.R.ResponseEmailLogEmailLog = o
+
+			o.R.ResponseEmailLogCommunications = append(o.R.ResponseEmailLogCommunications, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadSourceEmailLogCommunications loads the commsEmailLog's SourceEmailLogCommunications into the .R struct
+func (o *CommsEmailLog) LoadSourceEmailLogCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.SourceEmailLogCommunications = nil
+
+	related, err := o.SourceEmailLogCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.SourceEmailLogEmailLog = o
+	}
+
+	o.R.SourceEmailLogCommunications = related
+	return nil
+}
+
+// LoadSourceEmailLogCommunications loads the commsEmailLog's SourceEmailLogCommunications into the .R struct
+func (os CommsEmailLogSlice) LoadSourceEmailLogCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	communications, err := os.SourceEmailLogCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.SourceEmailLogCommunications = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range communications {
+
+			if !rel.SourceEmailLogID.IsValue() {
+				continue
+			}
+			if !(rel.SourceEmailLogID.IsValue() && o.ID == rel.SourceEmailLogID.MustGet()) {
+				continue
+			}
+
+			rel.R.SourceEmailLogEmailLog = o
+
+			o.R.SourceEmailLogCommunications = append(o.R.SourceEmailLogCommunications, rel)
 		}
 	}
 

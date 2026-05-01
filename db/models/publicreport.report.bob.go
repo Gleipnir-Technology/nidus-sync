@@ -68,20 +68,21 @@ type PublicreportReportsQuery = *psql.ViewQuery[*PublicreportReport, Publicrepor
 
 // publicreportReportR is where relationships are stored.
 type publicreportReportR struct {
-	TextJobs     CommsTextJobSlice            // comms.text_job.text_job_report_id_fkey
-	Compliance   *PublicreportCompliance      // publicreport.compliance.compliance_report_id_fkey
-	NotifyEmails PublicreportNotifyEmailSlice // publicreport.notify_email.notify_email_report_id_fkey
-	NotifyPhones PublicreportNotifyPhoneSlice // publicreport.notify_phone.notify_phone_report_id_fkey
-	Nuisance     *PublicreportNuisance        // publicreport.nuisance.nuisance_report_id_fkey
-	Address      *Address                     // publicreport.report.report_address_id_fkey
-	Client       *PublicreportClient          // publicreport.report.report_client_uuid_fkey
-	Organization *Organization                // publicreport.report.report_organization_id_fkey
-	ReviewerUser *User                        // publicreport.report.report_reviewer_id_fkey
-	Images       PublicreportImageSlice       // publicreport.report_image.report_image_image_id_fkeypublicreport.report_image.report_image_report_id_fkey
-	ReportLogs   PublicreportReportLogSlice   // publicreport.report_log.report_log_report_id_fkey
-	Water        *PublicreportWater           // publicreport.water.water_report_id_fkey
-	ReportTexts  ReportTextSlice              // report_text.report_text_report_id_fkey
-	Signals      SignalSlice                  // signal.signal_report_id_fkey
+	TextJobs                   CommsTextJobSlice            // comms.text_job.text_job_report_id_fkey
+	SourceReportCommunications CommunicationSlice           // communication.communication_source_report_id_fkey
+	Compliance                 *PublicreportCompliance      // publicreport.compliance.compliance_report_id_fkey
+	NotifyEmails               PublicreportNotifyEmailSlice // publicreport.notify_email.notify_email_report_id_fkey
+	NotifyPhones               PublicreportNotifyPhoneSlice // publicreport.notify_phone.notify_phone_report_id_fkey
+	Nuisance                   *PublicreportNuisance        // publicreport.nuisance.nuisance_report_id_fkey
+	Address                    *Address                     // publicreport.report.report_address_id_fkey
+	Client                     *PublicreportClient          // publicreport.report.report_client_uuid_fkey
+	Organization               *Organization                // publicreport.report.report_organization_id_fkey
+	ReviewerUser               *User                        // publicreport.report.report_reviewer_id_fkey
+	Images                     PublicreportImageSlice       // publicreport.report_image.report_image_image_id_fkeypublicreport.report_image.report_image_report_id_fkey
+	ReportLogs                 PublicreportReportLogSlice   // publicreport.report_log.report_log_report_id_fkey
+	Water                      *PublicreportWater           // publicreport.water.water_report_id_fkey
+	ReportTexts                ReportTextSlice              // report_text.report_text_report_id_fkey
+	Signals                    SignalSlice                  // signal.signal_report_id_fkey
 }
 
 func buildPublicreportReportColumns(alias string) publicreportReportColumns {
@@ -876,6 +877,30 @@ func (os PublicreportReportSlice) TextJobs(mods ...bob.Mod[*dialect.SelectQuery]
 	)...)
 }
 
+// SourceReportCommunications starts a query for related objects on communication
+func (o *PublicreportReport) SourceReportCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	return Communications.Query(append(mods,
+		sm.Where(Communications.Columns.SourceReportID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os PublicreportReportSlice) SourceReportCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Communications.Query(append(mods,
+		sm.Where(psql.Group(Communications.Columns.SourceReportID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // Compliance starts a query for related objects on publicreport.compliance
 func (o *PublicreportReport) Compliance(mods ...bob.Mod[*dialect.SelectQuery]) PublicreportCompliancesQuery {
 	return PublicreportCompliances.Query(append(mods,
@@ -1256,6 +1281,74 @@ func (publicreportReport0 *PublicreportReport) AttachTextJobs(ctx context.Contex
 
 	for _, rel := range related {
 		rel.R.Report = publicreportReport0
+	}
+
+	return nil
+}
+
+func insertPublicreportReportSourceReportCommunications0(ctx context.Context, exec bob.Executor, communications1 []*CommunicationSetter, publicreportReport0 *PublicreportReport) (CommunicationSlice, error) {
+	for i := range communications1 {
+		communications1[i].SourceReportID = omitnull.From(publicreportReport0.ID)
+	}
+
+	ret, err := Communications.Insert(bob.ToMods(communications1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertPublicreportReportSourceReportCommunications0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachPublicreportReportSourceReportCommunications0(ctx context.Context, exec bob.Executor, count int, communications1 CommunicationSlice, publicreportReport0 *PublicreportReport) (CommunicationSlice, error) {
+	setter := &CommunicationSetter{
+		SourceReportID: omitnull.From(publicreportReport0.ID),
+	}
+
+	err := communications1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachPublicreportReportSourceReportCommunications0: %w", err)
+	}
+
+	return communications1, nil
+}
+
+func (publicreportReport0 *PublicreportReport) InsertSourceReportCommunications(ctx context.Context, exec bob.Executor, related ...*CommunicationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	communications1, err := insertPublicreportReportSourceReportCommunications0(ctx, exec, related, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.SourceReportCommunications = append(publicreportReport0.R.SourceReportCommunications, communications1...)
+
+	for _, rel := range communications1 {
+		rel.R.SourceReportReport = publicreportReport0
+	}
+	return nil
+}
+
+func (publicreportReport0 *PublicreportReport) AttachSourceReportCommunications(ctx context.Context, exec bob.Executor, related ...*Communication) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	communications1 := CommunicationSlice(related)
+
+	_, err = attachPublicreportReportSourceReportCommunications0(ctx, exec, len(related), communications1, publicreportReport0)
+	if err != nil {
+		return err
+	}
+
+	publicreportReport0.R.SourceReportCommunications = append(publicreportReport0.R.SourceReportCommunications, communications1...)
+
+	for _, rel := range related {
+		rel.R.SourceReportReport = publicreportReport0
 	}
 
 	return nil
@@ -2100,6 +2193,20 @@ func (o *PublicreportReport) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "SourceReportCommunications":
+		rels, ok := retrieved.(CommunicationSlice)
+		if !ok {
+			return fmt.Errorf("publicreportReport cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.SourceReportCommunications = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.SourceReportReport = o
+			}
+		}
+		return nil
 	case "Compliance":
 		rel, ok := retrieved.(*PublicreportCompliance)
 		if !ok {
@@ -2380,25 +2487,29 @@ func buildPublicreportReportPreloader() publicreportReportPreloader {
 }
 
 type publicreportReportThenLoader[Q orm.Loadable] struct {
-	TextJobs     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Compliance   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NotifyEmails func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	NotifyPhones func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Nuisance     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Address      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Client       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Images       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReportLogs   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Water        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReportTexts  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Signals      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	TextJobs                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceReportCommunications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Compliance                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NotifyEmails               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	NotifyPhones               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Nuisance                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Address                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Client                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerUser               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Images                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReportLogs                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Water                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReportTexts                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Signals                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenLoader[Q] {
 	type TextJobsLoadInterface interface {
 		LoadTextJobs(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SourceReportCommunicationsLoadInterface interface {
+		LoadSourceReportCommunications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type ComplianceLoadInterface interface {
 		LoadCompliance(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -2445,6 +2556,12 @@ func buildPublicreportReportThenLoader[Q orm.Loadable]() publicreportReportThenL
 			"TextJobs",
 			func(ctx context.Context, exec bob.Executor, retrieved TextJobsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadTextJobs(ctx, exec, mods...)
+			},
+		),
+		SourceReportCommunications: thenLoadBuilder[Q](
+			"SourceReportCommunications",
+			func(ctx context.Context, exec bob.Executor, retrieved SourceReportCommunicationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSourceReportCommunications(ctx, exec, mods...)
 			},
 		),
 		Compliance: thenLoadBuilder[Q](
@@ -2586,6 +2703,70 @@ func (os PublicreportReportSlice) LoadTextJobs(ctx context.Context, exec bob.Exe
 			rel.R.Report = o
 
 			o.R.TextJobs = append(o.R.TextJobs, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadSourceReportCommunications loads the publicreportReport's SourceReportCommunications into the .R struct
+func (o *PublicreportReport) LoadSourceReportCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.SourceReportCommunications = nil
+
+	related, err := o.SourceReportCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.SourceReportReport = o
+	}
+
+	o.R.SourceReportCommunications = related
+	return nil
+}
+
+// LoadSourceReportCommunications loads the publicreportReport's SourceReportCommunications into the .R struct
+func (os PublicreportReportSlice) LoadSourceReportCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	communications, err := os.SourceReportCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.SourceReportCommunications = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range communications {
+
+			if !rel.SourceReportID.IsValue() {
+				continue
+			}
+			if !(rel.SourceReportID.IsValue() && o.ID == rel.SourceReportID.MustGet()) {
+				continue
+			}
+
+			rel.R.SourceReportReport = o
+
+			o.R.SourceReportCommunications = append(o.R.SourceReportCommunications, rel)
 		}
 	}
 
