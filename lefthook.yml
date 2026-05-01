@@ -12,6 +12,10 @@ pre-commit:
       glob: "*.go"
       run: gofmt -w {staged_files}
       stage_fixed: true
+    lint:
+      glob: "*.go"
+      run: golangci-lint run --fix
+      stage_fixed: true
     prettier:
       glob: "*.{html,js,ts,vue,scss}"
       run: prettier -w {staged_files}

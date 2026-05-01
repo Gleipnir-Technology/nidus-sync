@@ -34,6 +34,7 @@
 						pkgs.esbuild
 						pkgs.go
 						pkgs.go-jet
+						pkgs.golangci-lint
 						pkgs.goose
 						pkgs.gotools
 						pkgs.lefthook
