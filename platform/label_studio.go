@@ -64,7 +64,7 @@ func createLabelStudioClient() (*labelstudio.Client, error) {
 	// Get and store the access token
 	err := labelStudioClient.GetAccessToken()
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Failed to get access token: %v", err))
+		return nil, fmt.Errorf("Failed to get access token: %v", err)
 	}
 	log.Println("Got label studio client access token")
 
@@ -116,7 +116,7 @@ func createTask(client *labelstudio.Client, project *labelstudio.Project, minioC
 			return fmt.Errorf("Failed to upload audio: %v", err)
 		}
 	}
-	var transcription string = ""
+	var transcription = ""
 	//if note.Transcription.IsValue() {
 	//transcription = note.Transcription.MustGet()
 	//}

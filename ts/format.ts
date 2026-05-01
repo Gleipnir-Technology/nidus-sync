@@ -29,12 +29,14 @@ export function formatBigNumber(n: number): string {
 	return result;
 }
 export function formatDate(date: Date): string {
-	return new Intl.DateTimeFormat("en-US", {
+	return new Intl.DateTimeFormat(undefined, {
 		year: "numeric",
 		month: "short",
 		day: "numeric",
 		hour: "2-digit",
 		minute: "2-digit",
+		hour12: false,
+		timeZoneName: "short",
 	}).format(date);
 }
 

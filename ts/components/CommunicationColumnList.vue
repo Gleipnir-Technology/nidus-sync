@@ -74,7 +74,7 @@
 					}"
 					@click="handleClick(comm.id)"
 				>
-					<ListCardPublicReport :comm="comm" />
+					<ListCardCommunication :comm="comm" />
 				</div>
 			</div>
 		</div>
@@ -91,7 +91,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import ListCardPublicReport from "@/components/ListCardPublicReport.vue";
+import ListCardCommunication from "@/components/ListCardCommunication.vue";
 import { Communication, LogEntry, PublicReport } from "@/type/api";
 
 interface Props {

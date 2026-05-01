@@ -97,7 +97,7 @@ const currentImage = computed(() => {
 });
 const currentImages = computed(() => {
 	const comm = selectedCommunication.value;
-	if (comm == null || comm.public_report == null) {
+	if (comm == null) {
 		return [];
 	}
 	return selectedReport.value?.images ?? [];
@@ -181,13 +181,12 @@ const selectedReport = computedAsync(
 	async (): Promise<PublicReport | undefined> => {
 		if (
 			!(
-				selectedCommunication.value && selectedCommunication.value.public_report
+				selectedCommunication.value &&
+				selectedCommunication.value.type != "publicreport"
 			)
 		)
 			return;
-		return await storePublicReport.fetchByURI(
-			selectedCommunication.value.public_report,
-		);
+		return await storePublicReport.byURI(selectedCommunication.value.source);
 	},
 );
 const handleDeselect = (id: string) => {

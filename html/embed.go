@@ -76,9 +76,7 @@ func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
 }
 
 func (ts templateSystemEmbed) addSubdirTemplates(t *template.Template, subdir string) error {
-	var err error
-	//log.Debug().Msg("Adding subdir templates")
-	err = fs.WalkDir(ts.sourceFS, subdir, func(path string, d fs.DirEntry, err error) error {
+	var err error = fs.WalkDir(ts.sourceFS, subdir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}

@@ -15,7 +15,11 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
+	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
+	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	//"github.com/Gleipnir-Technology/nidus-sync/platform/background"
@@ -214,6 +218,9 @@ func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id st
 func PublicReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
 	return publicreport.ReportsForOrganization(ctx, org_id, is_public)
 }
+func PublicReportsFromIDs(ctx context.Context, report_ids []int64) ([]*modelpublicreport.Report, error) {
+	return querypublicreport.PublicReportsFromIDs(ctx, report_ids)
+}
 func PublicReportComplianceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_compliance models.PublicreportComplianceSetter, org_id int32) (*models.PublicreportReport, error) {
 	return publicReportCreate(ctx, setter_report, nil, nil, nil, org_id, func(ctx context.Context, txn bob.Executor, report_id int32) error {
 		setter_compliance.ReportID = omit.From(report_id)
@@ -381,6 +388,15 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 		Type:      omit.From(enums.PublicreportReportlogtypeCreated),
 		UserID:    omitnull.FromPtr[int32](nil),
 	}).One(ctx, txn)
+
+	comm := &model.Communication{
+		SourceReportID: &result.ID,
+	}
+	comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
+	if err != nil {
+		return nil, fmt.Errorf("insert communication: %w", err)
+	}
+	log.Debug().Int32("id", comm.ID).Msg("inserted new communication")
 
 	txn.Commit(ctx)
 

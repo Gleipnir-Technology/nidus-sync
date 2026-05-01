@@ -51,9 +51,7 @@ func main() {
 		log.Printf("%d: %d meters, %d seconds, %s traffic delay", i, s.LengthInMeters, s.TravelTimeInSeconds, s.TrafficDelayInSeconds)
 		for _, leg := range route.Legs {
 			all_stops = append(all_stops, leg.Points[0])
-			for _, p := range leg.Points {
-				all_points = append(all_points, p)
-			}
+			all_points = append(all_points, leg.Points...)
 		}
 	}
 	lines := tomtom.PolylineToGeoJSON(all_points)

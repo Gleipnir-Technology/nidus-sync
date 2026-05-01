@@ -523,22 +523,22 @@ export class PublicReportWater extends PublicReport {
 export interface CommunicationDTO {
 	created: string;
 	id: string;
-	public_report?: string;
+	source: string;
 	type: string;
 }
 export class Communication {
 	constructor(
 		public created: Date,
 		public id: string,
+		public source: string,
 		public type: string,
-		public public_report?: string,
 	) {}
 	static fromJSON(json: CommunicationDTO): Communication {
 		return new Communication(
 			new Date(json.created),
 			json.id,
+			json.source,
 			json.type,
-			json.public_report,
 		);
 	}
 }

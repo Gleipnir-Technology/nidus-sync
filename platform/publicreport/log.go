@@ -59,9 +59,7 @@ func logEntriesByReportID(ctx context.Context, report_ids []int32, is_public boo
 			if !ok {
 				return results, fmt.Errorf("no text logs for %d", report_id)
 			}
-			for _, l := range logs {
-				cur_logs = append(cur_logs, l)
-			}
+			cur_logs = append(cur_logs, logs...)
 			results[report_id] = cur_logs
 		}
 	}

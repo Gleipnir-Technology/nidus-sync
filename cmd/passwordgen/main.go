@@ -26,7 +26,7 @@ func main() {
 }
 
 func scanValue(message string, result *string) {
-	fmt.Printf(message)
+	fmt.Print("%s", message)
 	scanner := bufio.NewScanner(os.Stdin)
 	if ok := scanner.Scan(); !ok {
 		log.Fatal(errors.New("Failed to scan input"))

@@ -10,10 +10,7 @@ type PointShort struct {
 }
 
 func (ps PointShort) AsPoint() Point {
-	return Point{
-		Latitude:  ps.Latitude,
-		Longitude: ps.Longitude,
-	}
+	return Point(ps)
 }
 
 type GeocodeResult struct {

@@ -42,7 +42,7 @@ type Draft struct {
 func NewDraft(projectID int) *DraftRequest {
 	return &DraftRequest{
 		DraftID:   0,
-		Project:   string(projectID),
+		Project:   fmt.Sprint(rune(projectID)),
 		StartedAt: time.Now().UTC().Format(time.RFC3339Nano),
 	}
 }

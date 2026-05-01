@@ -20,10 +20,8 @@ func (qp QueryParams) SortOrDefault(default_name string, ascending bool) (string
 	if s == "" {
 		return default_name, ascending
 	}
-	a := true
-	if s[0] == '-' {
-		a = false
-	}
+	a := !(s[0] == '-')
+
 	if s[0] == '+' || s[0] == '-' {
 		s = s[1:]
 	}

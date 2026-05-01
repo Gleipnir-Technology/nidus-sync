@@ -8,6 +8,7 @@ CREATE TABLE communication (
 	invalidated_by INTEGER REFERENCES user_(id),
 	opened TIMESTAMP WITHOUT TIME ZONE,
 	opened_by INTEGER REFERENCES user_(id),
+	organization_id INTEGER NOT NULL REFERENCES organization(id),
 	response_email_log_id INTEGER REFERENCES comms.email_log(id),
 	response_text_log_id INTEGER REFERENCES comms.text_log(id),
 	set_pending TIMESTAMP WITHOUT TIME ZONE,

@@ -126,7 +126,7 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Don't send authentication headers for browsers because it forces the authentication popup
 		requested_with := r.Header.Get("X-Requested-With")
 		//log.Debug().Str("x-requested-with", requested_with).Send()
-		if !(strings.HasPrefix(requested_with, "nidus-web") || accept == "text/event-stream") {
+		if !strings.HasPrefix(requested_with, "nidus-web") && accept != "text/event-stream" {
 			w.Header().Set("WWW-Authenticate", `Basic realm="Nidus Sync"`)
 			// Separate return codes for different authentication failures
 			if _, ok := err.(*NoCredentialsError); ok {

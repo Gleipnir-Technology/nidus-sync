@@ -149,10 +149,6 @@ func InitializeDatabase(ctx context.Context, uri string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get database current: %w", err)
 	}
-	err = prepareStatements(ctx)
-	if err != nil {
-		return fmt.Errorf("Failed to initialize prepared statements: %w", err)
-	}
 	return nil
 }
 

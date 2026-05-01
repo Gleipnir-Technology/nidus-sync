@@ -69,7 +69,7 @@ func (c *openAIClient) continueConversation(ctx context.Context, tools genai.Opt
 		if m.String() == "" {
 			//log.Debug().Msg("Tool called")
 		} else {
-			var toSay string = m.String()
+			var toSay = m.String()
 			toSay = strings.Replace(toSay, "report-mosquitoes-online: ", "", 1)
 			return Message{
 				Content:        toSay,

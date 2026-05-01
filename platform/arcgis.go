@@ -792,9 +792,7 @@ func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, 
 
 	// +2 for geometry x and geometry x
 	columnNames := make([]string, len(sorted_columns)+2)
-	for i, c := range sorted_columns {
-		columnNames[i] = c
-	}
+	copy(columnNames, sorted_columns)
 	columnNames[len(sorted_columns)] = "geometry_x"
 	columnNames[len(sorted_columns)+1] = "geometry_y"
 
@@ -1031,7 +1029,7 @@ func selectAllFromQueryResult(table string, sorted_columns []string) string {
 	return sb.String()
 }
 func toHistoryTable(table string) string {
-	return "History_" + table[3:len(table)]
+	return "History_" + table[3:]
 }
 
 func updateRowFromFeatureFS(ctx context.Context, transaction bob.Tx, table string, sorted_columns []string, feature *response.Feature) error {
@@ -1618,7 +1616,7 @@ func aggregateAtResolution(ctx context.Context, resolution int, org_id int32, ty
 	if err != nil {
 		return fmt.Errorf("Failed to clear previous aggregation: %w", err)
 	}
-	var to_insert []bob.Mod[*dialect.InsertQuery] = make([]bob.Mod[*dialect.InsertQuery], 0)
+	var to_insert = make([]bob.Mod[*dialect.InsertQuery], 0)
 	to_insert = append(to_insert, im.Into("h3_aggregation", "cell", "resolution", "count_", "type_", "organization_id", "geometry"))
 	for cell, count := range cellToCount {
 		polygon, err := h3utils.CellToPostgisGeometry(cell)

@@ -67,7 +67,7 @@ func (c *ConnectionSSE) SendHeartbeat(w http.ResponseWriter, t time.Time) error 
 func SetEventChannel(chan_envelopes <-chan platform.Envelope) {
 	go func() {
 		for envelope := range chan_envelopes {
-			for conn, _ := range connectionsSSE {
+			for conn := range connectionsSSE {
 				if conn.organizationID == envelope.OrganizationID || envelope.OrganizationID == 0 {
 					log.Debug().Int("type", int(envelope.Event.Type)).Int32("env-org", envelope.OrganizationID).Msg("pushed event to client")
 					conn.chanEvent <- envelope.Event

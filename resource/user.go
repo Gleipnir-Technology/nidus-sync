@@ -94,7 +94,7 @@ func (res *userR) ByIDPut(ctx context.Context, r *http.Request, user platform.Us
 		return "", nhttp.NewErrorStatus(http.StatusBadRequest, "user id conversion: %w", err)
 	}
 	user_changes := &models.UserSetter{}
-	if !(user.HasRoot() || user.IsAccountOwner() || user.ID == user_id) {
+	if !user.HasRoot() && !user.IsAccountOwner() && user.ID != user_id {
 		return "", nhttp.NewForbidden("Only account owners can change other users")
 	}
 	if updates.Avatar.IsValue() {

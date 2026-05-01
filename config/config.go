@@ -98,7 +98,7 @@ func Parse() (err error) {
 	if Environment == "" {
 		return fmt.Errorf("You must specify a non-empty ENVIRONMENT")
 	}
-	if !(Environment == "PRODUCTION" || Environment == "DEVELOPMENT") {
+	if Environment != "PRODUCTION" && Environment != "DEVELOPMENT" {
 		return fmt.Errorf("ENVIRONMENT should be either DEVELOPMENT or PRODUCTION")
 	}
 	FieldseekerSchemaDirectory = os.Getenv("FIELDSEEKER_SCHEMA_DIRECTORY")

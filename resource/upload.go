@@ -98,7 +98,7 @@ func (res *uploadR) Discard(ctx context.Context, r *http.Request, u platform.Use
 
 func (res *uploadR) PoolFlyoverCreate(ctx context.Context, r *http.Request, u platform.User, uploads []file.Upload) (string, *nhttp.ErrorWithStatus) {
 	// If the organization we're uploading to doesn't have a service area, we can't process the upload correctly
-	if !(u.Organization.HasServiceArea() || u.Organization.IsCatchall()) {
+	if !u.Organization.HasServiceArea() && !u.Organization.IsCatchall() {
 		return "", nhttp.NewErrorStatus(http.StatusConflict, "Your organization does not yet have a service area")
 	}
 	if len(uploads) == 0 {

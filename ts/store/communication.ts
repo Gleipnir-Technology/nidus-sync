@@ -33,12 +33,10 @@ export const useCommunicationStore = defineStore("communication", () => {
 			//if (typeFilter.value) params.append("type", typeFilter.value);
 
 			const url = `${session.urls.api.communication}?${params}`;
-			const data = await apiClient.JSONGet(url);
+			const data = (await apiClient.JSONGet(url)) as CommunicationDTO[];
 
-			all.value = data.communications.map((c: CommunicationDTO) =>
-				Communication.fromJSON(c),
-			);
-			return data.communications;
+			all.value = data.map((c: CommunicationDTO) => Communication.fromJSON(c));
+			return all.value;
 		} catch (err) {
 			console.error("Error loading communications:", err);
 			throw err;

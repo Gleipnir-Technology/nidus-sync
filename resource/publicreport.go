@@ -118,7 +118,7 @@ func reportURI(r *router, report_type string, public_id string) (string, error) 
 	case "water":
 		route_name = "publicreport.water.ByIDGet"
 	default:
-		return "", fmt.Errorf("Unrecognized report type '%s'", report_type)
+		route_name = "publicreport.ByIDGet"
 	}
 	uri, err := r.IDStrToURI(route_name, public_id)
 	if err != nil {

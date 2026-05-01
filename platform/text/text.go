@@ -38,10 +38,8 @@ func HandleTextMessage(ctx context.Context, source string, destination string, c
 	if err != nil {
 		return fmt.Errorf("Failed to get phone status")
 	}
-	is_visible_to_llm := true
-	if status == enums.CommsPhonestatustypeUnconfirmed {
-		is_visible_to_llm = false
-	}
+	is_visible_to_llm := !(status == enums.CommsPhonestatustypeUnconfirmed)
+
 	l, err := models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
 		//ID:
 		Content:        omit.From(content),

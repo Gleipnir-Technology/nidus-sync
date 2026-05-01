@@ -1,7 +1,6 @@
 package platform
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -257,7 +256,7 @@ func toTemplateTrapsNearby(locations []sql.TrapLocationBySourceIDRow, trap_data 
 	for _, td := range trap_data {
 		c, ok := count_by_trap_data_id[td.Globalid]
 		if !ok {
-			return results, errors.New(fmt.Sprintf("Failed to find trap count for %s", td.Globalid))
+			return results, fmt.Errorf("Failed to find trap count for %s", td.Globalid)
 		}
 		loc_id := td.LocID
 		count := &TrapCount{
@@ -278,7 +277,7 @@ func toTemplateTrapsNearby(locations []sql.TrapLocationBySourceIDRow, trap_data 
 	for _, location := range locations {
 		counts, ok := counts_by_location_id[location.TrapLocationGlobalid]
 		if !ok {
-			return results, errors.New(fmt.Sprintf("Failed to find counts for %s", location.TrapLocationGlobalid))
+			return results, fmt.Errorf("Failed to find counts for %s", location.TrapLocationGlobalid)
 		}
 		trap := TrapNearby{
 			Counts:   counts,
