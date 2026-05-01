@@ -2,6 +2,7 @@
 .sass-cache/
 cmd/geocode-test/geocode-test
 cmd/passwordgen/passwordgen
+db/jet/jet
 districts/
 flogo.log
 lob/cmd/letter-create/letter-create
