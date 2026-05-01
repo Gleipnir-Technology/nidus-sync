@@ -164,7 +164,7 @@ func (l *defaultLogEntry) Panic(v interface{}, stack []byte) {
 }
 
 func init() {
-	color := !(runtime.GOOS == "windows")
+	color := runtime.GOOS != "windows"
 
 	DefaultLogger = RequestLogger(&DefaultLogFormatter{Logger: log.New(os.Stdout, "", log.LstdFlags), NoColor: !color})
 }

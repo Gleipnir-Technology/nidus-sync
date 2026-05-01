@@ -28,7 +28,7 @@ type complianceR struct {
 	router *router
 }
 
-type publicreportComplianceForm struct {
+type publicReportComplianceForm struct {
 	AccessInstructions omit.Val[string]                     `schema:"access_instructions" json:"access_instructions"`
 	Address            omit.Val[types.Address]              `schema:"address" json:"address"`
 	AvailabilityNotes  omit.Val[string]                     `schema:"availability_notes"  json:"availability_notes"`
@@ -42,6 +42,7 @@ type publicreportComplianceForm struct {
 	PermissionType     omit.Val[enums.Permissionaccesstype] `schema:"permission_type" json:"permission_type"`
 	Reporter           omit.Val[types.Contact]              `schema:"reporter" json:"reporter"`
 	ReportPhoneCanSMS  omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
+	Submitted          omitnull.Val[time.Time]              `schema:"submitted" json:"submitted"`
 	WantsScheduled     omitnull.Val[bool]                   `schema:"wants_scheduled" json:"wants_scheduled"`
 }
 
@@ -51,7 +52,7 @@ func (res *complianceR) ByID(ctx context.Context, r *http.Request, u platform.Us
 func (res *complianceR) ByIDPublic(ctx context.Context, r *http.Request, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	return res.byID(ctx, r, true)
 }
-func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicReportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	if n.District.IsUnset() && n.MailerID.IsUnset() {
 		return nil, nhttp.NewBadRequest("You must provide a district_id or mailer_id")
 	}
@@ -141,7 +142,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicrep
 	}
 	return res.complianceHydrate(result, true)
 }
-func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
+func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicReportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]
 	if public_id == "" {
@@ -198,12 +199,10 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 	if prf.WantsScheduled.IsValue() {
 		compliance_setter.WantsScheduled = prf.WantsScheduled
 	}
-	log.Debug().
-		Bool("access_instructions", prf.AccessInstructions.IsValue()).
-		Bool("access_instructions", prf.AccessInstructions.IsValue()).
-		Bool("access_instructions", prf.AccessInstructions.IsValue()).
-		Bool("access_instructions", prf.AccessInstructions.IsValue()).
-		Msg("updating compliance")
+	if prf.Submitted.IsValue() {
+		log.Debug().Str("submitted", prf.Submitted.MustGet().String()).Msg("got submitted")
+		compliance_setter.Submitted = omitnull.From(time.Now())
+	}
 	report, err := platform.PublicReportUpdateCompliance(ctx, public_id, &report_setter, &compliance_setter, address, location)
 	if err != nil {
 		return nil, nhttp.NewError("platform update report compliance: %w", err)
@@ -216,22 +215,6 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicr
 	return res.complianceHydrate(report, true)
 }
 
-type publicreportComplianceFormSubmit struct {
-	ClientID uuid.UUID `schema:"client_id" json:"client_id"`
-}
-
-func (res *complianceR) Submit(ctx context.Context, r *http.Request, prf publicreportComplianceForm) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	public_id := vars["id"]
-	if public_id == "" {
-		return nil, nhttp.NewBadRequest("You must provide an ID")
-	}
-	report, err := platform.PublicReportComplianceSubmit(ctx, public_id, true)
-	if err != nil {
-		return nil, nhttp.NewError("submit report: %w", err)
-	}
-	return report, nil
-}
 func (res *complianceR) byID(ctx context.Context, r *http.Request, is_public bool) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	public_id := vars["id"]

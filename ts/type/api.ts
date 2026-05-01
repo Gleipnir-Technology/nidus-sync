@@ -196,6 +196,7 @@ export interface ComplianceUpdate {
 	location?: Location;
 	permission_type?: string;
 	reporter?: Contact;
+	submitted?: string;
 	//uri: string;
 	wants_scheduled?: boolean;
 }
@@ -294,6 +295,7 @@ export interface PublicReportComplianceDTO extends PublicReportDTO {
 	gate_code: string;
 	has_dog: boolean;
 	permission_type: PermissionType;
+	submitted: string;
 	wants_scheduled: boolean;
 }
 export interface PublicReportComplianceOptions extends PublicReportOptions {
@@ -304,6 +306,7 @@ export interface PublicReportComplianceOptions extends PublicReportOptions {
 	gate_code: string;
 	has_dog: boolean;
 	permission_type: PermissionType;
+	submitted: string;
 	wants_scheduled: boolean;
 }
 export interface PublicReportComplianceUpdate extends PublicReportUpdate {
@@ -313,6 +316,7 @@ export interface PublicReportComplianceUpdate extends PublicReportUpdate {
 	gate_code?: string;
 	has_dog?: boolean;
 	permission_type?: PermissionType;
+	submitted?: string;
 	wants_scheduled?: boolean;
 }
 export class PublicReportCompliance extends PublicReport {
@@ -323,6 +327,7 @@ export class PublicReportCompliance extends PublicReport {
 	gate_code: string;
 	has_dog: boolean;
 	permission_type: PermissionType;
+	submitted?: Date;
 	wants_scheduled: boolean;
 	constructor(options?: PublicReportComplianceOptions) {
 		super(options);
@@ -335,6 +340,9 @@ export class PublicReportCompliance extends PublicReport {
 		this.permission_type = toPermissionType(
 			options?.permission_type ?? PermissionType.UNSELECTED,
 		);
+		this.submitted = options?.submitted
+			? new Date(options!.submitted)
+			: undefined;
 		this.wants_scheduled = options?.wants_scheduled ?? false;
 	}
 	static fromJSON(json: PublicReportComplianceDTO): PublicReportCompliance {

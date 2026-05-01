@@ -183,6 +183,9 @@ function doPermission() {
 function doSubmit() {
 	console.log("submit", report.value);
 	storeLocal.delExistingComplianceReportURI();
+	updateReport({
+		submitted: new Date().toISOString(),
+	});
 }
 async function updateReport(updates: ComplianceUpdate) {
 	if (!(report.value && report.value.uri)) {

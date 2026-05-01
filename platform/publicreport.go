@@ -173,6 +173,22 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 	if err != nil {
 		return nil, fmt.Errorf("find compliance %d: %w", report.ID, err)
 	}
+	// Don't allow modifying of the submission date if it's set
+	if compliance_setter.Submitted.IsValue() {
+		if compliance.Submitted.IsValue() {
+			compliance_setter.Submitted.Unset()
+		} else {
+			comm := &model.Communication{
+				SourceReportID: &report.ID,
+			}
+			comm, err := querypublic.CommunicationInsert(ctx, txn, comm)
+			if err != nil {
+				return nil, fmt.Errorf("insert communication: %w", err)
+			}
+			log.Debug().Int32("id", comm.ID).Msg("inserted new communication")
+		}
+	}
+
 	// Avoid attempting to perform an empty update
 	if report_setter.LatlngAccuracyValue.IsValue() ||
 		report_setter.ReporterEmail.IsValue() ||
@@ -389,14 +405,18 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 		UserID:    omitnull.FromPtr[int32](nil),
 	}).One(ctx, txn)
 
-	comm := &model.Communication{
-		SourceReportID: &result.ID,
+	// Only create communication entries for compliance when they're submitted
+	report_type := setter_report.ReportType.MustGet()
+	if report_type != enums.PublicreportReporttypeCompliance {
+		comm := &model.Communication{
+			SourceReportID: &result.ID,
+		}
+		comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
+		if err != nil {
+			return nil, fmt.Errorf("insert communication: %w", err)
+		}
+		log.Debug().Int32("id", comm.ID).Msg("inserted new communication")
 	}
-	comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
-	if err != nil {
-		return nil, fmt.Errorf("insert communication: %w", err)
-	}
-	log.Debug().Int32("id", comm.ID).Msg("inserted new communication")
 
 	txn.Commit(ctx)
 
