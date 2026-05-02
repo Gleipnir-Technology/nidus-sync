@@ -164,6 +164,7 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 			compliance_setter.Submitted.Unset()
 		} else {
 			comm := &model.Communication{
+				OrganizationID: report.OrganizationID,
 				SourceReportID: &report.ID,
 			}
 			comm, err := querypublic.CommunicationInsert(ctx, txn, comm)
@@ -394,6 +395,7 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	report_type := setter_report.ReportType.MustGet()
 	if report_type != enums.PublicreportReporttypeCompliance {
 		comm := &model.Communication{
+			OrganizationID: result.OrganizationID,
 			SourceReportID: &result.ID,
 		}
 		comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
