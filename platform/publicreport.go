@@ -85,21 +85,6 @@ func PublicReportByIDNuisance(ctx context.Context, report_id string, is_public b
 func PublicReportByIDWater(ctx context.Context, report_id string, is_public bool) (*types.PublicReportWater, error) {
 	return publicreport.ByIDWater(ctx, report_id, is_public)
 }
-func PublicReportComplianceSubmit(ctx context.Context, report_id string, is_public bool) (*types.PublicReportCompliance, error) {
-	report, err := publicreport.ByIDCompliance(ctx, report_id, is_public)
-	if err != nil {
-		return nil, fmt.Errorf("byidcompliance: %w", err)
-	}
-	_, err = psql.Update(
-		um.Table(models.PublicreportCompliances.NameAs()),
-		um.SetCol(models.PublicreportCompliances.Columns.Submitted.String()).ToArg(time.Now()),
-		um.Where(models.PublicreportCompliances.Columns.ReportID.EQ(psql.Arg(report.ReportID))),
-	).Exec(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, fmt.Errorf("update report submitted: %w", err)
-	}
-	return publicreport.ByIDCompliance(ctx, report_id, is_public)
-}
 func PublicReportInvalid(ctx context.Context, user User, public_id string) error {
 	report, err := publicReportFromID(ctx, public_id)
 	if err != nil {
