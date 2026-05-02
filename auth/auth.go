@@ -163,7 +163,10 @@ func SigninUser(r *http.Request, username string, password string) (*platform.Us
 func SignoutUser(r *http.Request, user platform.User) {
 	sessionManager.Put(r.Context(), "user_id", "")
 	sessionManager.Put(r.Context(), "username", "")
-	sessionManager.Destroy(r.Context())
+	err := sessionManager.Destroy(r.Context())
+	if err != nil {
+		log.Error().Err(err).Msg("failed to destroy session for user on signout")
+	}
 	log.Info().Str("username", user.Username).Int("user_id", (user.ID)).Msg("Ended user session")
 }
 

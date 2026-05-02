@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Client represents a Label Studio API client
@@ -58,7 +60,12 @@ func (c *Client) GetAccessToken() error {
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to close body")
+		}
+	}()
 
 	// Check for successful response
 	if resp.StatusCode != http.StatusOK {
@@ -110,7 +117,12 @@ func (c *Client) makeRequest(method string, path string, payload []byte) (*http.
 
 	// Check for successful response
 	if resp.StatusCode > http.StatusBadRequest {
-		defer resp.Body.Close()
+		defer func() {
+			err := resp.Body.Close()
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to close body")
+			}
+		}()
 		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("Got status code %d and failed to read response body: %v", resp.StatusCode, err)

@@ -120,7 +120,10 @@ func (ts templateSystemEmbed) renderOrError(w http.ResponseWriter, template_name
 		return
 	}
 
-	buf.WriteTo(w)
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to write buffer on render")
+	}
 }
 func loadTemplateEmbedded(sourceFS fs.FS, path string) (*template.Template, error) {
 	content, err := fs.ReadFile(sourceFS, "template/"+path)

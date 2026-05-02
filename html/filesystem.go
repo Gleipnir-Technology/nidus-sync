@@ -55,7 +55,10 @@ func (ts templateSystemDisk) renderOrError(w http.ResponseWriter, template_name 
 		RespondError(w, "Failed to render template", err, http.StatusInternalServerError)
 		return
 	}
-	buf.WriteTo(w)
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to write buffer")
+	}
 }
 
 /*

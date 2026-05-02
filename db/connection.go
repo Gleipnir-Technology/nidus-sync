@@ -76,7 +76,12 @@ func doMigrations(connection_string string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to open database connection: %w", err)
 	}
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to close database connection")
+		}
+	}()
 	row := db.QueryRowContext(context.Background(), "SELECT version()")
 	var val string
 	if err := row.Scan(&val); err != nil {
@@ -157,7 +162,12 @@ func needsMigrations(connection_string string) (*bool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to open database connection: %w", err)
 	}
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("failed to close database connection")
+		}
+	}()
 	row := db.QueryRowContext(context.Background(), "SELECT version()")
 	var val string
 	if err := row.Scan(&val); err != nil {

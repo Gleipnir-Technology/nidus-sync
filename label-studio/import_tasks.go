@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 )
 
 // TaskImportResponse represents the response from the import tasks endpoint
@@ -62,7 +64,12 @@ func (c *Client) ImportTasks(projectID int, tasks interface{}) (*TaskImportRespo
 	if err != nil {
 		return nil, fmt.Errorf("Failed to POST %s: %v", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to close body")
+		}
+	}()
 
 	// Check for successful response
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
