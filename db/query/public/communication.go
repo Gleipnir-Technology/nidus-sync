@@ -14,7 +14,8 @@ import (
 func CommunicationInsert(ctx context.Context, txn bob.Tx, m *model.Communication) (*model.Communication, error) {
 	m.Created = time.Now()
 	statement := table.Communication.INSERT(table.Communication.MutableColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.Communication.AllColumns)
 	return db.ExecuteOne[model.Communication](ctx, statement)
 }
 func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]*model.Communication, error) {
