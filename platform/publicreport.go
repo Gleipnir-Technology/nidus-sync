@@ -193,6 +193,7 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 		compliance_setter.HasDog.IsValue() ||
 		compliance_setter.PermissionType.IsValue() ||
 		compliance_setter.ReportPhoneCanText.IsValue() ||
+		compliance_setter.Submitted.IsValue() ||
 		compliance_setter.WantsScheduled.IsValue() {
 		err = compliance.Update(ctx, txn, compliance_setter)
 		if err != nil {

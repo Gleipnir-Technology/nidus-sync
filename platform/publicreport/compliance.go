@@ -27,6 +27,7 @@ func compliance(ctx context.Context, public_id string, report types.PublicReport
 			models.PublicreportCompliances.Columns.PermissionType,
 			models.PublicreportCompliances.Columns.ReportID,
 			models.PublicreportCompliances.Columns.ReportPhoneCanText,
+			models.PublicreportCompliances.Columns.Submitted,
 			models.PublicreportCompliances.Columns.WantsScheduled,
 		),
 		//sm.From(psql.Quote("publicreport", "compliance")).As("publicreport.compliance"),

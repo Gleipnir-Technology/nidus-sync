@@ -306,7 +306,7 @@ export interface PublicReportComplianceOptions extends PublicReportOptions {
 	gate_code: string;
 	has_dog: boolean;
 	permission_type: PermissionType;
-	submitted: string;
+	submitted?: Date;
 	wants_scheduled: boolean;
 }
 export interface PublicReportComplianceUpdate extends PublicReportUpdate {
@@ -350,6 +350,7 @@ export class PublicReportCompliance extends PublicReport {
 			...json,
 			created: new Date(json.created),
 			log: json.log.map((l: LogEntryDTO) => LogEntry.fromJSON(l)),
+			submitted: json.submitted ? new Date(json.submitted) : undefined,
 		});
 	}
 }

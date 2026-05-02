@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
+	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
+	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/google/uuid"
@@ -26,10 +27,15 @@ func Communication(r *router) *communicationR {
 }
 
 type communication struct {
-	Created time.Time `json:"created"`
-	ID      int32     `json:"id"`
-	Source  string    `json:"source"`
-	Type    string    `json:"type"`
+	Closed   *time.Time `json:"closed"`
+	ClosedBy string     `json:"closed_by"`
+	Created  time.Time  `json:"created"`
+	ID       int32      `json:"id"`
+	Opened   *time.Time `json:"opened"`
+	OpenedBy string     `json:"opened_by"`
+	Response string     `json:"response"`
+	Source   string     `json:"source"`
+	Type     string     `json:"type"`
 }
 
 func toImageURLs(m map[string][]uuid.UUID, id string) []string {
@@ -58,7 +64,7 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 	if err != nil {
 		return nil, nhttp.NewError("public reports from IDs: %w", err)
 	}
-	public_report_id_to_report := make(map[int32]*model.Report, 0)
+	public_report_id_to_report := make(map[int32]*modelpublicreport.Report, 0)
 	for _, pr := range public_reports {
 		public_report_id_to_report[pr.ID] = pr
 	}
@@ -89,11 +95,28 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 			}
 			source_uri = "text"
 		}
+		closed_by, err := userURI(res.router, comm.ClosedBy)
+		if err != nil {
+			return nil, nhttp.NewError("gen closed_by URI: %w", err)
+		}
+		opened_by, err := userURI(res.router, comm.OpenedBy)
+		if err != nil {
+			return nil, nhttp.NewError("gen opened_by URI: %w", err)
+		}
+		response, err := responseURI(res.router, comm)
+		if err != nil {
+			return nil, nhttp.NewError("gen response URI: %w", err)
+		}
 		result[i] = &communication{
-			Created: comm.Created,
-			ID:      comm.ID,
-			Source:  source_uri,
-			Type:    type_,
+			Closed:   comm.Closed,
+			ClosedBy: closed_by,
+			Created:  comm.Created,
+			ID:       comm.ID,
+			Opened:   comm.Opened,
+			OpenedBy: opened_by,
+			Response: response,
+			Source:   source_uri,
+			Type:     type_,
 		}
 	}
 	_by_created := func(a, b *communication) int {
@@ -112,6 +135,21 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 func emailURI(r *router, id int32) (string, error) {
 	return "fake email uri", nil
 }
+func responseURI(r *router, comm *modelpublic.Communication) (string, error) {
+	if comm.ResponseEmailLogID != nil {
+		return emailURI(r, *comm.ResponseEmailLogID)
+	} else if comm.ResponseTextLogID != nil {
+		return textURI(r, *comm.ResponseTextLogID)
+	} else {
+		return "", nil
+	}
+}
 func textURI(r *router, id int32) (string, error) {
 	return "fake text uri", nil
+}
+func userURI(r *router, id *int32) (string, error) {
+	if id == nil {
+		return "", nil
+	}
+	return r.IDToURI("user.ByIDGet", int(*id))
 }
