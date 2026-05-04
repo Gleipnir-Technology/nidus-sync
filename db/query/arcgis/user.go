@@ -20,5 +20,5 @@ func UserInsert(ctx context.Context, txn bob.Tx, m *model.User) (*model.User, er
 	statement := table.User.INSERT(table.User.MutableColumns).
 		MODEL(m).
 		RETURNING(table.User.AllColumns)
-	return db.ExecuteOneTx[model.User](ctx, txn, statement)
+	return db.ExecuteOneTxBob[model.User](ctx, txn, statement)
 }

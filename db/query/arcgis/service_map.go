@@ -27,5 +27,5 @@ func ServiceMapsFromAccountID(ctx context.Context, account_id string) ([]*model.
 func ServiceMapInsert(ctx context.Context, txn bob.Tx, m *model.ServiceMap) error {
 	statement := table.ServiceMap.INSERT(table.ServiceMap.MutableColumns).
 		MODEL(m)
-	return db.ExecuteNoneTx(ctx, txn, statement)
+	return db.ExecuteNoneTxBob(ctx, txn, statement)
 }

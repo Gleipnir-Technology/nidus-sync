@@ -27,5 +27,5 @@ func ServiceFeatureFromURL(ctx context.Context, url string) (*model.ServiceFeatu
 func ServiceFeatureInsert(ctx context.Context, txn bob.Tx, m *model.ServiceFeature) error {
 	statement := table.ServiceMap.INSERT(table.ServiceMap.MutableColumns).
 		MODEL(m)
-	return db.ExecuteNoneTx(ctx, txn, statement)
+	return db.ExecuteNoneTxBob(ctx, txn, statement)
 }

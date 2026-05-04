@@ -32,7 +32,7 @@ func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]*model
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)))
 	return db.ExecuteMany[model.Communication](ctx, statement)
 }
-func CommunicationMarkInvalid(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
+func CommunicationMarkInvalid(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
 		SET(
 			table.Communication.Invalidated.SET(postgres.TimestampT(time.Now())),
@@ -40,9 +40,9 @@ func CommunicationMarkInvalid(ctx context.Context, org_id int64, user_id int64, 
 		).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
-	return db.ExecuteNone(ctx, statement)
+	return db.ExecuteNoneTx(ctx, txn, statement)
 }
-func CommunicationMarkPendingResponse(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
+func CommunicationMarkPendingResponse(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
 		SET(
 			table.Communication.SetPending.SET(postgres.TimestampT(time.Now())),
@@ -50,9 +50,9 @@ func CommunicationMarkPendingResponse(ctx context.Context, org_id int64, user_id
 		).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
-	return db.ExecuteNone(ctx, statement)
+	return db.ExecuteNoneTx(ctx, txn, statement)
 }
-func CommunicationMarkPossibleIssue(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
+func CommunicationMarkPossibleIssue(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
 		SET(
 			table.Communication.SetPossibleIssue.SET(postgres.TimestampT(time.Now())),
@@ -60,9 +60,9 @@ func CommunicationMarkPossibleIssue(ctx context.Context, org_id int64, user_id i
 		).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
-	return db.ExecuteNone(ctx, statement)
+	return db.ExecuteNoneTx(ctx, txn, statement)
 }
-func CommunicationMarkPossibleResolved(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
+func CommunicationMarkPossibleResolved(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
 		SET(
 			table.Communication.SetPossibleResolved.SET(postgres.TimestampT(time.Now())),
@@ -70,5 +70,5 @@ func CommunicationMarkPossibleResolved(ctx context.Context, org_id int64, user_i
 		).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
-	return db.ExecuteNone(ctx, statement)
+	return db.ExecuteNoneTx(ctx, txn, statement)
 }

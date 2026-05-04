@@ -13,10 +13,10 @@ import (
 func UserPrivilegesDeleteByUserID(ctx context.Context, txn bob.Tx, id string) error {
 	statement := table.User.DELETE().
 		WHERE(table.User.ID.EQ(postgres.String(id)))
-	return db.ExecuteNoneTx(ctx, txn, statement)
+	return db.ExecuteNoneTxBob(ctx, txn, statement)
 }
 func UserPrivilegeInsert(ctx context.Context, txn bob.Tx, m *model.UserPrivilege) error {
 	statement := table.UserPrivilege.INSERT(table.UserPrivilege.MutableColumns).
 		MODEL(m)
-	return db.ExecuteNoneTx(ctx, txn, statement)
+	return db.ExecuteNoneTxBob(ctx, txn, statement)
 }

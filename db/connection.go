@@ -34,13 +34,24 @@ var (
 	pgOnce     sync.Once
 )
 
+type Tx = pgx.Tx
+
+func BeginTxn(ctx context.Context) (pgx.Tx, error) {
+	return PGInstance.PGXPool.BeginTx(ctx, pgx.TxOptions{})
+}
 func ExecuteNone(ctx context.Context, stmt postgres.Statement) error {
 	query, args := stmt.Sql()
 
 	_, err := PGInstance.PGXPool.Query(ctx, query, args...)
 	return err
 }
-func ExecuteNoneTx(ctx context.Context, txn bob.Tx, stmt postgres.Statement) error {
+func ExecuteNoneTx(ctx context.Context, txn Tx, stmt postgres.Statement) error {
+	query, args := stmt.Sql()
+
+	_, err := txn.Query(ctx, query, args...)
+	return err
+}
+func ExecuteNoneTxBob(ctx context.Context, txn bob.Tx, stmt postgres.Statement) error {
 	query, args := stmt.Sql()
 
 	_, err := txn.QueryContext(ctx, query, args...)
@@ -55,7 +66,24 @@ func ExecuteOne[T any](ctx context.Context, stmt postgres.Statement) (*T, error)
 	}
 	return pgx.CollectOneRow(row, pgx.RowToAddrOfStructByPos[T])
 }
-func ExecuteOneTx[T any](ctx context.Context, txn bob.Tx, stmt postgres.Statement) (*T, error) {
+func ExecuteOneTx[T any](ctx context.Context, txn Tx, stmt postgres.Statement) (*T, error) {
+	query, args := stmt.Sql()
+
+	//result, err := scan.One(ctx, txn, scan.StructMapper[T](), query, args...)
+	rows, err := txn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("txn query: %w", err)
+	}
+	results, err := pgx.CollectRows(rows, pgx.RowToStructByName[T])
+	if err != nil {
+		return nil, fmt.Errorf("collect rows: %w", err)
+	}
+	if len(results) < 1 {
+		return nil, fmt.Errorf("no results")
+	}
+	return &results[0], err
+}
+func ExecuteOneTxBob[T any](ctx context.Context, txn bob.Tx, stmt postgres.Statement) (*T, error) {
 	query, args := stmt.Sql()
 
 	result, err := scan.One(ctx, txn, scan.StructMapper[T](), query, args...)
