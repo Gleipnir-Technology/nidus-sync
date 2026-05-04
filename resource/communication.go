@@ -31,7 +31,7 @@ type communication struct {
 	Closed   *time.Time `json:"closed"`
 	ClosedBy string     `json:"closed_by"`
 	Created  time.Time  `json:"created"`
-	ID       int32      `json:"id"`
+	ID       string     `json:"id"`
 	Opened   *time.Time `json:"opened"`
 	OpenedBy string     `json:"opened_by"`
 	Response string     `json:"response"`
@@ -98,8 +98,7 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 	return result, nil
 }
 
-type communicationMarkRequest struct{}
-
+type communicationMarkRequest struct {}
 func (res *communicationR) MarkInvalid(ctx context.Context, r *http.Request, user platform.User, cmr communicationMarkRequest) (communication, *nhttp.ErrorWithStatus) {
 	return res.markReport(ctx, r, user, platform.CommunicationMarkInvalid)
 }
@@ -155,7 +154,7 @@ func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, 
 		Closed:   comm.Closed,
 		ClosedBy: closed_by,
 		Created:  comm.Created,
-		ID:       comm.ID,
+		ID:       strconv.Itoa(int(comm.ID)),
 		Opened:   comm.Opened,
 		OpenedBy: opened_by,
 		Response: response,
