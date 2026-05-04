@@ -22,5 +22,6 @@ const pinia = createPinia();
 const app = createApp(App);
 app.use(pinia);
 app.use(router);
-app.mount("#app");
-sentry.Init(app, pinia);
+sentry.Init(app, pinia).then(() => {
+	app.mount("#app");
+});
