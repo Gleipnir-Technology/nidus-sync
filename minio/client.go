@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -66,7 +67,7 @@ func (minioClient *Client) UploadFile(bucketName string, filePath string, upload
 	if err != nil {
 		return fmt.Errorf("Failed to open file %s to upload: %v", filePath, err)
 	}
-	defer file.Close()
+	defer lint.LogOnErr(file.Close, "close file")
 
 	// Upload the file
 	_, err = minioClient.client.FPutObject(context.Background(), bucketName, uploadPath, filePath, minio.PutObjectOptions{})

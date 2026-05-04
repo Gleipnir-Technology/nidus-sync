@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 )
 
 // AnnotationRequest represents the request body for creating a draft
@@ -63,7 +65,7 @@ func (c *Client) CreateAnnotation(taskID int, annotation *AnnotationRequest) (*A
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close resp body")
 
 	// Parse response
 	var createdAnnotation Annotation

@@ -230,7 +230,12 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 
 	// Write timestamp
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
-	fmt.Fprintf(file, "\n=== Request logged at %s ===\n", timestamp)
+	_, err = fmt.Fprintf(file, "\n=== Request logged at %s ===\n", timestamp)
+	if err != nil {
+		log.Error().Err(err).Msg("writing response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	// Write request line
 	fmt.Fprintf(file, "%s %s %s\n", r.Method, r.RequestURI, r.Proto)
@@ -250,7 +255,13 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error reading request body: %v", err)
 		fmt.Fprintf(file, "Error reading body: %v\n", err)
 	} else {
-		file.Write(body)
+		_, err = file.Write(body)
+		if err != nil {
+			log.Error().Err(err).Msg("writing response")
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
 		if len(body) == 0 {
 			fmt.Fprintf(file, "(empty body)")
 		}

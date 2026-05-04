@@ -37,6 +37,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/types"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
@@ -170,7 +171,7 @@ func downloadFieldseekerSchema(ctx context.Context, fieldseekerClient *fieldseek
 			log.Error().Err(err).Msg("Failed to open output")
 			return
 		}
-		defer output.Close()
+		defer lint.LogOnErr(output.Close, "close schema output file")
 		schema, err := fieldseekerClient.SchemaRaw(ctx, uint(i))
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get schema")
@@ -212,7 +213,10 @@ func generateCodeChallenge(codeVerifier string) string {
 // Generate a random code verifier for PKCE
 func generateCodeVerifier() string {
 	bytes := make([]byte, 64) // 64 bytes = 512 bits
-	rand.Read(bytes)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return ""
+	}
 	return base64.RawURLEncoding.EncodeToString(bytes)
 }
 

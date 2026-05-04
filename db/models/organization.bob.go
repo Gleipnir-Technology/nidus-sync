@@ -78,6 +78,7 @@ type OrganizationsQuery = *psql.ViewQuery[*Organization, OrganizationSlice]
 
 // organizationR is where relationships are stored.
 type organizationR struct {
+	Communications          CommunicationSlice                     // communication.communication_organization_id_fkey
 	EmailContacts           CommsEmailContactSlice                 // district_subscription_email.district_subscription_email_email_contact_address_fkeydistrict_subscription_email.district_subscription_email_organization_id_fkey
 	Phones                  CommsPhoneSlice                        // district_subscription_phone.district_subscription_phone_organization_id_fkeydistrict_subscription_phone.district_subscription_phone_phone_e164_fkey
 	Features                FeatureSlice                           // feature.feature_organization_id_fkey
@@ -970,6 +971,30 @@ func (o OrganizationSlice) ReloadAll(ctx context.Context, exec bob.Executor) err
 	o.copyMatchingRows(o2...)
 
 	return nil
+}
+
+// Communications starts a query for related objects on communication
+func (o *Organization) Communications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	return Communications.Query(append(mods,
+		sm.Where(Communications.Columns.OrganizationID.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os OrganizationSlice) Communications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Communications.Query(append(mods,
+		sm.Where(psql.Group(Communications.Columns.OrganizationID).OP("IN", PKArgExpr)),
+	)...)
 }
 
 // EmailContacts starts a query for related objects on comms.email_contact
@@ -1988,6 +2013,74 @@ func (os OrganizationSlice) User(mods ...bob.Mod[*dialect.SelectQuery]) UsersQue
 	return Users.Query(append(mods,
 		sm.Where(psql.Group(Users.Columns.OrganizationID).OP("IN", PKArgExpr)),
 	)...)
+}
+
+func insertOrganizationCommunications0(ctx context.Context, exec bob.Executor, communications1 []*CommunicationSetter, organization0 *Organization) (CommunicationSlice, error) {
+	for i := range communications1 {
+		communications1[i].OrganizationID = omit.From(organization0.ID)
+	}
+
+	ret, err := Communications.Insert(bob.ToMods(communications1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertOrganizationCommunications0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachOrganizationCommunications0(ctx context.Context, exec bob.Executor, count int, communications1 CommunicationSlice, organization0 *Organization) (CommunicationSlice, error) {
+	setter := &CommunicationSetter{
+		OrganizationID: omit.From(organization0.ID),
+	}
+
+	err := communications1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachOrganizationCommunications0: %w", err)
+	}
+
+	return communications1, nil
+}
+
+func (organization0 *Organization) InsertCommunications(ctx context.Context, exec bob.Executor, related ...*CommunicationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	communications1, err := insertOrganizationCommunications0(ctx, exec, related, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Communications = append(organization0.R.Communications, communications1...)
+
+	for _, rel := range communications1 {
+		rel.R.Organization = organization0
+	}
+	return nil
+}
+
+func (organization0 *Organization) AttachCommunications(ctx context.Context, exec bob.Executor, related ...*Communication) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	communications1 := CommunicationSlice(related)
+
+	_, err = attachOrganizationCommunications0(ctx, exec, len(related), communications1, organization0)
+	if err != nil {
+		return err
+	}
+
+	organization0.R.Communications = append(organization0.R.Communications, communications1...)
+
+	for _, rel := range related {
+		rel.R.Organization = organization0
+	}
+
+	return nil
 }
 
 func attachOrganizationEmailContacts0(ctx context.Context, exec bob.Executor, count int, organization0 *Organization, commsEmailContacts2 CommsEmailContactSlice) (DistrictSubscriptionEmailSlice, error) {
@@ -4928,6 +5021,20 @@ func (o *Organization) Preload(name string, retrieved any) error {
 	}
 
 	switch name {
+	case "Communications":
+		rels, ok := retrieved.(CommunicationSlice)
+		if !ok {
+			return fmt.Errorf("organization cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Communications = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.Organization = o
+			}
+		}
+		return nil
 	case "EmailContacts":
 		rels, ok := retrieved.(CommsEmailContactSlice)
 		if !ok {
@@ -5528,6 +5635,7 @@ func buildOrganizationPreloader() organizationPreloader {
 }
 
 type organizationThenLoader[Q orm.Loadable] struct {
+	Communications          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	EmailContacts           func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Phones                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 	Features                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
@@ -5573,6 +5681,9 @@ type organizationThenLoader[Q orm.Loadable] struct {
 }
 
 func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
+	type CommunicationsLoadInterface interface {
+		LoadCommunications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type EmailContactsLoadInterface interface {
 		LoadEmailContacts(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -5701,6 +5812,12 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 	}
 
 	return organizationThenLoader[Q]{
+		Communications: thenLoadBuilder[Q](
+			"Communications",
+			func(ctx context.Context, exec bob.Executor, retrieved CommunicationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadCommunications(ctx, exec, mods...)
+			},
+		),
 		EmailContacts: thenLoadBuilder[Q](
 			"EmailContacts",
 			func(ctx context.Context, exec bob.Executor, retrieved EmailContactsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -5954,6 +6071,67 @@ func buildOrganizationThenLoader[Q orm.Loadable]() organizationThenLoader[Q] {
 			},
 		),
 	}
+}
+
+// LoadCommunications loads the organization's Communications into the .R struct
+func (o *Organization) LoadCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Communications = nil
+
+	related, err := o.Communications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.Organization = o
+	}
+
+	o.R.Communications = related
+	return nil
+}
+
+// LoadCommunications loads the organization's Communications into the .R struct
+func (os OrganizationSlice) LoadCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	communications, err := os.Communications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.Communications = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range communications {
+
+			if !(o.ID == rel.OrganizationID) {
+				continue
+			}
+
+			rel.R.Organization = o
+
+			o.R.Communications = append(o.R.Communications, rel)
+		}
+	}
+
+	return nil
 }
 
 // LoadEmailContacts loads the organization's EmailContacts into the .R struct

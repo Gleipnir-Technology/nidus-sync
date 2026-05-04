@@ -8,7 +8,7 @@
 	<div class="card shadow-sm h-100">
 		<div class="card-header bg-light pane-header">Actions</div>
 		<div class="card-body scroll-pane">
-			<div v-if="loading" class="loading">Loading...</div>
+			<div v-if="isLoading" class="loading">Loading...</div>
 			<div v-else>
 				<div
 					v-if="!selectedCommunication"
@@ -25,22 +25,51 @@
 					class="actions-panel d-flex flex-column"
 				>
 					<div class="p-3 flex-grow-1">
-						<!-- Create Signal -->
+						<p class="text-muted mt-1">Send to planning</p>
 						<div class="d-grid mb-3">
-							<button class="btn btn-success btn-lg" @click="markSignal()">
-								<i class="bi bi-plus-circle me-2"></i>Mark Signal
-							</button>
-							<small class="text-muted mt-1"
-								>This report is useful signal</small
-							>
+							<ButtonLoading
+								@click="markPossibleIssue()"
+								:disabled="!selectedReport"
+								icon="bi-plus-circle"
+								:loading="isLoading"
+								text="Possible Issue"
+								variant="warning"
+							/>
 						</div>
 
-						<!-- Mark Invalid -->
 						<div class="d-grid mb-3">
-							<button class="btn btn-outline-danger" @click="markInvalid()">
-								<i class="bi bi-x-circle me-2"></i>Mark Invalid
-							</button>
-							<small class="text-muted mt-1">This report isn't useful</small>
+							<ButtonLoading
+								@click="markPossibleResolved()"
+								:disabled="!selectedReport"
+								icon="bi-x-circle"
+								:loading="isLoading"
+								text="May Be Resolved"
+								variant="outline-success"
+							/>
+						</div>
+
+						<hr />
+						<div class="d-grid mb-3">
+							<p class="text-muted mt-1">Resolve immediately</p>
+							<ButtonLoading
+								@click="markInvalid()"
+								:disabled="!selectedReport"
+								icon="bi-x-circle"
+								:loading="isLoading"
+								text="Invalid"
+								variant="outline-danger"
+							/>
+						</div>
+
+						<div class="d-grid mb-3">
+							<ButtonLoading
+								@click="markPendingResponse()"
+								:disabled="!selectedReport"
+								icon="bi-clock"
+								:loading="isLoading"
+								text="Pending Response"
+								variant="secondary"
+							/>
 						</div>
 
 						<hr />
@@ -134,14 +163,17 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { Communication, PublicReport, User } from "@/type/api";
+import ButtonLoading from "@/components/common/ButtonLoading.vue";
 import ListCardActivityLog from "@/components/ListCardActivityLog.vue";
 interface Emits {
-	(e: "markSignal"): void;
 	(e: "markInvalid"): void;
+	(e: "markPendingResponse"): void;
+	(e: "markPossibleIssue"): void;
+	(e: "markPossibleResolved"): void;
 	(e: "sendMessage", message: string): void;
 }
 interface Props {
-	loading: boolean;
+	isLoading: boolean;
 	selectedCommunication: Communication | null;
 	selectedReport: PublicReport | undefined;
 }
@@ -169,8 +201,14 @@ function handleTemplateChange(event: Event) {
 function markInvalid() {
 	emit("markInvalid");
 }
-function markSignal() {
-	emit("markSignal");
+function markPendingResponse() {
+	emit("markPendingResponse");
+}
+function markPossibleResolved() {
+	emit("markPossibleResolved");
+}
+function markPossibleIssue() {
+	emit("markPossibleIssue");
 }
 function sendMessage() {
 	emit("sendMessage", messageText.value);

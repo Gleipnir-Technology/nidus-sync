@@ -16,6 +16,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/llm"
 	"github.com/Gleipnir-Technology/nidus-sync/middleware"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
@@ -71,7 +72,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to create sentry writer")
 		os.Exit(2)
 	}
-	defer sentryWriter.Close()
+	defer lint.LogOnErr(sentryWriter.Close, "close sentry writer")
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.MultiLevelWriter(zerolog.ConsoleWriter{Out: os.Stderr}, sentryWriter))
@@ -84,8 +85,14 @@ func main() {
 	// Defer cleanup in reverse order - these will execute LAST (LIFO)
 	defer func() {
 		log.Info().Msg("Final cleanup")
-		os.Stderr.Sync()
-		sentryWriter.Close()
+		err = os.Stderr.Sync()
+		if err != nil {
+			log.Error().Err(err).Msg("sync stderr")
+		}
+		err = sentryWriter.Close()
+		if err != nil {
+			log.Error().Err(err).Msg("close sentrywriter")
+		}
 		sentry.Flush(2 * time.Second)
 	}()
 
@@ -183,7 +190,10 @@ func main() {
 	<-signalCh
 	log.Info().Msg("Received shutdown signal, shutting down...")
 	// Ensure logs are flushed
-	os.Stderr.Sync()
+	err = os.Stderr.Sync()
+	if err != nil {
+		log.Error().Err(err).Msg("stderr sync")
+	}
 
 	platform.EventShutdown()
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)

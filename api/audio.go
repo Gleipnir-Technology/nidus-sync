@@ -69,6 +69,7 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, user platform.U
 	if err != nil {
 		log.Printf("Failed to write content file: %v", err)
 		http.Error(w, "failed to write content file", http.StatusInternalServerError)
+		return
 	}
 	ctx := r.Context()
 	a, err := models.NoteAudios.Query(
@@ -78,8 +79,15 @@ func apiAudioContentPost(w http.ResponseWriter, r *http.Request, user platform.U
 	if err != nil {
 		log.Printf("Failed to get note audio %s for org %d: %w", u_str, user.Organization.ID, err)
 		http.Error(w, "failed to update database", http.StatusBadRequest)
+		return
 	}
 
-	background.NewAudioTranscode(ctx, db.PGInstance.BobDB, a.ID)
+	err = background.NewAudioTranscode(ctx, db.PGInstance.BobDB, a.ID)
+	if err != nil {
+		log.Printf("Failed to transcode audio %s for org %d: %w", u_str, user.Organization.ID, err)
+		http.Error(w, "failed to transcode audio", http.StatusBadRequest)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 }

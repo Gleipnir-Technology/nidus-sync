@@ -1283,85 +1283,6 @@ func (e *Notificationtype) Scan(value any) error {
 	return nil
 }
 
-// Enum values for Permissionaccesstype
-const (
-	PermissionaccesstypeDenied     Permissionaccesstype = "denied"
-	PermissionaccesstypeGranted    Permissionaccesstype = "granted"
-	PermissionaccesstypeUnselected Permissionaccesstype = "unselected"
-	PermissionaccesstypeWithOwner  Permissionaccesstype = "with-owner"
-)
-
-func AllPermissionaccesstype() []Permissionaccesstype {
-	return []Permissionaccesstype{
-		PermissionaccesstypeDenied,
-		PermissionaccesstypeGranted,
-		PermissionaccesstypeUnselected,
-		PermissionaccesstypeWithOwner,
-	}
-}
-
-type Permissionaccesstype string
-
-func (e Permissionaccesstype) String() string {
-	return string(e)
-}
-
-func (e Permissionaccesstype) Valid() bool {
-	switch e {
-	case PermissionaccesstypeDenied,
-		PermissionaccesstypeGranted,
-		PermissionaccesstypeUnselected,
-		PermissionaccesstypeWithOwner:
-		return true
-	default:
-		return false
-	}
-}
-
-// useful when testing in other packages
-func (e Permissionaccesstype) All() []Permissionaccesstype {
-	return AllPermissionaccesstype()
-}
-
-func (e Permissionaccesstype) MarshalText() ([]byte, error) {
-	return []byte(e), nil
-}
-
-func (e *Permissionaccesstype) UnmarshalText(text []byte) error {
-	return e.Scan(text)
-}
-
-func (e Permissionaccesstype) MarshalBinary() ([]byte, error) {
-	return []byte(e), nil
-}
-
-func (e *Permissionaccesstype) UnmarshalBinary(data []byte) error {
-	return e.Scan(data)
-}
-
-func (e Permissionaccesstype) Value() (driver.Value, error) {
-	return string(e), nil
-}
-
-func (e *Permissionaccesstype) Scan(value any) error {
-	switch x := value.(type) {
-	case string:
-		*e = Permissionaccesstype(x)
-	case []byte:
-		*e = Permissionaccesstype(x)
-	case nil:
-		return fmt.Errorf("cannot nil into Permissionaccesstype")
-	default:
-		return fmt.Errorf("cannot scan type %T: %v", value, value)
-	}
-
-	if !e.Valid() {
-		return fmt.Errorf("invalid Permissionaccesstype value: %s", *e)
-	}
-
-	return nil
-}
-
 // Enum values for Poolconditiontype
 const (
 	PoolconditiontypeBlue      Poolconditiontype = "blue"
@@ -1624,6 +1545,85 @@ func (e *PublicreportNuisancedurationtype) Scan(value any) error {
 
 	if !e.Valid() {
 		return fmt.Errorf("invalid PublicreportNuisancedurationtype value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for PublicreportPermissionaccesstype
+const (
+	PublicreportPermissionaccesstypeDenied     PublicreportPermissionaccesstype = "denied"
+	PublicreportPermissionaccesstypeGranted    PublicreportPermissionaccesstype = "granted"
+	PublicreportPermissionaccesstypeUnselected PublicreportPermissionaccesstype = "unselected"
+	PublicreportPermissionaccesstypeWithOwner  PublicreportPermissionaccesstype = "with-owner"
+)
+
+func AllPublicreportPermissionaccesstype() []PublicreportPermissionaccesstype {
+	return []PublicreportPermissionaccesstype{
+		PublicreportPermissionaccesstypeDenied,
+		PublicreportPermissionaccesstypeGranted,
+		PublicreportPermissionaccesstypeUnselected,
+		PublicreportPermissionaccesstypeWithOwner,
+	}
+}
+
+type PublicreportPermissionaccesstype string
+
+func (e PublicreportPermissionaccesstype) String() string {
+	return string(e)
+}
+
+func (e PublicreportPermissionaccesstype) Valid() bool {
+	switch e {
+	case PublicreportPermissionaccesstypeDenied,
+		PublicreportPermissionaccesstypeGranted,
+		PublicreportPermissionaccesstypeUnselected,
+		PublicreportPermissionaccesstypeWithOwner:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e PublicreportPermissionaccesstype) All() []PublicreportPermissionaccesstype {
+	return AllPublicreportPermissionaccesstype()
+}
+
+func (e PublicreportPermissionaccesstype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportPermissionaccesstype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e PublicreportPermissionaccesstype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *PublicreportPermissionaccesstype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e PublicreportPermissionaccesstype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *PublicreportPermissionaccesstype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = PublicreportPermissionaccesstype(x)
+	case []byte:
+		*e = PublicreportPermissionaccesstype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into PublicreportPermissionaccesstype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid PublicreportPermissionaccesstype value: %s", *e)
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/rs/zerolog/log"
 )
 
@@ -14,7 +15,7 @@ func debugSaveRequest(r *http.Request) {
 		log.Error().Err(err).Msg("failed to create temp file for debugSaveRequest")
 		return
 	}
-	defer tmpFile.Close()
+	defer lint.LogOnErr(tmpFile.Close, "close temp file")
 
 	_, err = io.Copy(tmpFile, r.Body)
 	if err != nil {

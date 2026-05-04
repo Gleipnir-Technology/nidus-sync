@@ -30,7 +30,7 @@ type handlerFunctionGet[T any] func(context.Context, *http.Request, resource.Que
 type handlerFunctionGetAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
 type handlerFunctionGetImage func(context.Context, *http.Request, platform.User) (file.Collection, uuid.UUID, *nhttp.ErrorWithStatus)
 type handlerFunctionGetSlice[T any] func(context.Context, *http.Request, resource.QueryParams) ([]*T, *nhttp.ErrorWithStatus)
-type handlerFunctionGetSliceAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) ([]*T, *nhttp.ErrorWithStatus)
+type handlerFunctionGetSliceAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) ([]T, *nhttp.ErrorWithStatus)
 type handlerFunctionPost[RequestType any, ResponseType any] func(context.Context, *http.Request, RequestType) (ResponseType, *nhttp.ErrorWithStatus)
 type handlerFunctionPostAuthenticated[RequestType any, ResponseType any] func(context.Context, *http.Request, platform.User, RequestType) (ResponseType, *nhttp.ErrorWithStatus)
 type handlerFunctionPostFormMultipart[RequestType any, ResponseType any] func(context.Context, *http.Request, RequestType) (*ResponseType, *nhttp.ErrorWithStatus)

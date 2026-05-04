@@ -3,6 +3,7 @@ package html
 import (
 	"bytes"
 	"fmt"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/google/uuid"
@@ -21,7 +22,7 @@ func ExtractImageUpload(headers *multipart.FileHeader) (upload platform.ImageUpl
 	if err != nil {
 		return upload, fmt.Errorf("Failed to open header: %w", err)
 	}
-	defer f.Close()
+	defer lint.LogOnErr(f.Close, "close headers")
 
 	file_bytes, err := io.ReadAll(f)
 	content_type := http.DetectContentType(file_bytes)

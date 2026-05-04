@@ -33,9 +33,11 @@
 		</template>
 		<template #right>
 			<CommunicationColumnAction
-				:loading="storePublicReport.loading || storeCommunication.loading"
+				:isLoading="storePublicReport.loading || storeCommunication.loading"
 				@markInvalid="markInvalid"
-				@markSignal="markSignal"
+				@markPendingResponse="markPendingResponse"
+				@markPossibleIssue="markPossibleIssue"
+				@markPossibleResolved="markPossibleResolved"
 				@sendMessage="sendMessage"
 				:selectedCommunication="selectedCommunication"
 				:selectedReport="selectedReport"
@@ -62,6 +64,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { computedAsync } from "@vueuse/core";
 import maplibregl from "maplibre-gl";
 
+import { apiClient } from "@/client";
 import CommunicationColumnAction from "@/components/CommunicationColumnAction.vue";
 import CommunicationColumnDetail from "@/components/CommunicationColumnDetail.vue";
 import CommunicationColumnList from "@/components/CommunicationColumnList.vue";
@@ -212,58 +215,30 @@ function openImageViewer(index: number) {
 }
 
 async function markInvalid() {
+	markReport("Invalid", "invalid");
+}
+async function markPendingResponse() {
+	markReport("Pending Response", "pending-response");
+}
+async function markPossibleIssue() {
+	markReport("Possible Issue", "possible-issue");
+}
+async function markPossibleResolved() {
+	markReport("Possibly Resolved", "possible-resolved");
+}
+async function markReport(title: string, status: string) {
 	if (selectedCommunication.value == null) {
 		return;
 	}
-	console.log("Marking report as invalid:", selectedCommunication.value.id);
-	const payload = {
-		reportID: selectedCommunication.value.id,
-	};
-	const response = await fetch("/api/publicreport/invalid", {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify(payload),
-	});
+	const url = `${selectedCommunication.value.uri}/${status}`;
+	const result = apiClient.JSONPost(url, {});
 
 	showNotification(
-		"Report Marked Invalid",
-		`Report #${selectedCommunication.value.id} has been marked as invalid`,
+		`Report Marked ${title}`,
+		`Report #${selectedCommunication.value.id} has been updated`,
 	);
 	removeCurrentFromList();
 	await storeCommunication.fetchAll();
-}
-
-async function markSignal() {
-	if (selectedCommunication.value == null) {
-		return;
-	}
-	console.log("Marking report as signal:", selectedCommunication.value.id);
-	try {
-		const report_id = selectedCommunication.value.id;
-		const payload = {
-			reportID: report_id,
-		};
-		removeCurrentFromList();
-		const response = await fetch("api/publicreport/signal", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify(payload),
-		});
-		if (!response.ok) {
-			throw new Error("Failed to submit signal");
-		}
-		showNotification(
-			"Report Marked Signal",
-			`Report #${report_id} has been marked as useful signal`,
-		);
-		await storeCommunication.fetchAll();
-	} catch (err) {
-		console.error("Error creating lead:", err);
-	}
 }
 
 function removeCurrentFromList() {

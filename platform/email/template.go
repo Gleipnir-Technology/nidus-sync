@@ -23,6 +23,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
@@ -67,7 +68,7 @@ func LoadTemplates() error {
 	if err != nil {
 		return fmt.Errorf("Failed to start transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer lint.LogOnErrCtx(tx.Rollback, ctx, "rollback")
 	templateByID = make(map[int32]*builtTemplate, 0)
 	for name, p := range all_templates {
 		template_id, err := templateDBID(tx, name, p)

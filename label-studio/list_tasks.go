@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"time"
+
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 )
 
 // TasksListResponse represents the response from the /api/tasks endpoint
@@ -131,7 +133,7 @@ func (c *Client) ListTasks(options *TasksListOptions) (*TasksListResponse, error
 	if err != nil {
 		return nil, fmt.Errorf("Failed to request %s: %v", path, err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close response body")
 
 	// Parse response
 	var tasksResponse TasksListResponse

@@ -25,21 +25,26 @@ import (
 
 // Communication is an object representing the database table.
 type Communication struct {
-	Closed             null.Val[time.Time] `db:"closed" `
-	ClosedBy           null.Val[int32]     `db:"closed_by" `
-	Created            time.Time           `db:"created" `
-	ID                 int32               `db:"id,pk" `
-	Invalidated        null.Val[time.Time] `db:"invalidated" `
-	InvalidatedBy      null.Val[int32]     `db:"invalidated_by" `
-	Opened             null.Val[time.Time] `db:"opened" `
-	OpenedBy           null.Val[int32]     `db:"opened_by" `
-	ResponseEmailLogID null.Val[int32]     `db:"response_email_log_id" `
-	ResponseTextLogID  null.Val[int32]     `db:"response_text_log_id" `
-	SetPending         null.Val[time.Time] `db:"set_pending" `
-	SetPendingBy       null.Val[int32]     `db:"set_pending_by" `
-	SourceEmailLogID   null.Val[int32]     `db:"source_email_log_id" `
-	SourceReportID     null.Val[int32]     `db:"source_report_id" `
-	SourceTextLogID    null.Val[int32]     `db:"source_text_log_id" `
+	Closed                null.Val[time.Time] `db:"closed" `
+	ClosedBy              null.Val[int32]     `db:"closed_by" `
+	Created               time.Time           `db:"created" `
+	ID                    int32               `db:"id,pk" `
+	Invalidated           null.Val[time.Time] `db:"invalidated" `
+	InvalidatedBy         null.Val[int32]     `db:"invalidated_by" `
+	Opened                null.Val[time.Time] `db:"opened" `
+	OpenedBy              null.Val[int32]     `db:"opened_by" `
+	OrganizationID        int32               `db:"organization_id" `
+	ResponseEmailLogID    null.Val[int32]     `db:"response_email_log_id" `
+	ResponseTextLogID     null.Val[int32]     `db:"response_text_log_id" `
+	SetPending            null.Val[time.Time] `db:"set_pending" `
+	SetPendingBy          null.Val[int32]     `db:"set_pending_by" `
+	SourceEmailLogID      null.Val[int32]     `db:"source_email_log_id" `
+	SourceReportID        null.Val[int32]     `db:"source_report_id" `
+	SourceTextLogID       null.Val[int32]     `db:"source_text_log_id" `
+	SetPossibleIssue      null.Val[time.Time] `db:"set_possible_issue" `
+	SetPossibleIssueBy    null.Val[int32]     `db:"set_possible_issue_by" `
+	SetPossibleResolved   null.Val[time.Time] `db:"set_possible_resolved" `
+	SetPossibleResolvedBy null.Val[int32]     `db:"set_possible_resolved_by" `
 
 	R communicationR `db:"-" `
 }
@@ -56,59 +61,72 @@ type CommunicationsQuery = *psql.ViewQuery[*Communication, CommunicationSlice]
 
 // communicationR is where relationships are stored.
 type communicationR struct {
-	ClosedByUser             *User               // communication.communication_closed_by_fkey
-	InvalidatedByUser        *User               // communication.communication_invalidated_by_fkey
-	OpenedByUser             *User               // communication.communication_opened_by_fkey
-	ResponseEmailLogEmailLog *CommsEmailLog      // communication.communication_response_email_log_id_fkey
-	ResponseTextLogTextLog   *CommsTextLog       // communication.communication_response_text_log_id_fkey
-	SetPendingByUser         *User               // communication.communication_set_pending_by_fkey
-	SourceEmailLogEmailLog   *CommsEmailLog      // communication.communication_source_email_log_id_fkey
-	SourceReportReport       *PublicreportReport // communication.communication_source_report_id_fkey
-	SourceTextLogTextLog     *CommsTextLog       // communication.communication_source_text_log_id_fkey
+	ClosedByUser              *User               // communication.communication_closed_by_fkey
+	InvalidatedByUser         *User               // communication.communication_invalidated_by_fkey
+	OpenedByUser              *User               // communication.communication_opened_by_fkey
+	Organization              *Organization       // communication.communication_organization_id_fkey
+	ResponseEmailLogEmailLog  *CommsEmailLog      // communication.communication_response_email_log_id_fkey
+	ResponseTextLogTextLog    *CommsTextLog       // communication.communication_response_text_log_id_fkey
+	SetPendingByUser          *User               // communication.communication_set_pending_by_fkey
+	SetPossibleIssueByUser    *User               // communication.communication_set_possible_issue_by_fkey
+	SetPossibleResolvedByUser *User               // communication.communication_set_possible_resolved_by_fkey
+	SourceEmailLogEmailLog    *CommsEmailLog      // communication.communication_source_email_log_id_fkey
+	SourceReportReport        *PublicreportReport // communication.communication_source_report_id_fkey
+	SourceTextLogTextLog      *CommsTextLog       // communication.communication_source_text_log_id_fkey
 }
 
 func buildCommunicationColumns(alias string) communicationColumns {
 	return communicationColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"closed", "closed_by", "created", "id", "invalidated", "invalidated_by", "opened", "opened_by", "response_email_log_id", "response_text_log_id", "set_pending", "set_pending_by", "source_email_log_id", "source_report_id", "source_text_log_id",
+			"closed", "closed_by", "created", "id", "invalidated", "invalidated_by", "opened", "opened_by", "organization_id", "response_email_log_id", "response_text_log_id", "set_pending", "set_pending_by", "source_email_log_id", "source_report_id", "source_text_log_id", "set_possible_issue", "set_possible_issue_by", "set_possible_resolved", "set_possible_resolved_by",
 		).WithParent("communication"),
-		tableAlias:         alias,
-		Closed:             psql.Quote(alias, "closed"),
-		ClosedBy:           psql.Quote(alias, "closed_by"),
-		Created:            psql.Quote(alias, "created"),
-		ID:                 psql.Quote(alias, "id"),
-		Invalidated:        psql.Quote(alias, "invalidated"),
-		InvalidatedBy:      psql.Quote(alias, "invalidated_by"),
-		Opened:             psql.Quote(alias, "opened"),
-		OpenedBy:           psql.Quote(alias, "opened_by"),
-		ResponseEmailLogID: psql.Quote(alias, "response_email_log_id"),
-		ResponseTextLogID:  psql.Quote(alias, "response_text_log_id"),
-		SetPending:         psql.Quote(alias, "set_pending"),
-		SetPendingBy:       psql.Quote(alias, "set_pending_by"),
-		SourceEmailLogID:   psql.Quote(alias, "source_email_log_id"),
-		SourceReportID:     psql.Quote(alias, "source_report_id"),
-		SourceTextLogID:    psql.Quote(alias, "source_text_log_id"),
+		tableAlias:            alias,
+		Closed:                psql.Quote(alias, "closed"),
+		ClosedBy:              psql.Quote(alias, "closed_by"),
+		Created:               psql.Quote(alias, "created"),
+		ID:                    psql.Quote(alias, "id"),
+		Invalidated:           psql.Quote(alias, "invalidated"),
+		InvalidatedBy:         psql.Quote(alias, "invalidated_by"),
+		Opened:                psql.Quote(alias, "opened"),
+		OpenedBy:              psql.Quote(alias, "opened_by"),
+		OrganizationID:        psql.Quote(alias, "organization_id"),
+		ResponseEmailLogID:    psql.Quote(alias, "response_email_log_id"),
+		ResponseTextLogID:     psql.Quote(alias, "response_text_log_id"),
+		SetPending:            psql.Quote(alias, "set_pending"),
+		SetPendingBy:          psql.Quote(alias, "set_pending_by"),
+		SourceEmailLogID:      psql.Quote(alias, "source_email_log_id"),
+		SourceReportID:        psql.Quote(alias, "source_report_id"),
+		SourceTextLogID:       psql.Quote(alias, "source_text_log_id"),
+		SetPossibleIssue:      psql.Quote(alias, "set_possible_issue"),
+		SetPossibleIssueBy:    psql.Quote(alias, "set_possible_issue_by"),
+		SetPossibleResolved:   psql.Quote(alias, "set_possible_resolved"),
+		SetPossibleResolvedBy: psql.Quote(alias, "set_possible_resolved_by"),
 	}
 }
 
 type communicationColumns struct {
 	expr.ColumnsExpr
-	tableAlias         string
-	Closed             psql.Expression
-	ClosedBy           psql.Expression
-	Created            psql.Expression
-	ID                 psql.Expression
-	Invalidated        psql.Expression
-	InvalidatedBy      psql.Expression
-	Opened             psql.Expression
-	OpenedBy           psql.Expression
-	ResponseEmailLogID psql.Expression
-	ResponseTextLogID  psql.Expression
-	SetPending         psql.Expression
-	SetPendingBy       psql.Expression
-	SourceEmailLogID   psql.Expression
-	SourceReportID     psql.Expression
-	SourceTextLogID    psql.Expression
+	tableAlias            string
+	Closed                psql.Expression
+	ClosedBy              psql.Expression
+	Created               psql.Expression
+	ID                    psql.Expression
+	Invalidated           psql.Expression
+	InvalidatedBy         psql.Expression
+	Opened                psql.Expression
+	OpenedBy              psql.Expression
+	OrganizationID        psql.Expression
+	ResponseEmailLogID    psql.Expression
+	ResponseTextLogID     psql.Expression
+	SetPending            psql.Expression
+	SetPendingBy          psql.Expression
+	SourceEmailLogID      psql.Expression
+	SourceReportID        psql.Expression
+	SourceTextLogID       psql.Expression
+	SetPossibleIssue      psql.Expression
+	SetPossibleIssueBy    psql.Expression
+	SetPossibleResolved   psql.Expression
+	SetPossibleResolvedBy psql.Expression
 }
 
 func (c communicationColumns) Alias() string {
@@ -123,25 +141,30 @@ func (communicationColumns) AliasedAs(alias string) communicationColumns {
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type CommunicationSetter struct {
-	Closed             omitnull.Val[time.Time] `db:"closed" `
-	ClosedBy           omitnull.Val[int32]     `db:"closed_by" `
-	Created            omit.Val[time.Time]     `db:"created" `
-	ID                 omit.Val[int32]         `db:"id,pk" `
-	Invalidated        omitnull.Val[time.Time] `db:"invalidated" `
-	InvalidatedBy      omitnull.Val[int32]     `db:"invalidated_by" `
-	Opened             omitnull.Val[time.Time] `db:"opened" `
-	OpenedBy           omitnull.Val[int32]     `db:"opened_by" `
-	ResponseEmailLogID omitnull.Val[int32]     `db:"response_email_log_id" `
-	ResponseTextLogID  omitnull.Val[int32]     `db:"response_text_log_id" `
-	SetPending         omitnull.Val[time.Time] `db:"set_pending" `
-	SetPendingBy       omitnull.Val[int32]     `db:"set_pending_by" `
-	SourceEmailLogID   omitnull.Val[int32]     `db:"source_email_log_id" `
-	SourceReportID     omitnull.Val[int32]     `db:"source_report_id" `
-	SourceTextLogID    omitnull.Val[int32]     `db:"source_text_log_id" `
+	Closed                omitnull.Val[time.Time] `db:"closed" `
+	ClosedBy              omitnull.Val[int32]     `db:"closed_by" `
+	Created               omit.Val[time.Time]     `db:"created" `
+	ID                    omit.Val[int32]         `db:"id,pk" `
+	Invalidated           omitnull.Val[time.Time] `db:"invalidated" `
+	InvalidatedBy         omitnull.Val[int32]     `db:"invalidated_by" `
+	Opened                omitnull.Val[time.Time] `db:"opened" `
+	OpenedBy              omitnull.Val[int32]     `db:"opened_by" `
+	OrganizationID        omit.Val[int32]         `db:"organization_id" `
+	ResponseEmailLogID    omitnull.Val[int32]     `db:"response_email_log_id" `
+	ResponseTextLogID     omitnull.Val[int32]     `db:"response_text_log_id" `
+	SetPending            omitnull.Val[time.Time] `db:"set_pending" `
+	SetPendingBy          omitnull.Val[int32]     `db:"set_pending_by" `
+	SourceEmailLogID      omitnull.Val[int32]     `db:"source_email_log_id" `
+	SourceReportID        omitnull.Val[int32]     `db:"source_report_id" `
+	SourceTextLogID       omitnull.Val[int32]     `db:"source_text_log_id" `
+	SetPossibleIssue      omitnull.Val[time.Time] `db:"set_possible_issue" `
+	SetPossibleIssueBy    omitnull.Val[int32]     `db:"set_possible_issue_by" `
+	SetPossibleResolved   omitnull.Val[time.Time] `db:"set_possible_resolved" `
+	SetPossibleResolvedBy omitnull.Val[int32]     `db:"set_possible_resolved_by" `
 }
 
 func (s CommunicationSetter) SetColumns() []string {
-	vals := make([]string, 0, 15)
+	vals := make([]string, 0, 20)
 	if !s.Closed.IsUnset() {
 		vals = append(vals, "closed")
 	}
@@ -166,6 +189,9 @@ func (s CommunicationSetter) SetColumns() []string {
 	if !s.OpenedBy.IsUnset() {
 		vals = append(vals, "opened_by")
 	}
+	if s.OrganizationID.IsValue() {
+		vals = append(vals, "organization_id")
+	}
 	if !s.ResponseEmailLogID.IsUnset() {
 		vals = append(vals, "response_email_log_id")
 	}
@@ -186,6 +212,18 @@ func (s CommunicationSetter) SetColumns() []string {
 	}
 	if !s.SourceTextLogID.IsUnset() {
 		vals = append(vals, "source_text_log_id")
+	}
+	if !s.SetPossibleIssue.IsUnset() {
+		vals = append(vals, "set_possible_issue")
+	}
+	if !s.SetPossibleIssueBy.IsUnset() {
+		vals = append(vals, "set_possible_issue_by")
+	}
+	if !s.SetPossibleResolved.IsUnset() {
+		vals = append(vals, "set_possible_resolved")
+	}
+	if !s.SetPossibleResolvedBy.IsUnset() {
+		vals = append(vals, "set_possible_resolved_by")
 	}
 	return vals
 }
@@ -215,6 +253,9 @@ func (s CommunicationSetter) Overwrite(t *Communication) {
 	if !s.OpenedBy.IsUnset() {
 		t.OpenedBy = s.OpenedBy.MustGetNull()
 	}
+	if s.OrganizationID.IsValue() {
+		t.OrganizationID = s.OrganizationID.MustGet()
+	}
 	if !s.ResponseEmailLogID.IsUnset() {
 		t.ResponseEmailLogID = s.ResponseEmailLogID.MustGetNull()
 	}
@@ -236,6 +277,18 @@ func (s CommunicationSetter) Overwrite(t *Communication) {
 	if !s.SourceTextLogID.IsUnset() {
 		t.SourceTextLogID = s.SourceTextLogID.MustGetNull()
 	}
+	if !s.SetPossibleIssue.IsUnset() {
+		t.SetPossibleIssue = s.SetPossibleIssue.MustGetNull()
+	}
+	if !s.SetPossibleIssueBy.IsUnset() {
+		t.SetPossibleIssueBy = s.SetPossibleIssueBy.MustGetNull()
+	}
+	if !s.SetPossibleResolved.IsUnset() {
+		t.SetPossibleResolved = s.SetPossibleResolved.MustGetNull()
+	}
+	if !s.SetPossibleResolvedBy.IsUnset() {
+		t.SetPossibleResolvedBy = s.SetPossibleResolvedBy.MustGetNull()
+	}
 }
 
 func (s *CommunicationSetter) Apply(q *dialect.InsertQuery) {
@@ -244,7 +297,7 @@ func (s *CommunicationSetter) Apply(q *dialect.InsertQuery) {
 	})
 
 	q.AppendValues(bob.ExpressionFunc(func(ctx context.Context, w io.StringWriter, d bob.Dialect, start int) ([]any, error) {
-		vals := make([]bob.Expression, 15)
+		vals := make([]bob.Expression, 20)
 		if !s.Closed.IsUnset() {
 			vals[0] = psql.Arg(s.Closed.MustGetNull())
 		} else {
@@ -293,46 +346,76 @@ func (s *CommunicationSetter) Apply(q *dialect.InsertQuery) {
 			vals[7] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResponseEmailLogID.IsUnset() {
-			vals[8] = psql.Arg(s.ResponseEmailLogID.MustGetNull())
+		if s.OrganizationID.IsValue() {
+			vals[8] = psql.Arg(s.OrganizationID.MustGet())
 		} else {
 			vals[8] = psql.Raw("DEFAULT")
 		}
 
-		if !s.ResponseTextLogID.IsUnset() {
-			vals[9] = psql.Arg(s.ResponseTextLogID.MustGetNull())
+		if !s.ResponseEmailLogID.IsUnset() {
+			vals[9] = psql.Arg(s.ResponseEmailLogID.MustGetNull())
 		} else {
 			vals[9] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SetPending.IsUnset() {
-			vals[10] = psql.Arg(s.SetPending.MustGetNull())
+		if !s.ResponseTextLogID.IsUnset() {
+			vals[10] = psql.Arg(s.ResponseTextLogID.MustGetNull())
 		} else {
 			vals[10] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SetPendingBy.IsUnset() {
-			vals[11] = psql.Arg(s.SetPendingBy.MustGetNull())
+		if !s.SetPending.IsUnset() {
+			vals[11] = psql.Arg(s.SetPending.MustGetNull())
 		} else {
 			vals[11] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SourceEmailLogID.IsUnset() {
-			vals[12] = psql.Arg(s.SourceEmailLogID.MustGetNull())
+		if !s.SetPendingBy.IsUnset() {
+			vals[12] = psql.Arg(s.SetPendingBy.MustGetNull())
 		} else {
 			vals[12] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SourceReportID.IsUnset() {
-			vals[13] = psql.Arg(s.SourceReportID.MustGetNull())
+		if !s.SourceEmailLogID.IsUnset() {
+			vals[13] = psql.Arg(s.SourceEmailLogID.MustGetNull())
 		} else {
 			vals[13] = psql.Raw("DEFAULT")
 		}
 
-		if !s.SourceTextLogID.IsUnset() {
-			vals[14] = psql.Arg(s.SourceTextLogID.MustGetNull())
+		if !s.SourceReportID.IsUnset() {
+			vals[14] = psql.Arg(s.SourceReportID.MustGetNull())
 		} else {
 			vals[14] = psql.Raw("DEFAULT")
+		}
+
+		if !s.SourceTextLogID.IsUnset() {
+			vals[15] = psql.Arg(s.SourceTextLogID.MustGetNull())
+		} else {
+			vals[15] = psql.Raw("DEFAULT")
+		}
+
+		if !s.SetPossibleIssue.IsUnset() {
+			vals[16] = psql.Arg(s.SetPossibleIssue.MustGetNull())
+		} else {
+			vals[16] = psql.Raw("DEFAULT")
+		}
+
+		if !s.SetPossibleIssueBy.IsUnset() {
+			vals[17] = psql.Arg(s.SetPossibleIssueBy.MustGetNull())
+		} else {
+			vals[17] = psql.Raw("DEFAULT")
+		}
+
+		if !s.SetPossibleResolved.IsUnset() {
+			vals[18] = psql.Arg(s.SetPossibleResolved.MustGetNull())
+		} else {
+			vals[18] = psql.Raw("DEFAULT")
+		}
+
+		if !s.SetPossibleResolvedBy.IsUnset() {
+			vals[19] = psql.Arg(s.SetPossibleResolvedBy.MustGetNull())
+		} else {
+			vals[19] = psql.Raw("DEFAULT")
 		}
 
 		return bob.ExpressSlice(ctx, w, d, start, vals, "", ", ", "")
@@ -344,7 +427,7 @@ func (s CommunicationSetter) UpdateMod() bob.Mod[*dialect.UpdateQuery] {
 }
 
 func (s CommunicationSetter) Expressions(prefix ...string) []bob.Expression {
-	exprs := make([]bob.Expression, 0, 15)
+	exprs := make([]bob.Expression, 0, 20)
 
 	if !s.Closed.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
@@ -402,6 +485,13 @@ func (s CommunicationSetter) Expressions(prefix ...string) []bob.Expression {
 		}})
 	}
 
+	if s.OrganizationID.IsValue() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "organization_id")...),
+			psql.Arg(s.OrganizationID),
+		}})
+	}
+
 	if !s.ResponseEmailLogID.IsUnset() {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "response_email_log_id")...),
@@ -448,6 +538,34 @@ func (s CommunicationSetter) Expressions(prefix ...string) []bob.Expression {
 		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
 			psql.Quote(append(prefix, "source_text_log_id")...),
 			psql.Arg(s.SourceTextLogID),
+		}})
+	}
+
+	if !s.SetPossibleIssue.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "set_possible_issue")...),
+			psql.Arg(s.SetPossibleIssue),
+		}})
+	}
+
+	if !s.SetPossibleIssueBy.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "set_possible_issue_by")...),
+			psql.Arg(s.SetPossibleIssueBy),
+		}})
+	}
+
+	if !s.SetPossibleResolved.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "set_possible_resolved")...),
+			psql.Arg(s.SetPossibleResolved),
+		}})
+	}
+
+	if !s.SetPossibleResolvedBy.IsUnset() {
+		exprs = append(exprs, expr.Join{Sep: " = ", Exprs: []bob.Expression{
+			psql.Quote(append(prefix, "set_possible_resolved_by")...),
+			psql.Arg(s.SetPossibleResolvedBy),
 		}})
 	}
 
@@ -749,6 +867,30 @@ func (os CommunicationSlice) OpenedByUser(mods ...bob.Mod[*dialect.SelectQuery])
 	)...)
 }
 
+// Organization starts a query for related objects on organization
+func (o *Communication) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	return Organizations.Query(append(mods,
+		sm.Where(Organizations.Columns.ID.EQ(psql.Arg(o.OrganizationID))),
+	)...)
+}
+
+func (os CommunicationSlice) Organization(mods ...bob.Mod[*dialect.SelectQuery]) OrganizationsQuery {
+	pkOrganizationID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkOrganizationID = append(pkOrganizationID, o.OrganizationID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkOrganizationID), "integer[]")),
+	))
+
+	return Organizations.Query(append(mods,
+		sm.Where(psql.Group(Organizations.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
 // ResponseEmailLogEmailLog starts a query for related objects on comms.email_log
 func (o *Communication) ResponseEmailLogEmailLog(mods ...bob.Mod[*dialect.SelectQuery]) CommsEmailLogsQuery {
 	return CommsEmailLogs.Query(append(mods,
@@ -814,6 +956,54 @@ func (os CommunicationSlice) SetPendingByUser(mods ...bob.Mod[*dialect.SelectQue
 	}
 	PKArgExpr := psql.Select(sm.Columns(
 		psql.F("unnest", psql.Cast(psql.Arg(pkSetPendingBy), "integer[]")),
+	))
+
+	return Users.Query(append(mods,
+		sm.Where(psql.Group(Users.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// SetPossibleIssueByUser starts a query for related objects on user_
+func (o *Communication) SetPossibleIssueByUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	return Users.Query(append(mods,
+		sm.Where(Users.Columns.ID.EQ(psql.Arg(o.SetPossibleIssueBy))),
+	)...)
+}
+
+func (os CommunicationSlice) SetPossibleIssueByUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	pkSetPossibleIssueBy := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkSetPossibleIssueBy = append(pkSetPossibleIssueBy, o.SetPossibleIssueBy)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkSetPossibleIssueBy), "integer[]")),
+	))
+
+	return Users.Query(append(mods,
+		sm.Where(psql.Group(Users.Columns.ID).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// SetPossibleResolvedByUser starts a query for related objects on user_
+func (o *Communication) SetPossibleResolvedByUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	return Users.Query(append(mods,
+		sm.Where(Users.Columns.ID.EQ(psql.Arg(o.SetPossibleResolvedBy))),
+	)...)
+}
+
+func (os CommunicationSlice) SetPossibleResolvedByUser(mods ...bob.Mod[*dialect.SelectQuery]) UsersQuery {
+	pkSetPossibleResolvedBy := make(pgtypes.Array[null.Val[int32]], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkSetPossibleResolvedBy = append(pkSetPossibleResolvedBy, o.SetPossibleResolvedBy)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkSetPossibleResolvedBy), "integer[]")),
 	))
 
 	return Users.Query(append(mods,
@@ -1037,6 +1227,54 @@ func (communication0 *Communication) AttachOpenedByUser(ctx context.Context, exe
 	return nil
 }
 
+func attachCommunicationOrganization0(ctx context.Context, exec bob.Executor, count int, communication0 *Communication, organization1 *Organization) (*Communication, error) {
+	setter := &CommunicationSetter{
+		OrganizationID: omit.From(organization1.ID),
+	}
+
+	err := communication0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommunicationOrganization0: %w", err)
+	}
+
+	return communication0, nil
+}
+
+func (communication0 *Communication) InsertOrganization(ctx context.Context, exec bob.Executor, related *OrganizationSetter) error {
+	var err error
+
+	organization1, err := Organizations.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachCommunicationOrganization0(ctx, exec, 1, communication0, organization1)
+	if err != nil {
+		return err
+	}
+
+	communication0.R.Organization = organization1
+
+	organization1.R.Communications = append(organization1.R.Communications, communication0)
+
+	return nil
+}
+
+func (communication0 *Communication) AttachOrganization(ctx context.Context, exec bob.Executor, organization1 *Organization) error {
+	var err error
+
+	_, err = attachCommunicationOrganization0(ctx, exec, 1, communication0, organization1)
+	if err != nil {
+		return err
+	}
+
+	communication0.R.Organization = organization1
+
+	organization1.R.Communications = append(organization1.R.Communications, communication0)
+
+	return nil
+}
+
 func attachCommunicationResponseEmailLogEmailLog0(ctx context.Context, exec bob.Executor, count int, communication0 *Communication, commsEmailLog1 *CommsEmailLog) (*Communication, error) {
 	setter := &CommunicationSetter{
 		ResponseEmailLogID: omitnull.From(commsEmailLog1.ID),
@@ -1177,6 +1415,102 @@ func (communication0 *Communication) AttachSetPendingByUser(ctx context.Context,
 	communication0.R.SetPendingByUser = user1
 
 	user1.R.SetPendingByCommunications = append(user1.R.SetPendingByCommunications, communication0)
+
+	return nil
+}
+
+func attachCommunicationSetPossibleIssueByUser0(ctx context.Context, exec bob.Executor, count int, communication0 *Communication, user1 *User) (*Communication, error) {
+	setter := &CommunicationSetter{
+		SetPossibleIssueBy: omitnull.From(user1.ID),
+	}
+
+	err := communication0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommunicationSetPossibleIssueByUser0: %w", err)
+	}
+
+	return communication0, nil
+}
+
+func (communication0 *Communication) InsertSetPossibleIssueByUser(ctx context.Context, exec bob.Executor, related *UserSetter) error {
+	var err error
+
+	user1, err := Users.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachCommunicationSetPossibleIssueByUser0(ctx, exec, 1, communication0, user1)
+	if err != nil {
+		return err
+	}
+
+	communication0.R.SetPossibleIssueByUser = user1
+
+	user1.R.SetPossibleIssueByCommunications = append(user1.R.SetPossibleIssueByCommunications, communication0)
+
+	return nil
+}
+
+func (communication0 *Communication) AttachSetPossibleIssueByUser(ctx context.Context, exec bob.Executor, user1 *User) error {
+	var err error
+
+	_, err = attachCommunicationSetPossibleIssueByUser0(ctx, exec, 1, communication0, user1)
+	if err != nil {
+		return err
+	}
+
+	communication0.R.SetPossibleIssueByUser = user1
+
+	user1.R.SetPossibleIssueByCommunications = append(user1.R.SetPossibleIssueByCommunications, communication0)
+
+	return nil
+}
+
+func attachCommunicationSetPossibleResolvedByUser0(ctx context.Context, exec bob.Executor, count int, communication0 *Communication, user1 *User) (*Communication, error) {
+	setter := &CommunicationSetter{
+		SetPossibleResolvedBy: omitnull.From(user1.ID),
+	}
+
+	err := communication0.Update(ctx, exec, setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachCommunicationSetPossibleResolvedByUser0: %w", err)
+	}
+
+	return communication0, nil
+}
+
+func (communication0 *Communication) InsertSetPossibleResolvedByUser(ctx context.Context, exec bob.Executor, related *UserSetter) error {
+	var err error
+
+	user1, err := Users.Insert(related).One(ctx, exec)
+	if err != nil {
+		return fmt.Errorf("inserting related objects: %w", err)
+	}
+
+	_, err = attachCommunicationSetPossibleResolvedByUser0(ctx, exec, 1, communication0, user1)
+	if err != nil {
+		return err
+	}
+
+	communication0.R.SetPossibleResolvedByUser = user1
+
+	user1.R.SetPossibleResolvedByCommunications = append(user1.R.SetPossibleResolvedByCommunications, communication0)
+
+	return nil
+}
+
+func (communication0 *Communication) AttachSetPossibleResolvedByUser(ctx context.Context, exec bob.Executor, user1 *User) error {
+	var err error
+
+	_, err = attachCommunicationSetPossibleResolvedByUser0(ctx, exec, 1, communication0, user1)
+	if err != nil {
+		return err
+	}
+
+	communication0.R.SetPossibleResolvedByUser = user1
+
+	user1.R.SetPossibleResolvedByCommunications = append(user1.R.SetPossibleResolvedByCommunications, communication0)
 
 	return nil
 }
@@ -1326,21 +1660,26 @@ func (communication0 *Communication) AttachSourceTextLogTextLog(ctx context.Cont
 }
 
 type communicationWhere[Q psql.Filterable] struct {
-	Closed             psql.WhereNullMod[Q, time.Time]
-	ClosedBy           psql.WhereNullMod[Q, int32]
-	Created            psql.WhereMod[Q, time.Time]
-	ID                 psql.WhereMod[Q, int32]
-	Invalidated        psql.WhereNullMod[Q, time.Time]
-	InvalidatedBy      psql.WhereNullMod[Q, int32]
-	Opened             psql.WhereNullMod[Q, time.Time]
-	OpenedBy           psql.WhereNullMod[Q, int32]
-	ResponseEmailLogID psql.WhereNullMod[Q, int32]
-	ResponseTextLogID  psql.WhereNullMod[Q, int32]
-	SetPending         psql.WhereNullMod[Q, time.Time]
-	SetPendingBy       psql.WhereNullMod[Q, int32]
-	SourceEmailLogID   psql.WhereNullMod[Q, int32]
-	SourceReportID     psql.WhereNullMod[Q, int32]
-	SourceTextLogID    psql.WhereNullMod[Q, int32]
+	Closed                psql.WhereNullMod[Q, time.Time]
+	ClosedBy              psql.WhereNullMod[Q, int32]
+	Created               psql.WhereMod[Q, time.Time]
+	ID                    psql.WhereMod[Q, int32]
+	Invalidated           psql.WhereNullMod[Q, time.Time]
+	InvalidatedBy         psql.WhereNullMod[Q, int32]
+	Opened                psql.WhereNullMod[Q, time.Time]
+	OpenedBy              psql.WhereNullMod[Q, int32]
+	OrganizationID        psql.WhereMod[Q, int32]
+	ResponseEmailLogID    psql.WhereNullMod[Q, int32]
+	ResponseTextLogID     psql.WhereNullMod[Q, int32]
+	SetPending            psql.WhereNullMod[Q, time.Time]
+	SetPendingBy          psql.WhereNullMod[Q, int32]
+	SourceEmailLogID      psql.WhereNullMod[Q, int32]
+	SourceReportID        psql.WhereNullMod[Q, int32]
+	SourceTextLogID       psql.WhereNullMod[Q, int32]
+	SetPossibleIssue      psql.WhereNullMod[Q, time.Time]
+	SetPossibleIssueBy    psql.WhereNullMod[Q, int32]
+	SetPossibleResolved   psql.WhereNullMod[Q, time.Time]
+	SetPossibleResolvedBy psql.WhereNullMod[Q, int32]
 }
 
 func (communicationWhere[Q]) AliasedAs(alias string) communicationWhere[Q] {
@@ -1349,21 +1688,26 @@ func (communicationWhere[Q]) AliasedAs(alias string) communicationWhere[Q] {
 
 func buildCommunicationWhere[Q psql.Filterable](cols communicationColumns) communicationWhere[Q] {
 	return communicationWhere[Q]{
-		Closed:             psql.WhereNull[Q, time.Time](cols.Closed),
-		ClosedBy:           psql.WhereNull[Q, int32](cols.ClosedBy),
-		Created:            psql.Where[Q, time.Time](cols.Created),
-		ID:                 psql.Where[Q, int32](cols.ID),
-		Invalidated:        psql.WhereNull[Q, time.Time](cols.Invalidated),
-		InvalidatedBy:      psql.WhereNull[Q, int32](cols.InvalidatedBy),
-		Opened:             psql.WhereNull[Q, time.Time](cols.Opened),
-		OpenedBy:           psql.WhereNull[Q, int32](cols.OpenedBy),
-		ResponseEmailLogID: psql.WhereNull[Q, int32](cols.ResponseEmailLogID),
-		ResponseTextLogID:  psql.WhereNull[Q, int32](cols.ResponseTextLogID),
-		SetPending:         psql.WhereNull[Q, time.Time](cols.SetPending),
-		SetPendingBy:       psql.WhereNull[Q, int32](cols.SetPendingBy),
-		SourceEmailLogID:   psql.WhereNull[Q, int32](cols.SourceEmailLogID),
-		SourceReportID:     psql.WhereNull[Q, int32](cols.SourceReportID),
-		SourceTextLogID:    psql.WhereNull[Q, int32](cols.SourceTextLogID),
+		Closed:                psql.WhereNull[Q, time.Time](cols.Closed),
+		ClosedBy:              psql.WhereNull[Q, int32](cols.ClosedBy),
+		Created:               psql.Where[Q, time.Time](cols.Created),
+		ID:                    psql.Where[Q, int32](cols.ID),
+		Invalidated:           psql.WhereNull[Q, time.Time](cols.Invalidated),
+		InvalidatedBy:         psql.WhereNull[Q, int32](cols.InvalidatedBy),
+		Opened:                psql.WhereNull[Q, time.Time](cols.Opened),
+		OpenedBy:              psql.WhereNull[Q, int32](cols.OpenedBy),
+		OrganizationID:        psql.Where[Q, int32](cols.OrganizationID),
+		ResponseEmailLogID:    psql.WhereNull[Q, int32](cols.ResponseEmailLogID),
+		ResponseTextLogID:     psql.WhereNull[Q, int32](cols.ResponseTextLogID),
+		SetPending:            psql.WhereNull[Q, time.Time](cols.SetPending),
+		SetPendingBy:          psql.WhereNull[Q, int32](cols.SetPendingBy),
+		SourceEmailLogID:      psql.WhereNull[Q, int32](cols.SourceEmailLogID),
+		SourceReportID:        psql.WhereNull[Q, int32](cols.SourceReportID),
+		SourceTextLogID:       psql.WhereNull[Q, int32](cols.SourceTextLogID),
+		SetPossibleIssue:      psql.WhereNull[Q, time.Time](cols.SetPossibleIssue),
+		SetPossibleIssueBy:    psql.WhereNull[Q, int32](cols.SetPossibleIssueBy),
+		SetPossibleResolved:   psql.WhereNull[Q, time.Time](cols.SetPossibleResolved),
+		SetPossibleResolvedBy: psql.WhereNull[Q, int32](cols.SetPossibleResolvedBy),
 	}
 }
 
@@ -1409,6 +1753,18 @@ func (o *Communication) Preload(name string, retrieved any) error {
 			rel.R.OpenedByCommunications = CommunicationSlice{o}
 		}
 		return nil
+	case "Organization":
+		rel, ok := retrieved.(*Organization)
+		if !ok {
+			return fmt.Errorf("communication cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.Organization = rel
+
+		if rel != nil {
+			rel.R.Communications = CommunicationSlice{o}
+		}
+		return nil
 	case "ResponseEmailLogEmailLog":
 		rel, ok := retrieved.(*CommsEmailLog)
 		if !ok {
@@ -1443,6 +1799,30 @@ func (o *Communication) Preload(name string, retrieved any) error {
 
 		if rel != nil {
 			rel.R.SetPendingByCommunications = CommunicationSlice{o}
+		}
+		return nil
+	case "SetPossibleIssueByUser":
+		rel, ok := retrieved.(*User)
+		if !ok {
+			return fmt.Errorf("communication cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.SetPossibleIssueByUser = rel
+
+		if rel != nil {
+			rel.R.SetPossibleIssueByCommunications = CommunicationSlice{o}
+		}
+		return nil
+	case "SetPossibleResolvedByUser":
+		rel, ok := retrieved.(*User)
+		if !ok {
+			return fmt.Errorf("communication cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.SetPossibleResolvedByUser = rel
+
+		if rel != nil {
+			rel.R.SetPossibleResolvedByCommunications = CommunicationSlice{o}
 		}
 		return nil
 	case "SourceEmailLogEmailLog":
@@ -1487,15 +1867,18 @@ func (o *Communication) Preload(name string, retrieved any) error {
 }
 
 type communicationPreloader struct {
-	ClosedByUser             func(...psql.PreloadOption) psql.Preloader
-	InvalidatedByUser        func(...psql.PreloadOption) psql.Preloader
-	OpenedByUser             func(...psql.PreloadOption) psql.Preloader
-	ResponseEmailLogEmailLog func(...psql.PreloadOption) psql.Preloader
-	ResponseTextLogTextLog   func(...psql.PreloadOption) psql.Preloader
-	SetPendingByUser         func(...psql.PreloadOption) psql.Preloader
-	SourceEmailLogEmailLog   func(...psql.PreloadOption) psql.Preloader
-	SourceReportReport       func(...psql.PreloadOption) psql.Preloader
-	SourceTextLogTextLog     func(...psql.PreloadOption) psql.Preloader
+	ClosedByUser              func(...psql.PreloadOption) psql.Preloader
+	InvalidatedByUser         func(...psql.PreloadOption) psql.Preloader
+	OpenedByUser              func(...psql.PreloadOption) psql.Preloader
+	Organization              func(...psql.PreloadOption) psql.Preloader
+	ResponseEmailLogEmailLog  func(...psql.PreloadOption) psql.Preloader
+	ResponseTextLogTextLog    func(...psql.PreloadOption) psql.Preloader
+	SetPendingByUser          func(...psql.PreloadOption) psql.Preloader
+	SetPossibleIssueByUser    func(...psql.PreloadOption) psql.Preloader
+	SetPossibleResolvedByUser func(...psql.PreloadOption) psql.Preloader
+	SourceEmailLogEmailLog    func(...psql.PreloadOption) psql.Preloader
+	SourceReportReport        func(...psql.PreloadOption) psql.Preloader
+	SourceTextLogTextLog      func(...psql.PreloadOption) psql.Preloader
 }
 
 func buildCommunicationPreloader() communicationPreloader {
@@ -1539,6 +1922,19 @@ func buildCommunicationPreloader() communicationPreloader {
 				},
 			}, Users.Columns.Names(), opts...)
 		},
+		Organization: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*Organization, OrganizationSlice](psql.PreloadRel{
+				Name: "Organization",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Communications,
+						To:          Organizations,
+						FromColumns: []string{"organization_id"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Organizations.Columns.Names(), opts...)
+		},
 		ResponseEmailLogEmailLog: func(opts ...psql.PreloadOption) psql.Preloader {
 			return psql.Preload[*CommsEmailLog, CommsEmailLogSlice](psql.PreloadRel{
 				Name: "ResponseEmailLogEmailLog",
@@ -1573,6 +1969,32 @@ func buildCommunicationPreloader() communicationPreloader {
 						From:        Communications,
 						To:          Users,
 						FromColumns: []string{"set_pending_by"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Users.Columns.Names(), opts...)
+		},
+		SetPossibleIssueByUser: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*User, UserSlice](psql.PreloadRel{
+				Name: "SetPossibleIssueByUser",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Communications,
+						To:          Users,
+						FromColumns: []string{"set_possible_issue_by"},
+						ToColumns:   []string{"id"},
+					},
+				},
+			}, Users.Columns.Names(), opts...)
+		},
+		SetPossibleResolvedByUser: func(opts ...psql.PreloadOption) psql.Preloader {
+			return psql.Preload[*User, UserSlice](psql.PreloadRel{
+				Name: "SetPossibleResolvedByUser",
+				Sides: []psql.PreloadSide{
+					{
+						From:        Communications,
+						To:          Users,
+						FromColumns: []string{"set_possible_resolved_by"},
 						ToColumns:   []string{"id"},
 					},
 				},
@@ -1621,15 +2043,18 @@ func buildCommunicationPreloader() communicationPreloader {
 }
 
 type communicationThenLoader[Q orm.Loadable] struct {
-	ClosedByUser             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	InvalidatedByUser        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	OpenedByUser             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ResponseEmailLogEmailLog func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ResponseTextLogTextLog   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SetPendingByUser         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceEmailLogEmailLog   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceReportReport       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SourceTextLogTextLog     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ClosedByUser              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	InvalidatedByUser         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	OpenedByUser              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ResponseEmailLogEmailLog  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ResponseTextLogTextLog    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SetPendingByUser          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SetPossibleIssueByUser    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SetPossibleResolvedByUser func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceEmailLogEmailLog    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceReportReport        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SourceTextLogTextLog      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildCommunicationThenLoader[Q orm.Loadable]() communicationThenLoader[Q] {
@@ -1642,6 +2067,9 @@ func buildCommunicationThenLoader[Q orm.Loadable]() communicationThenLoader[Q] {
 	type OpenedByUserLoadInterface interface {
 		LoadOpenedByUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
+	type OrganizationLoadInterface interface {
+		LoadOrganization(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
 	type ResponseEmailLogEmailLogLoadInterface interface {
 		LoadResponseEmailLogEmailLog(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
@@ -1650,6 +2078,12 @@ func buildCommunicationThenLoader[Q orm.Loadable]() communicationThenLoader[Q] {
 	}
 	type SetPendingByUserLoadInterface interface {
 		LoadSetPendingByUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SetPossibleIssueByUserLoadInterface interface {
+		LoadSetPossibleIssueByUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SetPossibleResolvedByUserLoadInterface interface {
+		LoadSetPossibleResolvedByUser(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type SourceEmailLogEmailLogLoadInterface interface {
 		LoadSourceEmailLogEmailLog(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -1680,6 +2114,12 @@ func buildCommunicationThenLoader[Q orm.Loadable]() communicationThenLoader[Q] {
 				return retrieved.LoadOpenedByUser(ctx, exec, mods...)
 			},
 		),
+		Organization: thenLoadBuilder[Q](
+			"Organization",
+			func(ctx context.Context, exec bob.Executor, retrieved OrganizationLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadOrganization(ctx, exec, mods...)
+			},
+		),
 		ResponseEmailLogEmailLog: thenLoadBuilder[Q](
 			"ResponseEmailLogEmailLog",
 			func(ctx context.Context, exec bob.Executor, retrieved ResponseEmailLogEmailLogLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
@@ -1696,6 +2136,18 @@ func buildCommunicationThenLoader[Q orm.Loadable]() communicationThenLoader[Q] {
 			"SetPendingByUser",
 			func(ctx context.Context, exec bob.Executor, retrieved SetPendingByUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadSetPendingByUser(ctx, exec, mods...)
+			},
+		),
+		SetPossibleIssueByUser: thenLoadBuilder[Q](
+			"SetPossibleIssueByUser",
+			func(ctx context.Context, exec bob.Executor, retrieved SetPossibleIssueByUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSetPossibleIssueByUser(ctx, exec, mods...)
+			},
+		),
+		SetPossibleResolvedByUser: thenLoadBuilder[Q](
+			"SetPossibleResolvedByUser",
+			func(ctx context.Context, exec bob.Executor, retrieved SetPossibleResolvedByUserLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSetPossibleResolvedByUser(ctx, exec, mods...)
 			},
 		),
 		SourceEmailLogEmailLog: thenLoadBuilder[Q](
@@ -1884,6 +2336,58 @@ func (os CommunicationSlice) LoadOpenedByUser(ctx context.Context, exec bob.Exec
 	return nil
 }
 
+// LoadOrganization loads the communication's Organization into the .R struct
+func (o *Communication) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.Organization = nil
+
+	related, err := o.Organization(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.Communications = CommunicationSlice{o}
+
+	o.R.Organization = related
+	return nil
+}
+
+// LoadOrganization loads the communication's Organization into the .R struct
+func (os CommunicationSlice) LoadOrganization(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	organizations, err := os.Organization(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range organizations {
+
+			if !(o.OrganizationID == rel.ID) {
+				continue
+			}
+
+			rel.R.Communications = append(rel.R.Communications, o)
+
+			o.R.Organization = rel
+			break
+		}
+	}
+
+	return nil
+}
+
 // LoadResponseEmailLogEmailLog loads the communication's ResponseEmailLogEmailLog into the .R struct
 func (o *Communication) LoadResponseEmailLogEmailLog(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
 	if o == nil {
@@ -2042,6 +2546,116 @@ func (os CommunicationSlice) LoadSetPendingByUser(ctx context.Context, exec bob.
 			rel.R.SetPendingByCommunications = append(rel.R.SetPendingByCommunications, o)
 
 			o.R.SetPendingByUser = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadSetPossibleIssueByUser loads the communication's SetPossibleIssueByUser into the .R struct
+func (o *Communication) LoadSetPossibleIssueByUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.SetPossibleIssueByUser = nil
+
+	related, err := o.SetPossibleIssueByUser(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.SetPossibleIssueByCommunications = CommunicationSlice{o}
+
+	o.R.SetPossibleIssueByUser = related
+	return nil
+}
+
+// LoadSetPossibleIssueByUser loads the communication's SetPossibleIssueByUser into the .R struct
+func (os CommunicationSlice) LoadSetPossibleIssueByUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	users, err := os.SetPossibleIssueByUser(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range users {
+			if !o.SetPossibleIssueBy.IsValue() {
+				continue
+			}
+
+			if !(o.SetPossibleIssueBy.IsValue() && o.SetPossibleIssueBy.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.SetPossibleIssueByCommunications = append(rel.R.SetPossibleIssueByCommunications, o)
+
+			o.R.SetPossibleIssueByUser = rel
+			break
+		}
+	}
+
+	return nil
+}
+
+// LoadSetPossibleResolvedByUser loads the communication's SetPossibleResolvedByUser into the .R struct
+func (o *Communication) LoadSetPossibleResolvedByUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.SetPossibleResolvedByUser = nil
+
+	related, err := o.SetPossibleResolvedByUser(mods...).One(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	related.R.SetPossibleResolvedByCommunications = CommunicationSlice{o}
+
+	o.R.SetPossibleResolvedByUser = related
+	return nil
+}
+
+// LoadSetPossibleResolvedByUser loads the communication's SetPossibleResolvedByUser into the .R struct
+func (os CommunicationSlice) LoadSetPossibleResolvedByUser(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	users, err := os.SetPossibleResolvedByUser(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range users {
+			if !o.SetPossibleResolvedBy.IsValue() {
+				continue
+			}
+
+			if !(o.SetPossibleResolvedBy.IsValue() && o.SetPossibleResolvedBy.MustGet() == rel.ID) {
+				continue
+			}
+
+			rel.R.SetPossibleResolvedByCommunications = append(rel.R.SetPossibleResolvedByCommunications, o)
+
+			o.R.SetPossibleResolvedByUser = rel
 			break
 		}
 	}

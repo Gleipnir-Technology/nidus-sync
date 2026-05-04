@@ -87,6 +87,15 @@ var Communications = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		OrganizationID: column{
+			Name:      "organization_id",
+			DBType:    "integer",
+			Default:   "",
+			Comment:   "",
+			Nullable:  false,
+			Generated: false,
+			AutoIncr:  false,
+		},
 		ResponseEmailLogID: column{
 			Name:      "response_email_log_id",
 			DBType:    "integer",
@@ -150,6 +159,42 @@ var Communications = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
+		SetPossibleIssue: column{
+			Name:      "set_possible_issue",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SetPossibleIssueBy: column{
+			Name:      "set_possible_issue_by",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SetPossibleResolved: column{
+			Name:      "set_possible_resolved",
+			DBType:    "timestamp without time zone",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
+		SetPossibleResolvedBy: column{
+			Name:      "set_possible_resolved_by",
+			DBType:    "integer",
+			Default:   "NULL",
+			Comment:   "",
+			Nullable:  true,
+			Generated: false,
+			AutoIncr:  false,
+		},
 	},
 	Indexes: communicationIndexes{
 		CommunicationPkey: index{
@@ -203,6 +248,15 @@ var Communications = Table[
 			ForeignTable:   "user_",
 			ForeignColumns: []string{"id"},
 		},
+		CommunicationCommunicationOrganizationIDFkey: foreignKey{
+			constraint: constraint{
+				Name:    "communication.communication_organization_id_fkey",
+				Columns: []string{"organization_id"},
+				Comment: "",
+			},
+			ForeignTable:   "organization",
+			ForeignColumns: []string{"id"},
+		},
 		CommunicationCommunicationResponseEmailLogIDFkey: foreignKey{
 			constraint: constraint{
 				Name:    "communication.communication_response_email_log_id_fkey",
@@ -225,6 +279,24 @@ var Communications = Table[
 			constraint: constraint{
 				Name:    "communication.communication_set_pending_by_fkey",
 				Columns: []string{"set_pending_by"},
+				Comment: "",
+			},
+			ForeignTable:   "user_",
+			ForeignColumns: []string{"id"},
+		},
+		CommunicationCommunicationSetPossibleIssueByFkey: foreignKey{
+			constraint: constraint{
+				Name:    "communication.communication_set_possible_issue_by_fkey",
+				Columns: []string{"set_possible_issue_by"},
+				Comment: "",
+			},
+			ForeignTable:   "user_",
+			ForeignColumns: []string{"id"},
+		},
+		CommunicationCommunicationSetPossibleResolvedByFkey: foreignKey{
+			constraint: constraint{
+				Name:    "communication.communication_set_possible_resolved_by_fkey",
+				Columns: []string{"set_possible_resolved_by"},
 				Comment: "",
 			},
 			ForeignTable:   "user_",
@@ -263,26 +335,31 @@ var Communications = Table[
 }
 
 type communicationColumns struct {
-	Closed             column
-	ClosedBy           column
-	Created            column
-	ID                 column
-	Invalidated        column
-	InvalidatedBy      column
-	Opened             column
-	OpenedBy           column
-	ResponseEmailLogID column
-	ResponseTextLogID  column
-	SetPending         column
-	SetPendingBy       column
-	SourceEmailLogID   column
-	SourceReportID     column
-	SourceTextLogID    column
+	Closed                column
+	ClosedBy              column
+	Created               column
+	ID                    column
+	Invalidated           column
+	InvalidatedBy         column
+	Opened                column
+	OpenedBy              column
+	OrganizationID        column
+	ResponseEmailLogID    column
+	ResponseTextLogID     column
+	SetPending            column
+	SetPendingBy          column
+	SourceEmailLogID      column
+	SourceReportID        column
+	SourceTextLogID       column
+	SetPossibleIssue      column
+	SetPossibleIssueBy    column
+	SetPossibleResolved   column
+	SetPossibleResolvedBy column
 }
 
 func (c communicationColumns) AsSlice() []column {
 	return []column{
-		c.Closed, c.ClosedBy, c.Created, c.ID, c.Invalidated, c.InvalidatedBy, c.Opened, c.OpenedBy, c.ResponseEmailLogID, c.ResponseTextLogID, c.SetPending, c.SetPendingBy, c.SourceEmailLogID, c.SourceReportID, c.SourceTextLogID,
+		c.Closed, c.ClosedBy, c.Created, c.ID, c.Invalidated, c.InvalidatedBy, c.Opened, c.OpenedBy, c.OrganizationID, c.ResponseEmailLogID, c.ResponseTextLogID, c.SetPending, c.SetPendingBy, c.SourceEmailLogID, c.SourceReportID, c.SourceTextLogID, c.SetPossibleIssue, c.SetPossibleIssueBy, c.SetPossibleResolved, c.SetPossibleResolvedBy,
 	}
 }
 
@@ -297,20 +374,23 @@ func (i communicationIndexes) AsSlice() []index {
 }
 
 type communicationForeignKeys struct {
-	CommunicationCommunicationClosedByFkey           foreignKey
-	CommunicationCommunicationInvalidatedByFkey      foreignKey
-	CommunicationCommunicationOpenedByFkey           foreignKey
-	CommunicationCommunicationResponseEmailLogIDFkey foreignKey
-	CommunicationCommunicationResponseTextLogIDFkey  foreignKey
-	CommunicationCommunicationSetPendingByFkey       foreignKey
-	CommunicationCommunicationSourceEmailLogIDFkey   foreignKey
-	CommunicationCommunicationSourceReportIDFkey     foreignKey
-	CommunicationCommunicationSourceTextLogIDFkey    foreignKey
+	CommunicationCommunicationClosedByFkey              foreignKey
+	CommunicationCommunicationInvalidatedByFkey         foreignKey
+	CommunicationCommunicationOpenedByFkey              foreignKey
+	CommunicationCommunicationOrganizationIDFkey        foreignKey
+	CommunicationCommunicationResponseEmailLogIDFkey    foreignKey
+	CommunicationCommunicationResponseTextLogIDFkey     foreignKey
+	CommunicationCommunicationSetPendingByFkey          foreignKey
+	CommunicationCommunicationSetPossibleIssueByFkey    foreignKey
+	CommunicationCommunicationSetPossibleResolvedByFkey foreignKey
+	CommunicationCommunicationSourceEmailLogIDFkey      foreignKey
+	CommunicationCommunicationSourceReportIDFkey        foreignKey
+	CommunicationCommunicationSourceTextLogIDFkey       foreignKey
 }
 
 func (f communicationForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.CommunicationCommunicationClosedByFkey, f.CommunicationCommunicationInvalidatedByFkey, f.CommunicationCommunicationOpenedByFkey, f.CommunicationCommunicationResponseEmailLogIDFkey, f.CommunicationCommunicationResponseTextLogIDFkey, f.CommunicationCommunicationSetPendingByFkey, f.CommunicationCommunicationSourceEmailLogIDFkey, f.CommunicationCommunicationSourceReportIDFkey, f.CommunicationCommunicationSourceTextLogIDFkey,
+		f.CommunicationCommunicationClosedByFkey, f.CommunicationCommunicationInvalidatedByFkey, f.CommunicationCommunicationOpenedByFkey, f.CommunicationCommunicationOrganizationIDFkey, f.CommunicationCommunicationResponseEmailLogIDFkey, f.CommunicationCommunicationResponseTextLogIDFkey, f.CommunicationCommunicationSetPendingByFkey, f.CommunicationCommunicationSetPossibleIssueByFkey, f.CommunicationCommunicationSetPossibleResolvedByFkey, f.CommunicationCommunicationSourceEmailLogIDFkey, f.CommunicationCommunicationSourceReportIDFkey, f.CommunicationCommunicationSourceTextLogIDFkey,
 	}
 }
 

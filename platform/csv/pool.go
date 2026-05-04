@@ -187,9 +187,12 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 	missing_headers := missingRequiredHeaders(header_types)
 	for _, mh := range missing_headers {
 		errorMissingHeader(ctx, txn, c, mh)
-		f.Update(ctx, txn, &models.FileuploadFileSetter{
+		err = f.Update(ctx, txn, &models.FileuploadFileSetter{
 			Status: omit.From(enums.FileuploadFilestatustypeError),
 		})
+		if err != nil {
+			return pools, fmt.Errorf("update: %w", err)
+		}
 		return pools, nil
 	}
 	for i, header_name := range header_names {
@@ -279,7 +282,11 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
 					continue
 				}
-				text.EnsureInDB(ctx, txn, *phone)
+				err = text.EnsureInDB(ctx, txn, *phone)
+				if err != nil {
+					log.Error().Err(err).Str("phone", col).Msg("ensure in DB failure")
+					continue
+				}
 				setter.PropertyOwnerPhoneE164 = omitnull.From(phone.PhoneString())
 			case headerPoolResidentOwned:
 				boolValue, err := parseBool(col)
@@ -294,7 +301,11 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
 					continue
 				}
-				text.EnsureInDB(ctx, txn, *phone)
+				err = text.EnsureInDB(ctx, txn, *phone)
+				if err != nil {
+					log.Error().Err(err).Str("phone", col).Msg("ensure in DB failure")
+					continue
+				}
 				setter.ResidentPhoneE164 = omitnull.From(phone.PhoneString())
 			case headerPoolTag:
 				tags[header_names[i]] = col

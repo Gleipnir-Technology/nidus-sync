@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/rs/zerolog/log"
 )
 
@@ -87,10 +88,10 @@ func makeVoipMSRequest(params url.Values) (VoipMSResponse, error) {
 		log.Warn().Err(err).Str("url", full_url).Msg("Failed to make request to Voip.MS")
 		return result, fmt.Errorf("Error making request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "failed closing response body")
 
 	// Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Warn().Err(err).Str("url", full_url).Msg("Failed to read Voip.MS response body")
 		return result, fmt.Errorf("Failed to read response: %w", err)

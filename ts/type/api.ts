@@ -534,6 +534,7 @@ export interface CommunicationDTO {
 	id: string;
 	source: string;
 	type: string;
+	uri: string;
 }
 export class Communication {
 	constructor(
@@ -541,6 +542,7 @@ export class Communication {
 		public id: string,
 		public source: string,
 		public type: string,
+		public uri: string,
 	) {}
 	static fromJSON(json: CommunicationDTO): Communication {
 		return new Communication(
@@ -548,6 +550,7 @@ export class Communication {
 			json.id,
 			json.source,
 			json.type,
+			json.uri,
 		);
 	}
 }

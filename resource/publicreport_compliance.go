@@ -29,21 +29,21 @@ type complianceR struct {
 }
 
 type publicReportComplianceForm struct {
-	AccessInstructions omit.Val[string]                     `schema:"access_instructions" json:"access_instructions"`
-	Address            omit.Val[types.Address]              `schema:"address" json:"address"`
-	AvailabilityNotes  omit.Val[string]                     `schema:"availability_notes"  json:"availability_notes"`
-	ClientID           uuid.UUID                            `schema:"client_id" json:"client_id"`
-	Comments           omit.Val[string]                     `schema:"comments" json:"comments"`
-	District           omit.Val[string]                     `schema:"district" json:"district"`
-	GateCode           omit.Val[string]                     `schema:"gate_code" json:"gate_code"`
-	HasDog             omitnull.Val[bool]                   `schema:"has_dog" json:"has_dog"`
-	Location           omit.Val[types.Location]             `schema:"location" json:"location"`
-	MailerID           omit.Val[string]                     `schema:"mailer_id" json:"mailer_id"`
-	PermissionType     omit.Val[enums.Permissionaccesstype] `schema:"permission_type" json:"permission_type"`
-	Reporter           omit.Val[types.Contact]              `schema:"reporter" json:"reporter"`
-	ReportPhoneCanSMS  omitnull.Val[bool]                   `schema:"report_phone_can_text"  json:"report_phone_can_text"`
-	Submitted          omitnull.Val[time.Time]              `schema:"submitted" json:"submitted"`
-	WantsScheduled     omitnull.Val[bool]                   `schema:"wants_scheduled" json:"wants_scheduled"`
+	AccessInstructions omit.Val[string]                                 `schema:"access_instructions" json:"access_instructions"`
+	Address            omit.Val[types.Address]                          `schema:"address" json:"address"`
+	AvailabilityNotes  omit.Val[string]                                 `schema:"availability_notes"  json:"availability_notes"`
+	ClientID           uuid.UUID                                        `schema:"client_id" json:"client_id"`
+	Comments           omit.Val[string]                                 `schema:"comments" json:"comments"`
+	District           omit.Val[string]                                 `schema:"district" json:"district"`
+	GateCode           omit.Val[string]                                 `schema:"gate_code" json:"gate_code"`
+	HasDog             omitnull.Val[bool]                               `schema:"has_dog" json:"has_dog"`
+	Location           omit.Val[types.Location]                         `schema:"location" json:"location"`
+	MailerID           omit.Val[string]                                 `schema:"mailer_id" json:"mailer_id"`
+	PermissionType     omit.Val[enums.PublicreportPermissionaccesstype] `schema:"permission_type" json:"permission_type"`
+	Reporter           omit.Val[types.Contact]                          `schema:"reporter" json:"reporter"`
+	ReportPhoneCanSMS  omitnull.Val[bool]                               `schema:"report_phone_can_text"  json:"report_phone_can_text"`
+	Submitted          omitnull.Val[time.Time]                          `schema:"submitted" json:"submitted"`
+	WantsScheduled     omitnull.Val[bool]                               `schema:"wants_scheduled" json:"wants_scheduled"`
 }
 
 func (res *complianceR) ByID(ctx context.Context, r *http.Request, u platform.User, query QueryParams) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
@@ -88,7 +88,7 @@ func (res *complianceR) Create(ctx context.Context, r *http.Request, n publicRep
 		Comments:           omit.From(""),
 		GateCode:           omit.From(""),
 		HasDog:             omitnull.FromPtr[bool](nil),
-		PermissionType:     omit.From(enums.PermissionaccesstypeUnselected),
+		PermissionType:     omit.From(enums.PublicreportPermissionaccesstypeUnselected),
 		//ReportID            omit.Val[int32]
 		WantsScheduled: omitnull.FromPtr[bool](nil),
 	}

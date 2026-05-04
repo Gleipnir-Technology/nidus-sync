@@ -91,7 +91,7 @@ func ComplianceSend(ctx context.Context, row_id int32) error {
 	if err != nil {
 		return fmt.Errorf("start txn: %w", err)
 	}
-	defer txn.Rollback(nil)
+	defer txn.Rollback(ctx)
 	mailer, err := models.CommsMailers.Insert(&models.CommsMailerSetter{
 		AddressID:  omit.From(address.ID),
 		Created:    omit.From(time.Now()),

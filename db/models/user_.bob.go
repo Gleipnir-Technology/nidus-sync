@@ -60,36 +60,38 @@ type UsersQuery = *psql.ViewQuery[*User, UserSlice]
 
 // userR is where relationships are stored.
 type userR struct {
-	CreatorTextJobs                 CommsTextJobSlice            // comms.text_job.text_job_creator_id_fkey
-	ClosedByCommunications          CommunicationSlice           // communication.communication_closed_by_fkey
-	InvalidatedByCommunications     CommunicationSlice           // communication.communication_invalidated_by_fkey
-	OpenedByCommunications          CommunicationSlice           // communication.communication_opened_by_fkey
-	SetPendingByCommunications      CommunicationSlice           // communication.communication_set_pending_by_fkey
-	CreatorComplianceReportRequests ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_creator_fkey
-	CreatorFeatures                 FeatureSlice                 // feature.feature_creator_id_fkey
-	CommitterFiles                  FileuploadFileSlice          // fileupload.file.file_committer_fkey
-	CreatorFiles                    FileuploadFileSlice          // fileupload.file.file_creator_id_fkey
-	FileuploadPool                  FileuploadPoolSlice          // fileupload.pool.pool_creator_id_fkey
-	CreatorLeads                    LeadSlice                    // lead.lead_creator_fkey
-	ImpersonatorLogImpersonations   LogImpersonationSlice        // log_impersonation.log_impersonation_impersonator_id_fkey
-	TargetLogImpersonations         LogImpersonationSlice        // log_impersonation.log_impersonation_target_id_fkey
-	CreatorNoteAudios               NoteAudioSlice               // note_audio.note_audio_creator_id_fkey
-	DeletorNoteAudios               NoteAudioSlice               // note_audio.note_audio_deletor_id_fkey
-	CreatorNoteImages               NoteImageSlice               // note_image.note_image_creator_id_fkey
-	DeletorNoteImages               NoteImageSlice               // note_image.note_image_deletor_id_fkey
-	UserNotifications               NotificationSlice            // notification.notification_user_id_fkey
-	ReviewerNuisanceOlds            PublicreportNuisanceOldSlice // publicreport.nuisance_old.nuisance_reviewer_id_fkey
-	ReviewerReports                 PublicreportReportSlice      // publicreport.report.report_reviewer_id_fkey
-	UserReportLogs                  PublicreportReportLogSlice   // publicreport.report_log.report_log_user_id_fkey
-	ReviewerWaterOlds               PublicreportWaterOldSlice    // publicreport.water_old.water_reviewer_id_fkey
-	CreatorReportTexts              ReportTextSlice              // report_text.report_text_creator_id_fkey
-	CreatorResidents                ResidentSlice                // resident.resident_creator_fkey
-	CreatorReviewTasks              ReviewTaskSlice              // review_task.review_task_creator_id_fkey
-	ReviewerReviewTasks             ReviewTaskSlice              // review_task.review_task_reviewer_id_fkey
-	AddressorSignals                SignalSlice                  // signal.signal_addressor_fkey
-	CreatorSignals                  SignalSlice                  // signal.signal_creator_fkey
-	CreatorSites                    SiteSlice                    // site.site_creator_id_fkey
-	Organization                    *Organization                // user_.user__organization_id_fkey
+	CreatorTextJobs                     CommsTextJobSlice            // comms.text_job.text_job_creator_id_fkey
+	ClosedByCommunications              CommunicationSlice           // communication.communication_closed_by_fkey
+	InvalidatedByCommunications         CommunicationSlice           // communication.communication_invalidated_by_fkey
+	OpenedByCommunications              CommunicationSlice           // communication.communication_opened_by_fkey
+	SetPendingByCommunications          CommunicationSlice           // communication.communication_set_pending_by_fkey
+	SetPossibleIssueByCommunications    CommunicationSlice           // communication.communication_set_possible_issue_by_fkey
+	SetPossibleResolvedByCommunications CommunicationSlice           // communication.communication_set_possible_resolved_by_fkey
+	CreatorComplianceReportRequests     ComplianceReportRequestSlice // compliance_report_request.compliance_report_request_creator_fkey
+	CreatorFeatures                     FeatureSlice                 // feature.feature_creator_id_fkey
+	CommitterFiles                      FileuploadFileSlice          // fileupload.file.file_committer_fkey
+	CreatorFiles                        FileuploadFileSlice          // fileupload.file.file_creator_id_fkey
+	FileuploadPool                      FileuploadPoolSlice          // fileupload.pool.pool_creator_id_fkey
+	CreatorLeads                        LeadSlice                    // lead.lead_creator_fkey
+	ImpersonatorLogImpersonations       LogImpersonationSlice        // log_impersonation.log_impersonation_impersonator_id_fkey
+	TargetLogImpersonations             LogImpersonationSlice        // log_impersonation.log_impersonation_target_id_fkey
+	CreatorNoteAudios                   NoteAudioSlice               // note_audio.note_audio_creator_id_fkey
+	DeletorNoteAudios                   NoteAudioSlice               // note_audio.note_audio_deletor_id_fkey
+	CreatorNoteImages                   NoteImageSlice               // note_image.note_image_creator_id_fkey
+	DeletorNoteImages                   NoteImageSlice               // note_image.note_image_deletor_id_fkey
+	UserNotifications                   NotificationSlice            // notification.notification_user_id_fkey
+	ReviewerNuisanceOlds                PublicreportNuisanceOldSlice // publicreport.nuisance_old.nuisance_reviewer_id_fkey
+	ReviewerReports                     PublicreportReportSlice      // publicreport.report.report_reviewer_id_fkey
+	UserReportLogs                      PublicreportReportLogSlice   // publicreport.report_log.report_log_user_id_fkey
+	ReviewerWaterOlds                   PublicreportWaterOldSlice    // publicreport.water_old.water_reviewer_id_fkey
+	CreatorReportTexts                  ReportTextSlice              // report_text.report_text_creator_id_fkey
+	CreatorResidents                    ResidentSlice                // resident.resident_creator_fkey
+	CreatorReviewTasks                  ReviewTaskSlice              // review_task.review_task_creator_id_fkey
+	ReviewerReviewTasks                 ReviewTaskSlice              // review_task.review_task_reviewer_id_fkey
+	AddressorSignals                    SignalSlice                  // signal.signal_addressor_fkey
+	CreatorSignals                      SignalSlice                  // signal.signal_creator_fkey
+	CreatorSites                        SiteSlice                    // site.site_creator_id_fkey
+	Organization                        *Organization                // user_.user__organization_id_fkey
 }
 
 func buildUserColumns(alias string) userColumns {
@@ -863,6 +865,54 @@ func (os UserSlice) SetPendingByCommunications(mods ...bob.Mod[*dialect.SelectQu
 
 	return Communications.Query(append(mods,
 		sm.Where(psql.Group(Communications.Columns.SetPendingBy).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// SetPossibleIssueByCommunications starts a query for related objects on communication
+func (o *User) SetPossibleIssueByCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	return Communications.Query(append(mods,
+		sm.Where(Communications.Columns.SetPossibleIssueBy.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) SetPossibleIssueByCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Communications.Query(append(mods,
+		sm.Where(psql.Group(Communications.Columns.SetPossibleIssueBy).OP("IN", PKArgExpr)),
+	)...)
+}
+
+// SetPossibleResolvedByCommunications starts a query for related objects on communication
+func (o *User) SetPossibleResolvedByCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	return Communications.Query(append(mods,
+		sm.Where(Communications.Columns.SetPossibleResolvedBy.EQ(psql.Arg(o.ID))),
+	)...)
+}
+
+func (os UserSlice) SetPossibleResolvedByCommunications(mods ...bob.Mod[*dialect.SelectQuery]) CommunicationsQuery {
+	pkID := make(pgtypes.Array[int32], 0, len(os))
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+		pkID = append(pkID, o.ID)
+	}
+	PKArgExpr := psql.Select(sm.Columns(
+		psql.F("unnest", psql.Cast(psql.Arg(pkID), "integer[]")),
+	))
+
+	return Communications.Query(append(mods,
+		sm.Where(psql.Group(Communications.Columns.SetPossibleResolvedBy).OP("IN", PKArgExpr)),
 	)...)
 }
 
@@ -1801,6 +1851,142 @@ func (user0 *User) AttachSetPendingByCommunications(ctx context.Context, exec bo
 
 	for _, rel := range related {
 		rel.R.SetPendingByUser = user0
+	}
+
+	return nil
+}
+
+func insertUserSetPossibleIssueByCommunications0(ctx context.Context, exec bob.Executor, communications1 []*CommunicationSetter, user0 *User) (CommunicationSlice, error) {
+	for i := range communications1 {
+		communications1[i].SetPossibleIssueBy = omitnull.From(user0.ID)
+	}
+
+	ret, err := Communications.Insert(bob.ToMods(communications1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserSetPossibleIssueByCommunications0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserSetPossibleIssueByCommunications0(ctx context.Context, exec bob.Executor, count int, communications1 CommunicationSlice, user0 *User) (CommunicationSlice, error) {
+	setter := &CommunicationSetter{
+		SetPossibleIssueBy: omitnull.From(user0.ID),
+	}
+
+	err := communications1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserSetPossibleIssueByCommunications0: %w", err)
+	}
+
+	return communications1, nil
+}
+
+func (user0 *User) InsertSetPossibleIssueByCommunications(ctx context.Context, exec bob.Executor, related ...*CommunicationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	communications1, err := insertUserSetPossibleIssueByCommunications0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.SetPossibleIssueByCommunications = append(user0.R.SetPossibleIssueByCommunications, communications1...)
+
+	for _, rel := range communications1 {
+		rel.R.SetPossibleIssueByUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachSetPossibleIssueByCommunications(ctx context.Context, exec bob.Executor, related ...*Communication) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	communications1 := CommunicationSlice(related)
+
+	_, err = attachUserSetPossibleIssueByCommunications0(ctx, exec, len(related), communications1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.SetPossibleIssueByCommunications = append(user0.R.SetPossibleIssueByCommunications, communications1...)
+
+	for _, rel := range related {
+		rel.R.SetPossibleIssueByUser = user0
+	}
+
+	return nil
+}
+
+func insertUserSetPossibleResolvedByCommunications0(ctx context.Context, exec bob.Executor, communications1 []*CommunicationSetter, user0 *User) (CommunicationSlice, error) {
+	for i := range communications1 {
+		communications1[i].SetPossibleResolvedBy = omitnull.From(user0.ID)
+	}
+
+	ret, err := Communications.Insert(bob.ToMods(communications1...)).All(ctx, exec)
+	if err != nil {
+		return ret, fmt.Errorf("insertUserSetPossibleResolvedByCommunications0: %w", err)
+	}
+
+	return ret, nil
+}
+
+func attachUserSetPossibleResolvedByCommunications0(ctx context.Context, exec bob.Executor, count int, communications1 CommunicationSlice, user0 *User) (CommunicationSlice, error) {
+	setter := &CommunicationSetter{
+		SetPossibleResolvedBy: omitnull.From(user0.ID),
+	}
+
+	err := communications1.UpdateAll(ctx, exec, *setter)
+	if err != nil {
+		return nil, fmt.Errorf("attachUserSetPossibleResolvedByCommunications0: %w", err)
+	}
+
+	return communications1, nil
+}
+
+func (user0 *User) InsertSetPossibleResolvedByCommunications(ctx context.Context, exec bob.Executor, related ...*CommunicationSetter) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+
+	communications1, err := insertUserSetPossibleResolvedByCommunications0(ctx, exec, related, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.SetPossibleResolvedByCommunications = append(user0.R.SetPossibleResolvedByCommunications, communications1...)
+
+	for _, rel := range communications1 {
+		rel.R.SetPossibleResolvedByUser = user0
+	}
+	return nil
+}
+
+func (user0 *User) AttachSetPossibleResolvedByCommunications(ctx context.Context, exec bob.Executor, related ...*Communication) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	communications1 := CommunicationSlice(related)
+
+	_, err = attachUserSetPossibleResolvedByCommunications0(ctx, exec, len(related), communications1, user0)
+	if err != nil {
+		return err
+	}
+
+	user0.R.SetPossibleResolvedByCommunications = append(user0.R.SetPossibleResolvedByCommunications, communications1...)
+
+	for _, rel := range related {
+		rel.R.SetPossibleResolvedByUser = user0
 	}
 
 	return nil
@@ -3608,6 +3794,34 @@ func (o *User) Preload(name string, retrieved any) error {
 			}
 		}
 		return nil
+	case "SetPossibleIssueByCommunications":
+		rels, ok := retrieved.(CommunicationSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.SetPossibleIssueByCommunications = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.SetPossibleIssueByUser = o
+			}
+		}
+		return nil
+	case "SetPossibleResolvedByCommunications":
+		rels, ok := retrieved.(CommunicationSlice)
+		if !ok {
+			return fmt.Errorf("user cannot load %T as %q", retrieved, name)
+		}
+
+		o.R.SetPossibleResolvedByCommunications = rels
+
+		for _, rel := range rels {
+			if rel != nil {
+				rel.R.SetPossibleResolvedByUser = o
+			}
+		}
+		return nil
 	case "CreatorComplianceReportRequests":
 		rels, ok := retrieved.(ComplianceReportRequestSlice)
 		if !ok {
@@ -3984,36 +4198,38 @@ func buildUserPreloader() userPreloader {
 }
 
 type userThenLoader[Q orm.Loadable] struct {
-	CreatorTextJobs                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ClosedByCommunications          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	InvalidatedByCommunications     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	OpenedByCommunications          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	SetPendingByCommunications      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorComplianceReportRequests func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorFeatures                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CommitterFiles                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorFiles                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	FileuploadPool                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorLeads                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ImpersonatorLogImpersonations   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	TargetLogImpersonations         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteAudios               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	DeletorNoteImages               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	UserNotifications               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerNuisanceOlds            func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerReports                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	UserReportLogs                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerWaterOlds               func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorReportTexts              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorResidents                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorReviewTasks              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	ReviewerReviewTasks             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	AddressorSignals                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorSignals                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	CreatorSites                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
-	Organization                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorTextJobs                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ClosedByCommunications              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	InvalidatedByCommunications         func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	OpenedByCommunications              func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SetPendingByCommunications          func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SetPossibleIssueByCommunications    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	SetPossibleResolvedByCommunications func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorComplianceReportRequests     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFeatures                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CommitterFiles                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorFiles                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	FileuploadPool                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorLeads                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ImpersonatorLogImpersonations       func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	TargetLogImpersonations             func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorNoteAudios                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DeletorNoteAudios                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorNoteImages                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	DeletorNoteImages                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserNotifications                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerNuisanceOlds                func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerReports                     func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	UserReportLogs                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerWaterOlds                   func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorReportTexts                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorResidents                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorReviewTasks                  func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	ReviewerReviewTasks                 func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	AddressorSignals                    func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorSignals                      func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	CreatorSites                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
+	Organization                        func(...bob.Mod[*dialect.SelectQuery]) orm.Loader[Q]
 }
 
 func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
@@ -4031,6 +4247,12 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 	}
 	type SetPendingByCommunicationsLoadInterface interface {
 		LoadSetPendingByCommunications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SetPossibleIssueByCommunicationsLoadInterface interface {
+		LoadSetPossibleIssueByCommunications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
+	}
+	type SetPossibleResolvedByCommunicationsLoadInterface interface {
+		LoadSetPossibleResolvedByCommunications(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
 	}
 	type CreatorComplianceReportRequestsLoadInterface interface {
 		LoadCreatorComplianceReportRequests(context.Context, bob.Executor, ...bob.Mod[*dialect.SelectQuery]) error
@@ -4137,6 +4359,18 @@ func buildUserThenLoader[Q orm.Loadable]() userThenLoader[Q] {
 			"SetPendingByCommunications",
 			func(ctx context.Context, exec bob.Executor, retrieved SetPendingByCommunicationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
 				return retrieved.LoadSetPendingByCommunications(ctx, exec, mods...)
+			},
+		),
+		SetPossibleIssueByCommunications: thenLoadBuilder[Q](
+			"SetPossibleIssueByCommunications",
+			func(ctx context.Context, exec bob.Executor, retrieved SetPossibleIssueByCommunicationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSetPossibleIssueByCommunications(ctx, exec, mods...)
+			},
+		),
+		SetPossibleResolvedByCommunications: thenLoadBuilder[Q](
+			"SetPossibleResolvedByCommunications",
+			func(ctx context.Context, exec bob.Executor, retrieved SetPossibleResolvedByCommunicationsLoadInterface, mods ...bob.Mod[*dialect.SelectQuery]) error {
+				return retrieved.LoadSetPossibleResolvedByCommunications(ctx, exec, mods...)
 			},
 		),
 		CreatorComplianceReportRequests: thenLoadBuilder[Q](
@@ -4606,6 +4840,134 @@ func (os UserSlice) LoadSetPendingByCommunications(ctx context.Context, exec bob
 			rel.R.SetPendingByUser = o
 
 			o.R.SetPendingByCommunications = append(o.R.SetPendingByCommunications, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadSetPossibleIssueByCommunications loads the user's SetPossibleIssueByCommunications into the .R struct
+func (o *User) LoadSetPossibleIssueByCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.SetPossibleIssueByCommunications = nil
+
+	related, err := o.SetPossibleIssueByCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.SetPossibleIssueByUser = o
+	}
+
+	o.R.SetPossibleIssueByCommunications = related
+	return nil
+}
+
+// LoadSetPossibleIssueByCommunications loads the user's SetPossibleIssueByCommunications into the .R struct
+func (os UserSlice) LoadSetPossibleIssueByCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	communications, err := os.SetPossibleIssueByCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.SetPossibleIssueByCommunications = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range communications {
+
+			if !rel.SetPossibleIssueBy.IsValue() {
+				continue
+			}
+			if !(rel.SetPossibleIssueBy.IsValue() && o.ID == rel.SetPossibleIssueBy.MustGet()) {
+				continue
+			}
+
+			rel.R.SetPossibleIssueByUser = o
+
+			o.R.SetPossibleIssueByCommunications = append(o.R.SetPossibleIssueByCommunications, rel)
+		}
+	}
+
+	return nil
+}
+
+// LoadSetPossibleResolvedByCommunications loads the user's SetPossibleResolvedByCommunications into the .R struct
+func (o *User) LoadSetPossibleResolvedByCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if o == nil {
+		return nil
+	}
+
+	// Reset the relationship
+	o.R.SetPossibleResolvedByCommunications = nil
+
+	related, err := o.SetPossibleResolvedByCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, rel := range related {
+		rel.R.SetPossibleResolvedByUser = o
+	}
+
+	o.R.SetPossibleResolvedByCommunications = related
+	return nil
+}
+
+// LoadSetPossibleResolvedByCommunications loads the user's SetPossibleResolvedByCommunications into the .R struct
+func (os UserSlice) LoadSetPossibleResolvedByCommunications(ctx context.Context, exec bob.Executor, mods ...bob.Mod[*dialect.SelectQuery]) error {
+	if len(os) == 0 {
+		return nil
+	}
+
+	communications, err := os.SetPossibleResolvedByCommunications(mods...).All(ctx, exec)
+	if err != nil {
+		return err
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		o.R.SetPossibleResolvedByCommunications = nil
+	}
+
+	for _, o := range os {
+		if o == nil {
+			continue
+		}
+
+		for _, rel := range communications {
+
+			if !rel.SetPossibleResolvedBy.IsValue() {
+				continue
+			}
+			if !(rel.SetPossibleResolvedBy.IsValue() && o.ID == rel.SetPossibleResolvedBy.MustGet()) {
+				continue
+			}
+
+			rel.R.SetPossibleResolvedByUser = o
+
+			o.R.SetPossibleResolvedByCommunications = append(o.R.SetPossibleResolvedByCommunications, rel)
 		}
 	}
 

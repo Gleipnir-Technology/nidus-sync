@@ -143,7 +143,10 @@ func (ea *EnsureAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(401)
-		w.Write(msg)
+		_, err = w.Write(msg)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to write response")
+		}
 		return
 	}
 	ea.handler(w, r, *user)

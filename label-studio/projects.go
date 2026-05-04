@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 )
 
 // ProjectsResponse represents the response from the /api/projects endpoint
@@ -114,7 +116,7 @@ func (c *Client) Projects() (*ProjectsResponse, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to GET /api/projects: %w", err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "resp.Body.Close")
 
 	// Parse response
 	var projects ProjectsResponse

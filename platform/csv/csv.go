@@ -256,9 +256,12 @@ func importCSV[T any](ctx context.Context, file_id int32, parser csvParserFunc[T
 		return fmt.Errorf("process parsed file: %w", err)
 	}
 
-	file.Update(ctx, txn, &models.FileuploadFileSetter{
+	err = file.Update(ctx, txn, &models.FileuploadFileSetter{
 		Status: omit.From(enums.FileuploadFilestatustypeParsed),
 	})
+	if err != nil {
+		return fmt.Errorf("update: %w", err)
+	}
 	log.Info().Int32("file.ID", file.ID).Msg("Set file to parsed")
 	txn.Commit(ctx)
 	return nil
