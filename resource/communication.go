@@ -14,7 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 type communicationR struct {
@@ -101,22 +101,22 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 type communicationMarkRequest struct{}
 
 func (res *communicationR) MarkInvalid(ctx context.Context, r *http.Request, user platform.User, cmr communicationMarkRequest) (communication, *nhttp.ErrorWithStatus) {
-	return res.markReport(ctx, r, user, platform.CommunicationMarkInvalid)
+	return res.markCommunication(ctx, r, user, "invalid", platform.CommunicationMarkInvalid)
 }
 func (res *communicationR) MarkPendingResponse(ctx context.Context, r *http.Request, user platform.User, cmr communicationMarkRequest) (communication, *nhttp.ErrorWithStatus) {
-	return res.markReport(ctx, r, user, platform.CommunicationMarkPendingResponse)
+	return res.markCommunication(ctx, r, user, "pending-response", platform.CommunicationMarkPendingResponse)
 }
 func (res *communicationR) MarkPossibleIssue(ctx context.Context, r *http.Request, user platform.User, cmr communicationMarkRequest) (communication, *nhttp.ErrorWithStatus) {
-	return res.markReport(ctx, r, user, platform.CommunicationMarkPossibleIssue)
+	return res.markCommunication(ctx, r, user, "possible-issue", platform.CommunicationMarkPossibleIssue)
 }
 func (res *communicationR) MarkPossibleResolved(ctx context.Context, r *http.Request, user platform.User, cmr communicationMarkRequest) (communication, *nhttp.ErrorWithStatus) {
-	return res.markReport(ctx, r, user, platform.CommunicationMarkPossibleResolved)
+	return res.markCommunication(ctx, r, user, "possible-resolved", platform.CommunicationMarkPossibleResolved)
 }
 func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, public_report *modelpublicreport.Report) (communication, *nhttp.ErrorWithStatus) {
 	var err error
 	source_uri := "unknown"
 	type_ := "unknown"
-	if comm.SourceReportID != nil {
+	if comm.SourceReportID != nil && public_report != nil {
 		source_uri, err = reportURI(res.router, "", public_report.PublicID)
 		if err != nil {
 			return communication{}, nhttp.NewError("gen report URI: %w", err)
@@ -167,22 +167,33 @@ func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, 
 
 type markFunc = func(context.Context, platform.User, int64) error
 
-func (res *communicationR) markReport(ctx context.Context, r *http.Request, user platform.User, m markFunc) (communication, *nhttp.ErrorWithStatus) {
+func (res *communicationR) markCommunication(ctx context.Context, r *http.Request, user platform.User, status string, m markFunc) (communication, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
-	report_id_str := vars["id"]
-	if report_id_str == "" {
+	comm_id_str := vars["id"]
+	if comm_id_str == "" {
 		return communication{}, nhttp.NewBadRequest("no id provided")
 	}
-	report_id, err := strconv.Atoi(report_id_str)
+	comm_id, err := strconv.Atoi(comm_id_str)
 	if err != nil {
 		return communication{}, nhttp.NewBadRequest("can't turn report ID into an int: %w", err)
 	}
-	m(ctx, user, int64(report_id))
-	result, err := platform.CommunicationFromID(ctx, user, int64(report_id))
+	m(ctx, user, int64(comm_id))
+	result, err := platform.CommunicationFromID(ctx, user, int64(comm_id))
 	if result == nil {
-		return communication{}, nhttp.NewUnauthorized("you are not authorized to modify communication %d", report_id)
+		return communication{}, nhttp.NewUnauthorized("you are not authorized to modify communication %d", comm_id)
 	}
-	return res.hydrateCommunication(*result, nil)
+	var public_report *modelpublicreport.Report
+	if result.SourceReportID != nil {
+		comm_ids := []int64{int64(*result.SourceReportID)}
+		public_reports, err := platform.PublicReportsFromIDs(ctx, comm_ids)
+		if err != nil {
+			return communication{}, nhttp.NewError("Get report %d: %w", *result.SourceReportID, err)
+		}
+		public_report = public_reports[0]
+	}
+
+	log.Info().Int("communication", comm_id).Str("status", status).Msg("Marked communication")
+	return res.hydrateCommunication(*result, public_report)
 }
 func responseURI(r router, comm modelpublic.Communication) (string, error) {
 	if comm.ResponseEmailLogID != nil {

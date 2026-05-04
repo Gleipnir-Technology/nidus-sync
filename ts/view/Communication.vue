@@ -230,7 +230,7 @@ async function markReport(title: string, status: string) {
 	if (selectedCommunication.value == null) {
 		return;
 	}
-	const url = `${selectedCommunication.value.uri}/${status}`;
+	const url = `${selectedCommunication.value.uri}/mark/${status}`;
 	const result = apiClient.JSONPost(url, {});
 
 	showNotification(
