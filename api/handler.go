@@ -94,7 +94,11 @@ func authenticatedHandlerJSON[T any](f handlerFunctionGetAuthenticated[T]) http.
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		_, err = w.Write(body)
+		if err != nil {
+			respondErrorStatus(w, nhttp.NewError("failed to write json: %w", err))
+			return
+		}
 	})
 }
 
@@ -124,7 +128,11 @@ func authenticatedHandlerJSONSlice[T any](f handlerFunctionGetSliceAuthenticated
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		_, err = w.Write(body)
+		if err != nil {
+			respondErrorStatus(w, nhttp.NewError("failed to write json: %w", err))
+			return
+		}
 	})
 }
 func authenticatedHandlerJSONPost[RequestType any, ResponseType any](f handlerFunctionPostAuthenticated[RequestType, ResponseType]) http.Handler {
@@ -146,7 +154,11 @@ func authenticatedHandlerJSONPost[RequestType any, ResponseType any](f handlerFu
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		_, err = w.Write(body)
+		if err != nil {
+			respondErrorStatus(w, nhttp.NewError("failed to write json: %w", err))
+			return
+		}
 	})
 }
 

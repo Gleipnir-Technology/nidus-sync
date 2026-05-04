@@ -12,6 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/resource"
@@ -68,7 +69,10 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 	var sinceStr string
 	err := r.ParseForm()
 	if err != nil {
-		renderShim(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err)))
+		err = renderShim(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err)))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	} else {
 		sinceStr = r.FormValue("since")
@@ -80,14 +84,20 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 	} else {
 		since, err = parseTime(sinceStr)
 		if err != nil {
-			renderShim(w, r, errRender(fmt.Errorf("Failed to parse 'since' value: %w", err)))
+			err = renderShim(w, r, errRender(fmt.Errorf("Failed to parse 'since' value: %w", err)))
+			if err != nil {
+				http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+			}
 			return
 		}
 	}
 
 	csync, err := platform.ContentClientIos(r.Context(), u, since)
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -102,7 +112,10 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 		Since:       since_used,
 	}
 	if err := renderShim(w, r, response); err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 }
@@ -110,7 +123,10 @@ func handleClientIos(w http.ResponseWriter, r *http.Request, u platform.User) {
 func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -119,7 +135,10 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u platform.User) 
 	query.Limit = 100
 	sources, err := platform.MosquitoSourceQuery()
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -128,14 +147,20 @@ func apiMosquitoSource(w http.ResponseWriter, r *http.Request, u platform.User) 
 		data = append(data, NewResponseMosquitoSource(s))
 	}
 	if err := renderList(w, r, data); err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 	}
 }
 
 func apiTrapData(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -144,7 +169,10 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u platform.User) {
 	query.Limit = 100
 	trap_data, err := platform.TrapDataQuery()
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -153,14 +181,20 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u platform.User) {
 		data = append(data, NewResponseTrapDatum(td))
 	}
 	if err := renderList(w, r, data); err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 	}
 }
 
 func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) {
 	bounds, err := parseBounds(r)
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 	query := db.NewGeoQuery()
@@ -168,7 +202,10 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) 
 	query.Limit = 100
 	requests, err := platform.ServiceRequestQuery()
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -177,7 +214,10 @@ func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) 
 		data = append(data, types.ServiceRequestFromModel(sr))
 	}
 	if err := renderList(w, r, data); err != nil {
-		renderShim(w, r, errRender(err))
+		err = renderShim(w, r, errRender(err))
+		if err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -226,7 +266,7 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	defer file.Close()
+	defer lint.LogOnErr(file.Close, "close request log")
 
 	// Write timestamp
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
@@ -238,10 +278,20 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write request line
-	fmt.Fprintf(file, "%s %s %s\n", r.Method, r.RequestURI, r.Proto)
+	_, err = fmt.Fprintf(file, "%s %s %s\n", r.Method, r.RequestURI, r.Proto)
+	if err != nil {
+		log.Error().Err(err).Msg("writing response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	// Write all headers
-	fmt.Fprintf(file, "\nHeaders:\n")
+	_, err = fmt.Fprintf(file, "\nHeaders:\n")
+	if err != nil {
+		log.Error().Err(err).Msg("writing response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	for name, values := range r.Header {
 		for _, value := range values {
 			fmt.Fprintf(file, "%s: %s\n", name, value)
@@ -249,11 +299,21 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Write body
-	fmt.Fprintf(file, "\nBody:\n")
+	_, err = fmt.Fprintf(file, "\nBody:\n")
+	if err != nil {
+		log.Error().Err(err).Msg("writing response")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading request body: %v", err)
-		fmt.Fprintf(file, "Error reading body: %v\n", err)
+		_, err = fmt.Fprintf(file, "Error reading body: %v\n", err)
+		if err != nil {
+			log.Error().Err(err).Msg("writing response")
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 	} else {
 		_, err = file.Write(body)
 		if err != nil {

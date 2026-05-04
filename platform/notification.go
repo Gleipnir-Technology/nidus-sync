@@ -44,7 +44,10 @@ func ClearOauth(ctx context.Context, user *models.User) {
 		models.UpdateWhere.Notifications.UserID.EQ(user.ID),
 		setter.UpdateMod(),
 	)
-	updater.Exec(ctx, db.PGInstance.BobDB)
+	_, err := updater.Exec(ctx, db.PGInstance.BobDB)
+	if err != nil {
+		log.Error().Err(err).Msg("execute update")
+	}
 	//user.UserNotifications(
 	//models.SelectWhere.Notifications.Link.EQ(NotificationPathOauthReset),
 	//).UpdateAll()

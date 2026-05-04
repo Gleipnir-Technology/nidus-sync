@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 )
 
 // DraftRequest represents the request body for creating a draft
@@ -94,7 +96,7 @@ func (c *Client) CreateDraft(taskID int, draft *DraftRequest) (*Draft, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to POST %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close response body")
 
 	// Parse response
 	var createdDraft Draft

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
@@ -33,7 +34,7 @@ func FileContentWrite(body io.Reader, collection Collection, uid uuid.UUID) erro
 		log.Error().Err(err).Str("filepath", filepath).Msg("Failed to create upload file")
 		return fmt.Errorf("Failed to create upload file at %s: %v", filepath, err)
 	}
-	defer dst.Close()
+	defer lint.LogOnErr(dst.Close, "close dst file")
 
 	// Copy rest of request body to file
 	_, err = io.Copy(dst, body)

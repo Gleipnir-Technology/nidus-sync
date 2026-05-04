@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/google/uuid"
 	//"github.com/rs/zerolog/log"
 )
@@ -93,7 +94,7 @@ func writeFileContent(w http.ResponseWriter, image_path string) {
 		}
 		return
 	}
-	defer file.Close()
+	defer lint.LogOnErr(file.Close, "close file")
 
 	// Get file info for Content-Length header
 	fileInfo, err := file.Stat()

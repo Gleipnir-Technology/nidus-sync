@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/rs/zerolog/log"
 )
 
@@ -16,7 +17,7 @@ func MailerFromReader(public_id string, body io.Reader) error {
 	if err != nil {
 		return fmt.Errorf("Failed to create image file %s: %w", filepath, err)
 	}
-	defer dst.Close()
+	defer lint.LogOnErr(dst.Close, "close dst file")
 
 	// Copy rest of request body to file
 	_, err = io.Copy(dst, body)

@@ -3,6 +3,8 @@ package labelstudio
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 )
 
 type TaskResultValue struct {
@@ -171,7 +173,7 @@ func (c *Client) TaskUpdate(taskID int, update *TaskUpdate) (*Task, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to PATCH %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close response")
 
 	// Parse response
 	var updatedTask Task

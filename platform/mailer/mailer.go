@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/lob"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/pdf"
@@ -91,7 +92,7 @@ func ComplianceSend(ctx context.Context, row_id int32) error {
 	if err != nil {
 		return fmt.Errorf("start txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	mailer, err := models.CommsMailers.Insert(&models.CommsMailerSetter{
 		AddressID:  omit.From(address.ID),
 		Created:    omit.From(time.Now()),
@@ -113,7 +114,7 @@ func ComplianceSend(ctx context.Context, row_id int32) error {
 		return fmt.Errorf("create crrm: %w", err)
 	}
 	log.Info().Int32("id", crrm.ID).Msg("Created compliance report request mailer")
-	txn.Commit(ctx)
+	lint.LogOnErrCtx(txn.Commit, ctx, "commit")
 	return nil
 }
 

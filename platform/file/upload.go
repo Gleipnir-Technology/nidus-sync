@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
@@ -50,7 +51,7 @@ func saveFileUpload(headers *multipart.FileHeader, collection Collection) (uploa
 	if err != nil {
 		return upload, fmt.Errorf("Failed to open header: %w", err)
 	}
-	defer file.Close()
+	defer lint.LogOnErr(file.Close, "close file")
 
 	file_bytes, err := io.ReadAll(file)
 	content_type := http.DetectContentType(file_bytes)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 )
 
 // User represents a user in Label Studio
@@ -33,7 +35,7 @@ func (c *Client) ListUsers() ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to GET /api/userls: %w", err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close response")
 
 	// Parse response
 	var users []User

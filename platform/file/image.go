@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )
@@ -18,7 +19,7 @@ func ImageFileFromReader(collection Collection, uid uuid.UUID, body io.Reader) e
 	if err != nil {
 		return fmt.Errorf("Failed to create image file %s: %w", filepath, err)
 	}
-	defer dst.Close()
+	defer lint.LogOnErr(dst.Close, "close dst file")
 
 	// Copy rest of request body to file
 	_, err = io.Copy(dst, body)

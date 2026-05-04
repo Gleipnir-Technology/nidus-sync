@@ -208,7 +208,10 @@ func main() {
 	platform.WaitForExit()
 
 	log.Info().Msg("Shutdown complete")
-	os.Stderr.Sync()
+	err = os.Stderr.Sync()
+	if err != nil {
+		panic("can't sync stderr")
+	}
 }
 func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

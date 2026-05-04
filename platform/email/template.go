@@ -99,7 +99,7 @@ func LoadTemplates() error {
 	if err != nil {
 		return fmt.Errorf("Failed to load report-notification-confirmation template ID: %s", err)
 	}
-	tx.Commit(ctx)
+	lint.LogOnErrCtx(tx.Commit, ctx, "commit")
 	return nil
 }
 
