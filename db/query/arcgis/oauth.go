@@ -2,6 +2,7 @@ package arcgis
 
 import (
 	"context"
+	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/model"
@@ -16,7 +17,7 @@ func OAuthTokenInsert(ctx context.Context, m *model.OAuthToken) (*model.OAuthTok
 }
 func OAuthTokenInvalidate(ctx context.Context, id int64) error {
 	statement := table.OAuthToken.UPDATE().
-		SET(table.OAuthToken.InvalidatedAt.SET(postgres.LOCALTIMESTAMP())).
+		SET(table.OAuthToken.InvalidatedAt.SET(postgres.TimestampT(time.Now()))).
 		WHERE(table.OAuthToken.ID.EQ(postgres.Int(id)))
 	return db.ExecuteNone(ctx, statement)
 }

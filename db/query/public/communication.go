@@ -34,7 +34,7 @@ func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]*model
 }
 func CommunicationMarkInvalid(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
-		SET(table.Communication.Invalidated.SET(postgres.LOCALTIMESTAMP())).
+		SET(table.Communication.Invalidated.SET(postgres.TimestampT(time.Now()))).
 		SET(table.Communication.InvalidatedBy.SET(postgres.Int(user_id))).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
@@ -42,7 +42,7 @@ func CommunicationMarkInvalid(ctx context.Context, org_id int64, user_id int64, 
 }
 func CommunicationMarkPendingResponse(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
-		SET(table.Communication.SetPending.SET(postgres.LOCALTIMESTAMP())).
+		SET(table.Communication.SetPending.SET(postgres.TimestampT(time.Now()))).
 		SET(table.Communication.SetPendingBy.SET(postgres.Int(user_id))).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
@@ -50,7 +50,7 @@ func CommunicationMarkPendingResponse(ctx context.Context, org_id int64, user_id
 }
 func CommunicationMarkPossibleIssue(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
-		SET(table.Communication.SetPossibleIssue.SET(postgres.LOCALTIMESTAMP())).
+		SET(table.Communication.SetPossibleIssue.SET(postgres.TimestampT(time.Now()))).
 		SET(table.Communication.SetPossibleIssueBy.SET(postgres.Int(user_id))).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
@@ -58,7 +58,7 @@ func CommunicationMarkPossibleIssue(ctx context.Context, org_id int64, user_id i
 }
 func CommunicationMarkPossibleResolved(ctx context.Context, org_id int64, user_id int64, comm_id int64) error {
 	statement := table.Communication.UPDATE().
-		SET(table.Communication.SetPossibleResolved.SET(postgres.LOCALTIMESTAMP())).
+		SET(table.Communication.SetPossibleResolved.SET(postgres.TimestampT(time.Now()))).
 		SET(table.Communication.SetPossibleResolvedBy.SET(postgres.Int(user_id))).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
