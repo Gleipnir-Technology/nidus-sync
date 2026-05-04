@@ -98,7 +98,8 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 	return result, nil
 }
 
-type communicationMarkRequest struct {}
+type communicationMarkRequest struct{}
+
 func (res *communicationR) MarkInvalid(ctx context.Context, r *http.Request, user platform.User, cmr communicationMarkRequest) (communication, *nhttp.ErrorWithStatus) {
 	return res.markReport(ctx, r, user, platform.CommunicationMarkInvalid)
 }

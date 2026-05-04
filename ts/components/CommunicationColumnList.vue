@@ -1,23 +1,3 @@
-<style scoped>
-.report-card {
-	cursor: pointer;
-	transition: background-color 0.2s;
-}
-
-.report-card:hover {
-	background-color: $secondary;
-}
-
-.report-card.active {
-	background-color: $primary;
-	color: white;
-}
-.reports-list {
-	overflow-y: auto;
-	max-height: 100vh;
-}
-</style>
-
 <template>
 	<div class="card shadow-sm h-100 reports-list">
 		<div class="card-header bg-light pane-header">
@@ -68,13 +48,12 @@
 					v-else-if="all.length > 0"
 					v-for="comm in filteredCommunications"
 					:key="comm.id"
-					class="list-group-item report-card p-3"
-					:class="{
-						active: selectedId && selectedId === comm.id,
-					}"
-					@click="handleClick(comm.id)"
 				>
-					<ListCardCommunication :comm="comm" />
+					<ListCardCommunication
+						@click="handleClick(comm.id)"
+						:comm="comm"
+						:isSelected="selectedID == comm.id"
+					/>
 				</div>
 			</div>
 		</div>
@@ -97,22 +76,20 @@ import { Communication, LogEntry, PublicReport } from "@/type/api";
 interface Props {
 	all: Communication[] | null;
 	loading: boolean;
-	selectedId?: string | null;
+	selectedID?: string;
 }
 interface Emits {
 	(e: "deselect", id: string): void;
 	(e: "select", id: string): void;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-	selectedId: null,
-});
+const props = defineProps<Props>();
 
 const emit = defineEmits<Emits>();
 const handleClick = (id: string) => {
-	if (props.selectedId == null) {
+	if (props.selectedID == undefined) {
 		emit("select", id);
-	} else if (props.selectedId == id) {
+	} else if (props.selectedID == id) {
 		emit("deselect", id);
 	} else {
 		emit("select", id);

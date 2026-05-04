@@ -1,6 +1,29 @@
+<style scoped lang="scss">
+.report-card {
+	cursor: pointer;
+	transition: background-color 0.2s;
+}
+
+.report-card:hover {
+	background-color: $secondary;
+}
+
+.report-card.active {
+	background-color: $primary;
+	color: white;
+}
+.reports-list {
+	overflow-y: auto;
+	max-height: 100vh;
+}
+</style>
+
 <template>
 	<!-- First row: icon, type badge, and time -->
-	<div class="justify-content-between align-items-center">
+	<div
+		class="align-items-center justify-content-between list-group-item p-3 report-card"
+		:class="{ active: isSelected }"
+	>
 		<div class="row">
 			<div class="d-flex align-items-center">
 				<div class="col">
@@ -30,6 +53,7 @@ import { formatAddress, formatDate } from "@/format";
 import { Communication } from "@/type/api";
 interface Props {
 	comm: Communication;
+	isSelected: boolean;
 }
 const props = defineProps<Props>();
 function iconForCommunicationType(): string {

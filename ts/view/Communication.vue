@@ -17,7 +17,7 @@
 				:all="storeCommunication.all"
 				@deselect="handleDeselect"
 				:loading="storeCommunication.loading"
-				:selected-id="selectedId"
+				:selectedID="selectedId"
 				@select="handleSelect"
 			/>
 		</template>
@@ -86,7 +86,7 @@ const session = useSessionStore();
 // Refs
 const currentImageIndex = ref<number>(0);
 const paramCommunication = useQueryParam("communication");
-const selectedId = ref<string | null>(null);
+const selectedId = ref<string | undefined>(undefined);
 const showImageModal = ref(false);
 const storeCommunication = useCommunicationStore();
 const storePublicReport = useStorePublicReport();
@@ -170,7 +170,7 @@ const mapMarkers = computed<Marker[]>((): Marker[] => {
 });
 const selectedCommunication = computed<Communication | null>(
 	(): Communication | null => {
-		if (selectedId.value == null) {
+		if (selectedId.value == undefined) {
 			return null;
 		}
 		if (storeCommunication.all == null) {
@@ -193,7 +193,7 @@ const selectedReport = computedAsync(
 	},
 );
 const handleDeselect = (id: string) => {
-	selectedId.value = null;
+	selectedId.value = undefined;
 };
 const handleSelect = (id: string) => {
 	selectedId.value = id;
@@ -255,7 +255,7 @@ function removeCurrentFromList() {
 		const nextIndex = Math.min(index, storeCommunication.all.length - 1);
 		selectedId.value = storeCommunication.all[nextIndex].id;
 	} else {
-		selectedId.value = null;
+		selectedId.value = undefined;
 	}
 }
 async function sendMessage(message: string) {
