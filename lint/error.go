@@ -23,3 +23,13 @@ func LogOnErrCtx(f ErrorableCtx, ctx context.Context, msg string) {
 		log.Error().Err(e).Msg(msg)
 	}
 }
+func LogOnErrRollback(f ErrorableCtx, ctx context.Context, msg string) {
+	e := f(ctx)
+	if e != nil {
+		// We're fine with rollbacks that are already properly closed
+		if e.Error() == "sql: transaction has already been committed or rolled back" {
+			return
+		}
+		log.Error().Err(e).Msg(msg)
+	}
+}

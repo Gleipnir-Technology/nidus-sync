@@ -68,7 +68,7 @@ func LoadTemplates() error {
 	if err != nil {
 		return fmt.Errorf("Failed to start transaction: %w", err)
 	}
-	defer lint.LogOnErrCtx(tx.Rollback, ctx, "rollback")
+	defer lint.LogOnErrRollback(tx.Rollback, ctx, "rollback")
 	templateByID = make(map[int32]*builtTemplate, 0)
 	for name, p := range all_templates {
 		template_id, err := templateDBID(tx, name, p)
