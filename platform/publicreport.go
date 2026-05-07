@@ -213,8 +213,8 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOPublicReport, org_id, report_id)
 }
-func PublicReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
-	return publicreport.ReportsForOrganization(ctx, org_id, is_public)
+func PublicReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]types.PublicReport, error) {
+	return publicreport.UnreviewedForOrganization(ctx, db.PGInstance.PGXPool, int64(org_id), is_public)
 }
 func PublicReportsFromIDs(ctx context.Context, report_ids []int64) ([]modelpublicreport.Report, error) {
 	return querypublicreport.ReportsFromIDs(ctx, report_ids)

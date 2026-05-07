@@ -39,6 +39,18 @@ func ReportsFromIDs(ctx context.Context, report_ids []int64) ([]model.Report, er
 		WHERE(table.Report.ID.IN(sql_ids...))
 	return db.ExecuteMany[model.Report](ctx, statement)
 }
+func ReportsFromIDsForOrg(ctx context.Context, txn db.Ex, report_ids []int64, org_id int64) ([]model.Report, error) {
+	sql_ids := make([]postgres.Expression, len(report_ids))
+	for i, report_id := range report_ids {
+		sql_ids[i] = postgres.Int(report_id)
+	}
+	statement := table.Report.SELECT(
+		table.Report.AllColumns,
+	).FROM(table.Report).
+		WHERE(table.Report.ID.IN(sql_ids...).AND(
+			table.Report.OrganizationID.EQ(postgres.Int(org_id))))
+	return db.ExecuteManyTx[model.Report](ctx, txn, statement)
+}
 func ReportFromPublicID(ctx context.Context, txn db.Ex, public_id string) (*model.Report, error) {
 	statement := table.Report.SELECT(
 		table.Report.AllColumns,
@@ -67,4 +79,12 @@ func ReportFromPublicIDForOrg(ctx context.Context, txn db.Ex, public_id string, 
 		return nil, fmt.Errorf("query: %w", err)
 	}
 	return &result, nil
+}
+func ReportsUnreviewedForOrganization(ctx context.Context, txn db.Ex, org_id int64) ([]model.Report, error) {
+	statement := table.Report.SELECT(
+		table.Report.AllColumns,
+	).FROM(table.Report).
+		WHERE(table.Report.Reviewed.IS_NULL().AND(
+			table.Report.OrganizationID.EQ(postgres.Int(org_id))))
+	return db.ExecuteManyTx[model.Report](ctx, txn, statement)
 }

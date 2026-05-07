@@ -212,11 +212,11 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get signals: %w", err)
 	}
-	report_ids := make([]int32, 0)
+	report_ids := make([]int64, 0)
 	pool_ids := make([]int32, 0)
 	for _, row := range rows {
 		if row.Report.ID != 0 {
-			report_ids = append(report_ids, row.Report.ID)
+			report_ids = append(report_ids, int64(row.Report.ID))
 		} else if row.Pool.ID != 0 {
 			pool_ids = append(pool_ids, row.Pool.ID)
 		}
@@ -225,7 +225,7 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting pools by ID: %w", err)
 	}
-	reports, err := publicreport.Reports(ctx, org_id, report_ids, false)
+	reports, err := publicreport.Reports(ctx, int64(org_id), report_ids, false)
 	if err != nil {
 		return nil, fmt.Errorf("getting reports by ID: %w", err)
 	}
@@ -234,7 +234,7 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 		pool_map[pool.ID] = pool
 		log.Debug().Int32("pool", pool.ID).Msg("Added to map")
 	}
-	report_map := make(map[int32]*types.PublicReport, len(report_ids))
+	report_map := make(map[int32]types.PublicReport, len(report_ids))
 	for _, report := range reports {
 		report_map[report.ID] = report
 	}
@@ -254,11 +254,8 @@ func SignalList(ctx context.Context, user User, limit int) ([]*Signal, error) {
 			if !ok {
 				return nil, fmt.Errorf("failed to get report %d for %d", row.Report.ID, row.ID)
 			}
-			if report == nil {
-				return nil, fmt.Errorf("got nil for report %d for %d", row.Report.ID, row.ID)
-			}
 			row.Pool = nil
-			row.Report = report
+			row.Report = &report
 		} else {
 			log.Debug().Int32("id", row.ID).Msg("has no publicrreport nor pool")
 			row.Pool = nil

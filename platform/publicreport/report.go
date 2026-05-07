@@ -6,9 +6,12 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/dialect"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
+	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
+	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
+	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -45,20 +48,22 @@ func ByIDWater(ctx context.Context, public_id string, is_public bool) (*types.Pu
 	}
 	return water(ctx, public_id, *report)
 }
-func ReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
-	query := reportQuery()
-	query.Apply(
-		sm.Where(psql.Quote("r", "organization_id").EQ(psql.Arg(org_id))),
-		sm.Where(psql.Quote("r", "reviewed").IsNull()),
-	)
-	return reportQueryToRows(ctx, query, is_public)
+func UnreviewedForOrganization(ctx context.Context, txn db.Ex, org_id int64, is_public bool) ([]types.PublicReport, error) {
+	reports, err := querypublicreport.ReportsUnreviewedForOrganization(ctx, txn, org_id)
+	if err != nil {
+		return nil, fmt.Errorf("reports unreviewed: %w", err)
+	}
+	return reportQueryToRows(ctx, reports, is_public)
 }
 func byID(ctx context.Context, public_id string, is_public bool) (*types.PublicReport, error) {
-	query := reportQuery()
-	query.Apply(
-		sm.Where(psql.Quote("r", "public_id").EQ(psql.Arg(public_id))),
-	)
-	reports, err := reportQueryToRows(ctx, query, is_public)
+	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
+	if err != nil {
+		return nil, fmt.Errorf("query report from public ID: %w", err)
+	}
+	if report == nil {
+		return nil, nil
+	}
+	reports, err := reportQueryToRows(ctx, []modelpublicreport.Report{*report}, is_public)
 	if err != nil {
 		return nil, fmt.Errorf("query to rows: %w", err)
 	}
@@ -66,17 +71,16 @@ func byID(ctx context.Context, public_id string, is_public bool) (*types.PublicR
 	if len(reports) != 1 {
 		return nil, nil
 	}
-	return reports[0], nil
+	return &reports[0], nil
 }
-func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQuery], is_public bool) ([]*types.PublicReport, error) {
-	rows, err := bob.All(ctx, db.PGInstance.BobDB, query, scan.StructMapper[types.PublicReport]())
-
-	if err != nil {
-		return nil, fmt.Errorf("get reports: %w", err)
-	}
-	report_ids := make([]int32, len(rows))
-	for i, row := range rows {
-		report_ids[i] = row.ID
+func reportQueryToRows(ctx context.Context, reports []modelpublicreport.Report, is_public bool) ([]types.PublicReport, error) {
+	address_ids := make([]int64, 0)
+	report_ids := make([]int32, len(reports))
+	for i, report := range reports {
+		report_ids[i] = report.ID
+		if report.AddressID != nil {
+			address_ids = append(address_ids, int64(*report.AddressID))
+		}
 	}
 	images_by_id, err := loadImagesForReport(ctx, report_ids)
 	if err != nil {
@@ -86,31 +90,74 @@ func reportQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQ
 	if err != nil {
 		return nil, fmt.Errorf("log entries for reports: %w", err)
 	}
+	addresses, err := querypublic.AddressesFromIDs(ctx, db.PGInstance.PGXPool, address_ids)
+	if err != nil {
+		return nil, fmt.Errorf("addresses for reports: %w", err)
+	}
+	addresses_by_id := make(map[int64]modelpublic.Address, 0)
+	for _, address := range addresses {
+		addresses_by_id[int64(address.ID)] = address
+	}
 
-	results := make([]*types.PublicReport, len(rows))
-	for i, row := range rows {
+	results := make([]types.PublicReport, len(reports))
+	for i, row := range reports {
+		var images []types.Image
 		images, ok := images_by_id[row.ID]
-		if ok {
-			row.Images = images
-		} else {
-			row.Images = []types.Image{}
+		if !ok {
+			images = []types.Image{}
 		}
-		row.Log = logs_by_report_id[row.ID]
-		if row.Location.Latitude == 0.0 || row.Location.Longitude == 0.0 {
-			row.Location = nil
+		logs, ok := logs_by_report_id[row.ID]
+		if !ok {
+			return nil, fmt.Errorf("impossible, missing logs for %d", row.ID)
 		}
-		row.Address.Raw = types.AddressToRaw(row.Address)
-		results[i] = &row
+		var location *types.Location
+		if row.Location == nil {
+			location = nil
+		}
+		var address *types.Address
+		if row.AddressID != nil {
+			addr, ok := addresses_by_id[int64(*row.AddressID)]
+			if !ok {
+				return nil, fmt.Errorf("impossible, missing address %d", row.AddressID)
+			}
+			a := types.AddressFromModel(addr)
+			address = &a
+		}
+		if address == nil {
+			return nil, fmt.Errorf("nil address: %w", err)
+		}
+		results[i] = types.PublicReport{
+			Address: *address,
+			Concerns: nil,
+			Created: row.Created,
+			ID: row.ID,
+			Images: images,
+			Location: location,
+			Log: logs,
+			DistrictID: &row.OrganizationID,
+			District: nil,
+			PublicID: row.PublicID,
+			Reporter: types.Contact{
+				CanSMS: &row.ReporterPhoneCanSms,
+				Email: &row.ReporterEmail,
+				HasEmail: row.ReporterEmail != "",
+				HasPhone: row.ReporterPhone != "",
+				Name: &row.ReporterName,
+				Phone: &row.ReporterPhone,
+			},
+			Status: row.Status.String(),
+			Type: row.ReportType.String(),
+			URI: "",
+		}
 	}
 	return results, nil
 }
-func Reports(ctx context.Context, org_id int32, ids []int32, is_public bool) ([]*types.PublicReport, error) {
-	query := reportQuery()
-	query.Apply(
-		sm.Where(psql.Quote("r", "organization_id").EQ(psql.Arg(org_id))),
-		sm.Where(psql.Quote("r", "id").EQ(psql.Any(ids))),
-	)
-	return reportQueryToRows(ctx, query, is_public)
+func Reports(ctx context.Context, org_id int64, ids []int64, is_public bool) ([]types.PublicReport, error) {
+	reports, err := querypublicreport.ReportsFromIDsForOrg(ctx, db.PGInstance.PGXPool, ids, org_id)
+	if err != nil {
+		return []types.PublicReport{}, fmt.Errorf("reports from ID for org: %w", err)
+	}
+	return reportQueryToRows(ctx, reports, is_public)
 }
 func ReportsForOrganizationCount(ctx context.Context, org_id int32) (uint, error) {
 	type _Row struct {
@@ -142,39 +189,4 @@ func copyReportContent(src types.PublicReport, dst *types.PublicReport) {
 	dst.Status = src.Status
 	dst.Type = src.Type
 	dst.URI = src.URI
-}
-func reportQuery() bob.BaseQuery[*dialect.SelectQuery] {
-	return psql.Select(
-		sm.Columns(
-			"COALESCE(a.country, '') AS \"address.country\"",
-			"a.id AS \"address.id\"",
-			"COALESCE(a.gid, '') AS \"address.gid\"",
-			"COALESCE(a.location_latitude, 0) AS \"address.location.latitude\"",
-			"COALESCE(a.location_longitude, 0) AS \"address.location.longitude\"",
-			"COALESCE(a.locality, '') AS \"address.locality\"",
-			"COALESCE(a.number_, '') AS \"address.number_\"",
-			"COALESCE(a.postal_code, '') AS \"address.postal_code\"",
-			"COALESCE(a.region, '') AS \"address.region\"",
-			"COALESCE(a.street, '') AS \"address.street\"",
-			"r.address_raw AS \"address.raw\"",
-			"r.created",
-			"r.id",
-			"r.latlng_accuracy_value AS \"location.accuracy\"",
-			"COALESCE(ST_Y(r.location::geometry::geometry(point, 4326)), 0.0) AS \"location.latitude\"",
-			"COALESCE(ST_X(r.location::geometry::geometry(point, 4326)), 0.0) AS \"location.longitude\"",
-			"r.organization_id",
-			"r.public_id",
-			"r.report_type",
-			"r.reporter_email AS \"reporter.email\"",
-			"r.reporter_name AS \"reporter.name\"",
-			"r.reporter_phone AS \"reporter.phone\"",
-			"r.reporter_phone_can_sms AS \"reporter.can_sms\"",
-			"r.status",
-		),
-		sm.From("publicreport.report").As("r"),
-		sm.LeftJoin("address").As("a").OnEQ(
-			psql.Quote("r", "address_id"),
-			psql.Quote("a", "id"),
-		),
-	)
 }
