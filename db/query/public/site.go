@@ -28,11 +28,11 @@ func SiteFromAddressIDForOrg(ctx context.Context, txn db.Ex, address_id int64, o
 	}
 	return &result, nil
 }
-func SiteFromIDForOrg(ctx context.Context, comm_id int64, org_id int64) (model.Site, error) {
+func SiteFromIDForOrg(ctx context.Context, txn db.Ex, comm_id int64, org_id int64) (model.Site, error) {
 	statement := table.Site.SELECT(
 		table.Site.AllColumns,
 	).FROM(table.Site).
 		WHERE(table.Site.ID.EQ(postgres.Int(comm_id)).AND(
 			table.Site.OrganizationID.EQ(postgres.Int(org_id))))
-	return db.ExecuteOne[model.Site](ctx, statement)
+	return db.ExecuteOneTx[model.Site](ctx, txn, statement)
 }

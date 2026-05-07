@@ -12,7 +12,8 @@ import (
 
 func OAuthTokenInsert(ctx context.Context, m *model.OAuthToken) (model.OAuthToken, error) {
 	statement := table.OAuthToken.INSERT(table.OAuthToken.MutableColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.OAuthToken.AllColumns)
 	return db.ExecuteOne[model.OAuthToken](ctx, statement)
 }
 func OAuthTokenInvalidate(ctx context.Context, id int64) error {

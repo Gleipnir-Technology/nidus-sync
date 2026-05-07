@@ -105,15 +105,6 @@ var Signals = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		LocationType: column{
-			Name:      "location_type",
-			DBType:    "text",
-			Default:   "GENERATED",
-			Comment:   "",
-			Nullable:  true,
-			Generated: true,
-			AutoIncr:  false,
-		},
 		FeaturePoolFeatureID: column{
 			Name:      "feature_pool_feature_id",
 			DBType:    "integer",
@@ -157,23 +148,6 @@ var Signals = Table[
 			Columns: []indexColumn{
 				{
 					Name:         "location",
-					Desc:         null.FromCond(false, true),
-					IsExpression: false,
-				},
-			},
-			Unique:        false,
-			Comment:       "",
-			NullsFirst:    []bool{false},
-			NullsDistinct: false,
-			Where:         "",
-			Include:       []string{},
-		},
-		IdxSignalLocationType: index{
-			Type: "btree",
-			Name: "idx_signal_location_type",
-			Columns: []indexColumn{
-				{
-					Name:         "location_type",
 					Desc:         null.FromCond(false, true),
 					IsExpression: false,
 				},
@@ -257,14 +231,6 @@ var Signals = Table[
 			},
 			Expression: "((feature_pool_feature_id IS NULL) OR (report_id IS NULL))",
 		},
-		ValidLocationTypes: check{
-			constraint: constraint{
-				Name:    "valid_location_types",
-				Columns: []string{"location_type"},
-				Comment: "",
-			},
-			Expression: "(location_type = ANY (ARRAY['POINT'::text, 'POLYGON'::text, 'MULTIPOLYGON'::text]))",
-		},
 	},
 	Comment: "",
 }
@@ -280,26 +246,24 @@ type signalColumns struct {
 	Type                 column
 	SiteID               column
 	Location             column
-	LocationType         column
 	FeaturePoolFeatureID column
 	ReportID             column
 }
 
 func (c signalColumns) AsSlice() []column {
 	return []column{
-		c.Addressed, c.Addressor, c.Created, c.Creator, c.ID, c.OrganizationID, c.Species, c.Type, c.SiteID, c.Location, c.LocationType, c.FeaturePoolFeatureID, c.ReportID,
+		c.Addressed, c.Addressor, c.Created, c.Creator, c.ID, c.OrganizationID, c.Species, c.Type, c.SiteID, c.Location, c.FeaturePoolFeatureID, c.ReportID,
 	}
 }
 
 type signalIndexes struct {
-	SignalPkey            index
-	IdxSignalLocation     index
-	IdxSignalLocationType index
+	SignalPkey        index
+	IdxSignalLocation index
 }
 
 func (i signalIndexes) AsSlice() []index {
 	return []index{
-		i.SignalPkey, i.IdxSignalLocation, i.IdxSignalLocationType,
+		i.SignalPkey, i.IdxSignalLocation,
 	}
 }
 
@@ -326,11 +290,10 @@ func (u signalUniques) AsSlice() []constraint {
 
 type signalChecks struct {
 	CheckExclusiveReference check
-	ValidLocationTypes      check
 }
 
 func (c signalChecks) AsSlice() []check {
 	return []check{
-		c.CheckExclusiveReference, c.ValidLocationTypes,
+		c.CheckExclusiveReference,
 	}
 }

@@ -25,14 +25,12 @@ import (
 
 // Feature is an object representing the database table.
 type Feature struct {
-	Created           time.Time         `db:"created" `
-	CreatorID         int32             `db:"creator_id" `
-	ID                int32             `db:"id,pk" `
-	OrganizationID    int32             `db:"organization_id" `
-	SiteID            int32             `db:"site_id" `
-	Location          null.Val[string]  `db:"location" `
-	LocationLatitude  null.Val[float64] `db:"location_latitude,generated" `
-	LocationLongitude null.Val[float64] `db:"location_longitude,generated" `
+	Created        time.Time        `db:"created" `
+	CreatorID      int32            `db:"creator_id" `
+	ID             int32            `db:"id,pk" `
+	OrganizationID int32            `db:"organization_id" `
+	SiteID         int32            `db:"site_id" `
+	Location       null.Val[string] `db:"location" `
 
 	R featureR `db:"-" `
 }
@@ -58,31 +56,27 @@ type featureR struct {
 func buildFeatureColumns(alias string) featureColumns {
 	return featureColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"created", "creator_id", "id", "organization_id", "site_id", "location", "location_latitude", "location_longitude",
+			"created", "creator_id", "id", "organization_id", "site_id", "location",
 		).WithParent("feature"),
-		tableAlias:        alias,
-		Created:           psql.Quote(alias, "created"),
-		CreatorID:         psql.Quote(alias, "creator_id"),
-		ID:                psql.Quote(alias, "id"),
-		OrganizationID:    psql.Quote(alias, "organization_id"),
-		SiteID:            psql.Quote(alias, "site_id"),
-		Location:          psql.Quote(alias, "location"),
-		LocationLatitude:  psql.Quote(alias, "location_latitude"),
-		LocationLongitude: psql.Quote(alias, "location_longitude"),
+		tableAlias:     alias,
+		Created:        psql.Quote(alias, "created"),
+		CreatorID:      psql.Quote(alias, "creator_id"),
+		ID:             psql.Quote(alias, "id"),
+		OrganizationID: psql.Quote(alias, "organization_id"),
+		SiteID:         psql.Quote(alias, "site_id"),
+		Location:       psql.Quote(alias, "location"),
 	}
 }
 
 type featureColumns struct {
 	expr.ColumnsExpr
-	tableAlias        string
-	Created           psql.Expression
-	CreatorID         psql.Expression
-	ID                psql.Expression
-	OrganizationID    psql.Expression
-	SiteID            psql.Expression
-	Location          psql.Expression
-	LocationLatitude  psql.Expression
-	LocationLongitude psql.Expression
+	tableAlias     string
+	Created        psql.Expression
+	CreatorID      psql.Expression
+	ID             psql.Expression
+	OrganizationID psql.Expression
+	SiteID         psql.Expression
+	Location       psql.Expression
 }
 
 func (c featureColumns) Alias() string {
@@ -766,14 +760,12 @@ func (feature0 *Feature) AttachFeaturePool(ctx context.Context, exec bob.Executo
 }
 
 type featureWhere[Q psql.Filterable] struct {
-	Created           psql.WhereMod[Q, time.Time]
-	CreatorID         psql.WhereMod[Q, int32]
-	ID                psql.WhereMod[Q, int32]
-	OrganizationID    psql.WhereMod[Q, int32]
-	SiteID            psql.WhereMod[Q, int32]
-	Location          psql.WhereNullMod[Q, string]
-	LocationLatitude  psql.WhereNullMod[Q, float64]
-	LocationLongitude psql.WhereNullMod[Q, float64]
+	Created        psql.WhereMod[Q, time.Time]
+	CreatorID      psql.WhereMod[Q, int32]
+	ID             psql.WhereMod[Q, int32]
+	OrganizationID psql.WhereMod[Q, int32]
+	SiteID         psql.WhereMod[Q, int32]
+	Location       psql.WhereNullMod[Q, string]
 }
 
 func (featureWhere[Q]) AliasedAs(alias string) featureWhere[Q] {
@@ -782,14 +774,12 @@ func (featureWhere[Q]) AliasedAs(alias string) featureWhere[Q] {
 
 func buildFeatureWhere[Q psql.Filterable](cols featureColumns) featureWhere[Q] {
 	return featureWhere[Q]{
-		Created:           psql.Where[Q, time.Time](cols.Created),
-		CreatorID:         psql.Where[Q, int32](cols.CreatorID),
-		ID:                psql.Where[Q, int32](cols.ID),
-		OrganizationID:    psql.Where[Q, int32](cols.OrganizationID),
-		SiteID:            psql.Where[Q, int32](cols.SiteID),
-		Location:          psql.WhereNull[Q, string](cols.Location),
-		LocationLatitude:  psql.WhereNull[Q, float64](cols.LocationLatitude),
-		LocationLongitude: psql.WhereNull[Q, float64](cols.LocationLongitude),
+		Created:        psql.Where[Q, time.Time](cols.Created),
+		CreatorID:      psql.Where[Q, int32](cols.CreatorID),
+		ID:             psql.Where[Q, int32](cols.ID),
+		OrganizationID: psql.Where[Q, int32](cols.OrganizationID),
+		SiteID:         psql.Where[Q, int32](cols.SiteID),
+		Location:       psql.WhereNull[Q, string](cols.Location),
 	}
 }
 

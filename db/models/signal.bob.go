@@ -36,7 +36,6 @@ type Signal struct {
 	Type                 enums.Signaltype                `db:"type_" `
 	SiteID               null.Val[int32]                 `db:"site_id" `
 	Location             string                          `db:"location" `
-	LocationType         null.Val[string]                `db:"location_type,generated" `
 	FeaturePoolFeatureID null.Val[int32]                 `db:"feature_pool_feature_id" `
 	ReportID             null.Val[int32]                 `db:"report_id" `
 
@@ -66,7 +65,7 @@ type signalR struct {
 func buildSignalColumns(alias string) signalColumns {
 	return signalColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "type_", "site_id", "location", "location_type", "feature_pool_feature_id", "report_id",
+			"addressed", "addressor", "created", "creator", "id", "organization_id", "species", "type_", "site_id", "location", "feature_pool_feature_id", "report_id",
 		).WithParent("signal"),
 		tableAlias:           alias,
 		Addressed:            psql.Quote(alias, "addressed"),
@@ -79,7 +78,6 @@ func buildSignalColumns(alias string) signalColumns {
 		Type:                 psql.Quote(alias, "type_"),
 		SiteID:               psql.Quote(alias, "site_id"),
 		Location:             psql.Quote(alias, "location"),
-		LocationType:         psql.Quote(alias, "location_type"),
 		FeaturePoolFeatureID: psql.Quote(alias, "feature_pool_feature_id"),
 		ReportID:             psql.Quote(alias, "report_id"),
 	}
@@ -98,7 +96,6 @@ type signalColumns struct {
 	Type                 psql.Expression
 	SiteID               psql.Expression
 	Location             psql.Expression
-	LocationType         psql.Expression
 	FeaturePoolFeatureID psql.Expression
 	ReportID             psql.Expression
 }
@@ -1052,7 +1049,6 @@ type signalWhere[Q psql.Filterable] struct {
 	Type                 psql.WhereMod[Q, enums.Signaltype]
 	SiteID               psql.WhereNullMod[Q, int32]
 	Location             psql.WhereMod[Q, string]
-	LocationType         psql.WhereNullMod[Q, string]
 	FeaturePoolFeatureID psql.WhereNullMod[Q, int32]
 	ReportID             psql.WhereNullMod[Q, int32]
 }
@@ -1073,7 +1069,6 @@ func buildSignalWhere[Q psql.Filterable](cols signalColumns) signalWhere[Q] {
 		Type:                 psql.Where[Q, enums.Signaltype](cols.Type),
 		SiteID:               psql.WhereNull[Q, int32](cols.SiteID),
 		Location:             psql.Where[Q, string](cols.Location),
-		LocationType:         psql.WhereNull[Q, string](cols.LocationType),
 		FeaturePoolFeatureID: psql.WhereNull[Q, int32](cols.FeaturePoolFeatureID),
 		ReportID:             psql.WhereNull[Q, int32](cols.ReportID),
 	}

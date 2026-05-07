@@ -11,6 +11,7 @@ import (
 
 func ImageInsert(ctx context.Context, txn db.Ex, m model.Image) (model.Image, error) {
 	statement := table.Image.INSERT(table.Image.AllColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.Image.AllColumns)
 	return db.ExecuteOneTx[model.Image](ctx, txn, statement)
 }

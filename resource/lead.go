@@ -54,10 +54,10 @@ func (res *leadR) Create(ctx context.Context, r *http.Request, user platform.Use
 	if err != nil || site_id == nil {
 		return "", nhttp.NewError("site from signal: %w", err)
 	}
-	lead_id, err := platform.LeadCreate(ctx, user, int32(signal_id), *site_id, pool_location)
-	if err != nil || lead_id == nil {
+	lead, err := platform.LeadCreate(ctx, user, int32(signal_id), *site_id, pool_location)
+	if err != nil {
 		return "", nhttp.NewError("lead create: %w", err)
 	}
 
-	return fmt.Sprintf("/lead/%d", *lead_id), nil
+	return fmt.Sprintf("/lead/%d", lead.ID), nil
 }

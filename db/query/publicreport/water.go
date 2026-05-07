@@ -12,6 +12,7 @@ import (
 
 func WaterInsert(ctx context.Context, txn db.Ex, m model.Water) (model.Water, error) {
 	statement := table.Water.INSERT(table.Water.AllColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.Water.AllColumns)
 	return db.ExecuteOneTx[model.Water](ctx, txn, statement)
 }

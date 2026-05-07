@@ -13,6 +13,23 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 )
 
+func AddressFromComplianceReportRequestID(ctx context.Context, txn db.Ex, public_id string) (model.Address, error) {
+	statement := table.Address.SELECT(
+		table.Address.AllColumns,
+	).FROM(
+		table.Address,
+		table.Site.INNER_JOIN(
+			table.Site,
+			table.Site.AddressID.EQ(table.Address.ID)),
+		table.Site.INNER_JOIN(
+			table.Lead,
+			table.Lead.SiteID.EQ(table.Site.ID)),
+		table.Lead.INNER_JOIN(
+			table.ComplianceReportRequest,
+			table.ComplianceReportRequest.LeadID.EQ(table.Lead.ID))).
+		WHERE(table.ComplianceReportRequest.PublicID.EQ(postgres.String(public_id)))
+	return db.ExecuteOne[model.Address](ctx, statement)
+}
 func AddressFromGID(ctx context.Context, txn db.Ex, gid string) (*model.Address, error) {
 	statement := table.Address.SELECT(
 		table.Address.AllColumns,
@@ -58,12 +75,4 @@ func AddressInserts(ctx context.Context, txn db.Ex, addresses []model.Address) (
 		MODELS(addresses).
 		RETURNING(table.Address.AllColumns)
 	return db.ExecuteManyTx[model.Address](ctx, txn, statement)
-}
-
-func addressQuery() postgres.InsertStatement {
-	return table.Address.INSERT(
-		table.Address.MutableColumns,
-	)
-	//im.Into("address", "country", "created", "gid", "h3cell", "id", "locality", "location", "number_", "postal_code", "region", "street", "unit"),
-	//im.Returning("id"),
 }

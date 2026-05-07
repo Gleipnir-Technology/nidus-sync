@@ -11,11 +11,13 @@ import (
 
 func ReportImageInsert(ctx context.Context, txn db.Ex, m model.ReportImage) (model.ReportImage, error) {
 	statement := table.ReportImage.INSERT(table.ReportImage.AllColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.ReportImage.AllColumns)
 	return db.ExecuteOneTx[model.ReportImage](ctx, txn, statement)
 }
 func ReportImagesInsert(ctx context.Context, txn db.Ex, m []model.ReportImage) ([]model.ReportImage, error) {
 	statement := table.ReportImage.INSERT(table.ReportImage.AllColumns).
-		MODELS(m)
+		MODELS(m).
+		RETURNING(table.ReportImage.AllColumns)
 	return db.ExecuteManyTx[model.ReportImage](ctx, txn, statement)
 }

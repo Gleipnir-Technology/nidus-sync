@@ -1,0 +1,12 @@
+-- +goose Up
+ALTER TABLE address
+	DROP COLUMN location_latitude,
+	DROP COLUMN location_longitude;
+ALTER TABLE feature
+	DROP COLUMN location_latitude,
+	DROP COLUMN location_longitude;
+ALTER TABLE publicreport.report
+	DROP COLUMN location_latitude,
+	DROP COLUMN location_longitude;
+ALTER TABLE signal
+	DROP COLUMN location_type;

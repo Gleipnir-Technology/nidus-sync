@@ -18,27 +18,24 @@ import (
 	"github.com/Gleipnir-Technology/bob/expr"
 	"github.com/Gleipnir-Technology/bob/orm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
-	"github.com/aarondl/opt/null"
 	"github.com/aarondl/opt/omit"
 	"github.com/aarondl/opt/omitnull"
 )
 
 // Address is an object representing the database table.
 type Address struct {
-	Country           string            `db:"country" `
-	Created           time.Time         `db:"created" `
-	Location          string            `db:"location" `
-	H3cell            string            `db:"h3cell" `
-	ID                int32             `db:"id,pk" `
-	Locality          string            `db:"locality" `
-	PostalCode        string            `db:"postal_code" `
-	Street            string            `db:"street" `
-	Unit              string            `db:"unit" `
-	Region            string            `db:"region" `
-	Number            string            `db:"number_" `
-	Gid               string            `db:"gid" `
-	LocationLatitude  null.Val[float64] `db:"location_latitude,generated" `
-	LocationLongitude null.Val[float64] `db:"location_longitude,generated" `
+	Country    string    `db:"country" `
+	Created    time.Time `db:"created" `
+	Location   string    `db:"location" `
+	H3cell     string    `db:"h3cell" `
+	ID         int32     `db:"id,pk" `
+	Locality   string    `db:"locality" `
+	PostalCode string    `db:"postal_code" `
+	Street     string    `db:"street" `
+	Unit       string    `db:"unit" `
+	Region     string    `db:"region" `
+	Number     string    `db:"number_" `
+	Gid        string    `db:"gid" `
 
 	R addressR `db:"-" `
 }
@@ -67,43 +64,39 @@ type addressR struct {
 func buildAddressColumns(alias string) addressColumns {
 	return addressColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"country", "created", "location", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_", "gid", "location_latitude", "location_longitude",
+			"country", "created", "location", "h3cell", "id", "locality", "postal_code", "street", "unit", "region", "number_", "gid",
 		).WithParent("address"),
-		tableAlias:        alias,
-		Country:           psql.Quote(alias, "country"),
-		Created:           psql.Quote(alias, "created"),
-		Location:          psql.Quote(alias, "location"),
-		H3cell:            psql.Quote(alias, "h3cell"),
-		ID:                psql.Quote(alias, "id"),
-		Locality:          psql.Quote(alias, "locality"),
-		PostalCode:        psql.Quote(alias, "postal_code"),
-		Street:            psql.Quote(alias, "street"),
-		Unit:              psql.Quote(alias, "unit"),
-		Region:            psql.Quote(alias, "region"),
-		Number:            psql.Quote(alias, "number_"),
-		Gid:               psql.Quote(alias, "gid"),
-		LocationLatitude:  psql.Quote(alias, "location_latitude"),
-		LocationLongitude: psql.Quote(alias, "location_longitude"),
+		tableAlias: alias,
+		Country:    psql.Quote(alias, "country"),
+		Created:    psql.Quote(alias, "created"),
+		Location:   psql.Quote(alias, "location"),
+		H3cell:     psql.Quote(alias, "h3cell"),
+		ID:         psql.Quote(alias, "id"),
+		Locality:   psql.Quote(alias, "locality"),
+		PostalCode: psql.Quote(alias, "postal_code"),
+		Street:     psql.Quote(alias, "street"),
+		Unit:       psql.Quote(alias, "unit"),
+		Region:     psql.Quote(alias, "region"),
+		Number:     psql.Quote(alias, "number_"),
+		Gid:        psql.Quote(alias, "gid"),
 	}
 }
 
 type addressColumns struct {
 	expr.ColumnsExpr
-	tableAlias        string
-	Country           psql.Expression
-	Created           psql.Expression
-	Location          psql.Expression
-	H3cell            psql.Expression
-	ID                psql.Expression
-	Locality          psql.Expression
-	PostalCode        psql.Expression
-	Street            psql.Expression
-	Unit              psql.Expression
-	Region            psql.Expression
-	Number            psql.Expression
-	Gid               psql.Expression
-	LocationLatitude  psql.Expression
-	LocationLongitude psql.Expression
+	tableAlias string
+	Country    psql.Expression
+	Created    psql.Expression
+	Location   psql.Expression
+	H3cell     psql.Expression
+	ID         psql.Expression
+	Locality   psql.Expression
+	PostalCode psql.Expression
+	Street     psql.Expression
+	Unit       psql.Expression
+	Region     psql.Expression
+	Number     psql.Expression
+	Gid        psql.Expression
 }
 
 func (c addressColumns) Alias() string {
@@ -1243,20 +1236,18 @@ func (address0 *Address) AttachSite(ctx context.Context, exec bob.Executor, site
 }
 
 type addressWhere[Q psql.Filterable] struct {
-	Country           psql.WhereMod[Q, string]
-	Created           psql.WhereMod[Q, time.Time]
-	Location          psql.WhereMod[Q, string]
-	H3cell            psql.WhereMod[Q, string]
-	ID                psql.WhereMod[Q, int32]
-	Locality          psql.WhereMod[Q, string]
-	PostalCode        psql.WhereMod[Q, string]
-	Street            psql.WhereMod[Q, string]
-	Unit              psql.WhereMod[Q, string]
-	Region            psql.WhereMod[Q, string]
-	Number            psql.WhereMod[Q, string]
-	Gid               psql.WhereMod[Q, string]
-	LocationLatitude  psql.WhereNullMod[Q, float64]
-	LocationLongitude psql.WhereNullMod[Q, float64]
+	Country    psql.WhereMod[Q, string]
+	Created    psql.WhereMod[Q, time.Time]
+	Location   psql.WhereMod[Q, string]
+	H3cell     psql.WhereMod[Q, string]
+	ID         psql.WhereMod[Q, int32]
+	Locality   psql.WhereMod[Q, string]
+	PostalCode psql.WhereMod[Q, string]
+	Street     psql.WhereMod[Q, string]
+	Unit       psql.WhereMod[Q, string]
+	Region     psql.WhereMod[Q, string]
+	Number     psql.WhereMod[Q, string]
+	Gid        psql.WhereMod[Q, string]
 }
 
 func (addressWhere[Q]) AliasedAs(alias string) addressWhere[Q] {
@@ -1265,20 +1256,18 @@ func (addressWhere[Q]) AliasedAs(alias string) addressWhere[Q] {
 
 func buildAddressWhere[Q psql.Filterable](cols addressColumns) addressWhere[Q] {
 	return addressWhere[Q]{
-		Country:           psql.Where[Q, string](cols.Country),
-		Created:           psql.Where[Q, time.Time](cols.Created),
-		Location:          psql.Where[Q, string](cols.Location),
-		H3cell:            psql.Where[Q, string](cols.H3cell),
-		ID:                psql.Where[Q, int32](cols.ID),
-		Locality:          psql.Where[Q, string](cols.Locality),
-		PostalCode:        psql.Where[Q, string](cols.PostalCode),
-		Street:            psql.Where[Q, string](cols.Street),
-		Unit:              psql.Where[Q, string](cols.Unit),
-		Region:            psql.Where[Q, string](cols.Region),
-		Number:            psql.Where[Q, string](cols.Number),
-		Gid:               psql.Where[Q, string](cols.Gid),
-		LocationLatitude:  psql.WhereNull[Q, float64](cols.LocationLatitude),
-		LocationLongitude: psql.WhereNull[Q, float64](cols.LocationLongitude),
+		Country:    psql.Where[Q, string](cols.Country),
+		Created:    psql.Where[Q, time.Time](cols.Created),
+		Location:   psql.Where[Q, string](cols.Location),
+		H3cell:     psql.Where[Q, string](cols.H3cell),
+		ID:         psql.Where[Q, int32](cols.ID),
+		Locality:   psql.Where[Q, string](cols.Locality),
+		PostalCode: psql.Where[Q, string](cols.PostalCode),
+		Street:     psql.Where[Q, string](cols.Street),
+		Unit:       psql.Where[Q, string](cols.Unit),
+		Region:     psql.Where[Q, string](cols.Region),
+		Number:     psql.Where[Q, string](cols.Number),
+		Gid:        psql.Where[Q, string](cols.Gid),
 	}
 }
 

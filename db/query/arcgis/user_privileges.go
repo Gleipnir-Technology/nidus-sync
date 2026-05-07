@@ -17,6 +17,7 @@ func UserPrivilegesDeleteByUserID(ctx context.Context, txn bob.Tx, id string) er
 }
 func UserPrivilegeInsert(ctx context.Context, txn bob.Tx, m *model.UserPrivilege) error {
 	statement := table.UserPrivilege.INSERT(table.UserPrivilege.MutableColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.UserPrivilege.AllColumns)
 	return db.ExecuteNoneTxBob(ctx, txn, statement)
 }

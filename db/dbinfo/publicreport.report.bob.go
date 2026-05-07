@@ -186,24 +186,6 @@ var PublicreportReports = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		LocationLatitude: column{
-			Name:      "location_latitude",
-			DBType:    "double precision",
-			Default:   "GENERATED",
-			Comment:   "",
-			Nullable:  true,
-			Generated: true,
-			AutoIncr:  false,
-		},
-		LocationLongitude: column{
-			Name:      "location_longitude",
-			DBType:    "double precision",
-			Default:   "GENERATED",
-			Comment:   "",
-			Nullable:  true,
-			Generated: true,
-			AutoIncr:  false,
-		},
 		AddressGid: column{
 			Name:      "address_gid",
 			DBType:    "text",
@@ -342,8 +324,6 @@ type publicreportReportColumns struct {
 	Reviewed               column
 	ReviewerID             column
 	Status                 column
-	LocationLatitude       column
-	LocationLongitude      column
 	AddressGid             column
 	ClientUUID             column
 	ReporterPhoneCanSMS    column
@@ -351,7 +331,7 @@ type publicreportReportColumns struct {
 
 func (c publicreportReportColumns) AsSlice() []column {
 	return []column{
-		c.AddressRaw, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.LocationLatitude, c.LocationLongitude, c.AddressGid, c.ClientUUID, c.ReporterPhoneCanSMS,
+		c.AddressRaw, c.AddressID, c.Created, c.Location, c.H3cell, c.ID, c.LatlngAccuracyType, c.LatlngAccuracyValue, c.MapZoom, c.OrganizationID, c.PublicID, c.ReporterName, c.ReporterEmail, c.ReporterPhone, c.ReporterContactConsent, c.ReportType, c.Reviewed, c.ReviewerID, c.Status, c.AddressGid, c.ClientUUID, c.ReporterPhoneCanSMS,
 	}
 }
 

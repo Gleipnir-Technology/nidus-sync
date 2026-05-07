@@ -10,7 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
 
@@ -33,15 +33,16 @@ func (a Address) String() string {
 }
 func AddressFromModel(m model.Address) Address {
 	//log.Debug().Int32("id", m.ID).Float64("lat", m.LocationLatitude.GetOr(0.0)).Float64("lng", m.LocationLongitude.GetOr(0.0)).Msg("converting address")
+	l, err := LocationFromGeom(m.Location)
+	if err != nil {
+		log.Error().Err(err).Int32("id", m.ID).Msg("getting location for address")
+	}
 	return Address{
-		Country:  m.Country,
-		GID:      m.Gid,
-		ID:       &m.ID,
-		Locality: m.Locality,
-		Location: &Location{
-			Latitude:  *m.LocationLatitude,
-			Longitude: *m.LocationLongitude,
-		},
+		Country:    m.Country,
+		GID:        m.Gid,
+		ID:         &m.ID,
+		Locality:   m.Locality,
+		Location:   &l,
 		Number:     m.Number,
 		PostalCode: m.PostalCode,
 		Raw:        addressToRaw(m),

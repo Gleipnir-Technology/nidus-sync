@@ -2,63 +2,39 @@ package platform
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
-	"github.com/stephenafamo/scan"
 )
 
 type Address = types.Address
 
 func AddressFromComplianceReportRequestID(ctx context.Context, public_id string) (*types.Address, error) {
-	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.Columns(
-			models.Addresses.Columns.Country,
-			models.Addresses.Columns.Gid,
-			models.Addresses.Columns.ID,
-			models.Addresses.Columns.Locality,
-			models.Addresses.Columns.LocationLatitude.As("location.latitude"),
-			models.Addresses.Columns.LocationLongitude.As("location.longitude"),
-			models.Addresses.Columns.Number,
-			models.Addresses.Columns.PostalCode,
-			models.Addresses.Columns.Region,
-			models.Addresses.Columns.Street,
-			models.Addresses.Columns.Unit,
-		),
-		//sm.From(models.Addresses.NameAs()),
-		sm.From(models.ComplianceReportRequests.NameAs()),
-		sm.InnerJoin(models.Leads.NameAs()).On(
-			models.ComplianceReportRequests.Columns.LeadID.EQ(models.Leads.Columns.ID)),
-		sm.InnerJoin(models.Sites.NameAs()).On(
-			models.Leads.Columns.SiteID.EQ(models.Sites.Columns.ID)),
-		sm.InnerJoin(models.Addresses.NameAs()).On(
-			models.Sites.Columns.AddressID.EQ(models.Addresses.Columns.ID)),
-		sm.Where(models.ComplianceReportRequests.Columns.PublicID.EQ(psql.Arg(public_id))),
-	), scan.StructMapper[*types.Address]())
+	row, err := querypublic.AddressFromComplianceReportRequestID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
+		if errors.Is(err, db.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("query address from compliance report request: %w", err)
 	}
-	return row, nil
+	result := types.AddressFromModel(row)
+	return &result, nil
 }
 
 func AddressLocation(ctx context.Context, address types.Address) (*types.Location, error) {
-	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
-		sm.Columns(
-			models.Addresses.Columns.LocationLatitude.As("latitude"),
-			models.Addresses.Columns.LocationLongitude.As("longitude"),
-		),
-		sm.From(models.Addresses.NameAs()),
-		sm.Where(models.Addresses.Columns.ID.EQ(psql.Arg(address.ID))),
-	), scan.StructMapper[*types.Location]())
+	address_id := int64(*address.ID)
+	addr, err := querypublic.AddressFromID(ctx, db.PGInstance.PGXPool, address_id)
 	if err != nil {
 		return nil, fmt.Errorf("query address: %w", err)
 	}
-	return row, nil
+	l, err := types.LocationFromGeom(addr.Location)
+	if err != nil {
+		return nil, fmt.Errorf("location from geom: %w", err)
+	}
+	return &l, nil
 }
 
 func AddressInsert(ctx context.Context) (*types.Address, error) {

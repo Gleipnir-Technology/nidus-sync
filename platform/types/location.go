@@ -42,6 +42,16 @@ func (l Location) ToGeom() geom.T {
 func LocationFromFS(pl *models.FieldseekerPointlocation) Location {
 	return Location{}
 }
+func LocationFromGeom(g geom.T) (Location, error) {
+	p, err := geomutil.AsPoint(g)
+	if err != nil {
+		return Location{}, fmt.Errorf("as point: %w", err)
+	}
+	return Location{
+		Latitude:  p.Y(),
+		Longitude: p.X(),
+	}, nil
+}
 func LocationDistance(l1 Location, l2 Location) float64 {
 	lat_delta := l1.Latitude - l2.Latitude
 	lng_delta := l1.Longitude - l2.Longitude

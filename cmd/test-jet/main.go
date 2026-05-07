@@ -37,7 +37,7 @@ func main() {
 		os.Exit(4)
 	}
 	//log.Printf("address %d lat %f lng %f", address.ID, *address.LocationLatitude, *address.LocationLongitude)
-	log.Printf("Address id %d location %s, lat %f, lng %f", address.ID, address.Location, *address.LocationLatitude, *address.LocationLongitude)
+	log.Printf("Address id %d location %s", address.ID, address.Location)
 	txn.Commit(ctx)
 
 	/*

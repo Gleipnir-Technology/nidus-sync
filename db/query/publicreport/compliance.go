@@ -29,6 +29,7 @@ func ComplianceFromID(ctx context.Context, txn db.Tx, report_id int64) (model.Co
 }
 func ComplianceInsert(ctx context.Context, txn db.Ex, m model.Compliance) (model.Compliance, error) {
 	statement := table.Compliance.INSERT(table.Compliance.AllColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.Compliance.AllColumns)
 	return db.ExecuteOneTx[model.Compliance](ctx, txn, statement)
 }

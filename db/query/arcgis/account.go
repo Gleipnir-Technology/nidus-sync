@@ -19,6 +19,7 @@ func AccountFromID(ctx context.Context, org_id string) (model.Account, error) {
 }
 func AccountInsert(ctx context.Context, txn bob.Tx, m *model.Account) (model.Account, error) {
 	statement := table.Account.INSERT(table.Account.AllColumns).
-		MODEL(m)
+		MODEL(m).
+		RETURNING(table.Account.AllColumns)
 	return db.ExecuteOneTxBob[model.Account](ctx, txn, statement)
 }

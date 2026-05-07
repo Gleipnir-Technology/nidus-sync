@@ -9,9 +9,9 @@ import (
 	//"github.com/go-jet/jet/v2/postgres"
 )
 
-func SignalInsert(ctx context.Context, txn db.Ex, m model.Signal) (model.Signal, error) {
-	statement := table.Signal.INSERT(table.Signal.MutableColumns).
+func LeadInsert(ctx context.Context, txn db.Ex, m model.Lead) (model.Lead, error) {
+	statement := table.Lead.INSERT(table.Lead.MutableColumns).
 		MODEL(m).
-		RETURNING(table.Signal.AllColumns)
-	return db.ExecuteOne[model.Signal](ctx, statement)
+		RETURNING(table.Lead.AllColumns)
+	return db.ExecuteOne[model.Lead](ctx, statement)
 }

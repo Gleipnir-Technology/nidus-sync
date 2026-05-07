@@ -9,9 +9,9 @@ import (
 	//"github.com/go-jet/jet/v2/postgres"
 )
 
-func SignalInsert(ctx context.Context, txn db.Ex, m model.Signal) (model.Signal, error) {
-	statement := table.Signal.INSERT(table.Signal.MutableColumns).
+func JobInsert(ctx context.Context, txn db.Ex, m model.Job) (model.Job, error) {
+	statement := table.Job.INSERT(table.Job.MutableColumns).
 		MODEL(m).
-		RETURNING(table.Signal.AllColumns)
-	return db.ExecuteOne[model.Signal](ctx, statement)
+		RETURNING(table.Job.AllColumns)
+	return db.ExecuteOne[model.Job](ctx, statement)
 }

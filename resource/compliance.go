@@ -31,7 +31,7 @@ type complianceRequestMailerForm struct {
 }
 
 func (res *complianceRequestR) CreateMailer(ctx context.Context, r *http.Request, user platform.User, n complianceRequestMailerForm) (*complianceRequestMailer, *nhttp.ErrorWithStatus) {
-	id, err := platform.ComplianceRequestMailerCreate(ctx, user, n.SiteID)
+	id, err := platform.ComplianceRequestMailerCreate(ctx, user, int64(n.SiteID))
 	if err != nil {
 		return nil, nhttp.NewError("create mailer: %w", err)
 	}

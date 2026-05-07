@@ -69,24 +69,6 @@ var Features = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		LocationLatitude: column{
-			Name:      "location_latitude",
-			DBType:    "double precision",
-			Default:   "GENERATED",
-			Comment:   "",
-			Nullable:  true,
-			Generated: true,
-			AutoIncr:  false,
-		},
-		LocationLongitude: column{
-			Name:      "location_longitude",
-			DBType:    "double precision",
-			Default:   "GENERATED",
-			Comment:   "",
-			Nullable:  true,
-			Generated: true,
-			AutoIncr:  false,
-		},
 	},
 	Indexes: featureIndexes{
 		FeaturePkey: index{
@@ -146,19 +128,17 @@ var Features = Table[
 }
 
 type featureColumns struct {
-	Created           column
-	CreatorID         column
-	ID                column
-	OrganizationID    column
-	SiteID            column
-	Location          column
-	LocationLatitude  column
-	LocationLongitude column
+	Created        column
+	CreatorID      column
+	ID             column
+	OrganizationID column
+	SiteID         column
+	Location       column
 }
 
 func (c featureColumns) AsSlice() []column {
 	return []column{
-		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.SiteID, c.Location, c.LocationLatitude, c.LocationLongitude,
+		c.Created, c.CreatorID, c.ID, c.OrganizationID, c.SiteID, c.Location,
 	}
 }
 

@@ -47,8 +47,6 @@ type PublicreportReport struct {
 	Reviewed               null.Val[time.Time]                `db:"reviewed" `
 	ReviewerID             null.Val[int32]                    `db:"reviewer_id" `
 	Status                 enums.PublicreportReportstatustype `db:"status" `
-	LocationLatitude       null.Val[float64]                  `db:"location_latitude,generated" `
-	LocationLongitude      null.Val[float64]                  `db:"location_longitude,generated" `
 	AddressGid             string                             `db:"address_gid" `
 	ClientUUID             null.Val[uuid.UUID]                `db:"client_uuid" `
 	ReporterPhoneCanSMS    bool                               `db:"reporter_phone_can_sms" `
@@ -88,7 +86,7 @@ type publicreportReportR struct {
 func buildPublicreportReportColumns(alias string) publicreportReportColumns {
 	return publicreportReportColumns{
 		ColumnsExpr: expr.NewColumnsExpr(
-			"address_raw", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "location_latitude", "location_longitude", "address_gid", "client_uuid", "reporter_phone_can_sms",
+			"address_raw", "address_id", "created", "location", "h3cell", "id", "latlng_accuracy_type", "latlng_accuracy_value", "map_zoom", "organization_id", "public_id", "reporter_name", "reporter_email", "reporter_phone", "reporter_contact_consent", "report_type", "reviewed", "reviewer_id", "status", "address_gid", "client_uuid", "reporter_phone_can_sms",
 		).WithParent("publicreport.report"),
 		tableAlias:             alias,
 		AddressRaw:             psql.Quote(alias, "address_raw"),
@@ -110,8 +108,6 @@ func buildPublicreportReportColumns(alias string) publicreportReportColumns {
 		Reviewed:               psql.Quote(alias, "reviewed"),
 		ReviewerID:             psql.Quote(alias, "reviewer_id"),
 		Status:                 psql.Quote(alias, "status"),
-		LocationLatitude:       psql.Quote(alias, "location_latitude"),
-		LocationLongitude:      psql.Quote(alias, "location_longitude"),
 		AddressGid:             psql.Quote(alias, "address_gid"),
 		ClientUUID:             psql.Quote(alias, "client_uuid"),
 		ReporterPhoneCanSMS:    psql.Quote(alias, "reporter_phone_can_sms"),
@@ -140,8 +136,6 @@ type publicreportReportColumns struct {
 	Reviewed               psql.Expression
 	ReviewerID             psql.Expression
 	Status                 psql.Expression
-	LocationLatitude       psql.Expression
-	LocationLongitude      psql.Expression
 	AddressGid             psql.Expression
 	ClientUUID             psql.Expression
 	ReporterPhoneCanSMS    psql.Expression
@@ -2133,8 +2127,6 @@ type publicreportReportWhere[Q psql.Filterable] struct {
 	Reviewed               psql.WhereNullMod[Q, time.Time]
 	ReviewerID             psql.WhereNullMod[Q, int32]
 	Status                 psql.WhereMod[Q, enums.PublicreportReportstatustype]
-	LocationLatitude       psql.WhereNullMod[Q, float64]
-	LocationLongitude      psql.WhereNullMod[Q, float64]
 	AddressGid             psql.WhereMod[Q, string]
 	ClientUUID             psql.WhereNullMod[Q, uuid.UUID]
 	ReporterPhoneCanSMS    psql.WhereMod[Q, bool]
@@ -2165,8 +2157,6 @@ func buildPublicreportReportWhere[Q psql.Filterable](cols publicreportReportColu
 		Reviewed:               psql.WhereNull[Q, time.Time](cols.Reviewed),
 		ReviewerID:             psql.WhereNull[Q, int32](cols.ReviewerID),
 		Status:                 psql.Where[Q, enums.PublicreportReportstatustype](cols.Status),
-		LocationLatitude:       psql.WhereNull[Q, float64](cols.LocationLatitude),
-		LocationLongitude:      psql.WhereNull[Q, float64](cols.LocationLongitude),
 		AddressGid:             psql.Where[Q, string](cols.AddressGid),
 		ClientUUID:             psql.WhereNull[Q, uuid.UUID](cols.ClientUUID),
 		ReporterPhoneCanSMS:    psql.Where[Q, bool](cols.ReporterPhoneCanSMS),
