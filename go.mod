@@ -16,7 +16,6 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/getsentry/sentry-go v0.42.0
 	github.com/getsentry/sentry-go/zerolog v0.42.0
-	github.com/go-jet/jet v2.3.0+incompatible
 	github.com/go-jet/jet/v2 v2.14.1
 	github.com/google/go-querystring v1.2.0
 	github.com/google/uuid v1.6.0
@@ -24,7 +23,7 @@ require (
 	github.com/gorilla/schema v1.4.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.7.6
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.12.3
 	github.com/maruel/genai v0.0.0-20251221000642-77279d1194c1
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/nyaruka/phonenumbers v1.6.8
@@ -59,11 +58,8 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect
-	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.14.3 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.3.3 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgtype v1.14.4 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
@@ -93,7 +89,9 @@ require (
 	github.com/tidwall/rtree v1.3.1 // indirect
 	github.com/tidwall/sjson v1.2.4 // indirect
 	github.com/tinylib/msgp v1.3.0 // indirect
+	github.com/twpayne/go-geom v1.6.1 // indirect
 	github.com/twpayne/go-proj/v11 v11.0.0 // indirect
+	github.com/twpayne/pgx-geom v1.0.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	go.mongodb.org/mongo-driver v1.11.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
@@ -108,3 +106,4 @@ require (
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob
 // replace github.com/Gleipnir-Technology/arcgis-go v0.0.12 => ./arcgis-go
+replace github.com/go-jet/jet/v2 v2.14.1 => ../jet

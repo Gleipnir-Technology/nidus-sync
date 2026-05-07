@@ -15,24 +15,6 @@ var Communications = Table[
 	Schema: "",
 	Name:   "communication",
 	Columns: communicationColumns{
-		Closed: column{
-			Name:      "closed",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		ClosedBy: column{
-			Name:      "closed_by",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
 		Created: column{
 			Name:      "created",
 			DBType:    "timestamp without time zone",
@@ -48,42 +30,6 @@ var Communications = Table[
 			Default:   "nextval('communication_id_seq'::regclass)",
 			Comment:   "",
 			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Invalidated: column{
-			Name:      "invalidated",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		InvalidatedBy: column{
-			Name:      "invalidated_by",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		Opened: column{
-			Name:      "opened",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		OpenedBy: column{
-			Name:      "opened_by",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -107,24 +53,6 @@ var Communications = Table[
 		},
 		ResponseTextLogID: column{
 			Name:      "response_text_log_id",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SetPending: column{
-			Name:      "set_pending",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SetPendingBy: column{
-			Name:      "set_pending_by",
 			DBType:    "integer",
 			Default:   "NULL",
 			Comment:   "",
@@ -159,39 +87,12 @@ var Communications = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		SetPossibleIssue: column{
-			Name:      "set_possible_issue",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
+		Status: column{
+			Name:      "status",
+			DBType:    "public.communicationstatus",
+			Default:   "",
 			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SetPossibleIssueBy: column{
-			Name:      "set_possible_issue_by",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SetPossibleResolved: column{
-			Name:      "set_possible_resolved",
-			DBType:    "timestamp without time zone",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		SetPossibleResolvedBy: column{
-			Name:      "set_possible_resolved_by",
-			DBType:    "integer",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
+			Nullable:  false,
 			Generated: false,
 			AutoIncr:  false,
 		},
@@ -221,33 +122,6 @@ var Communications = Table[
 		Comment: "",
 	},
 	ForeignKeys: communicationForeignKeys{
-		CommunicationCommunicationClosedByFkey: foreignKey{
-			constraint: constraint{
-				Name:    "communication.communication_closed_by_fkey",
-				Columns: []string{"closed_by"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
-			ForeignColumns: []string{"id"},
-		},
-		CommunicationCommunicationInvalidatedByFkey: foreignKey{
-			constraint: constraint{
-				Name:    "communication.communication_invalidated_by_fkey",
-				Columns: []string{"invalidated_by"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
-			ForeignColumns: []string{"id"},
-		},
-		CommunicationCommunicationOpenedByFkey: foreignKey{
-			constraint: constraint{
-				Name:    "communication.communication_opened_by_fkey",
-				Columns: []string{"opened_by"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
-			ForeignColumns: []string{"id"},
-		},
 		CommunicationCommunicationOrganizationIDFkey: foreignKey{
 			constraint: constraint{
 				Name:    "communication.communication_organization_id_fkey",
@@ -273,33 +147,6 @@ var Communications = Table[
 				Comment: "",
 			},
 			ForeignTable:   "comms.text_log",
-			ForeignColumns: []string{"id"},
-		},
-		CommunicationCommunicationSetPendingByFkey: foreignKey{
-			constraint: constraint{
-				Name:    "communication.communication_set_pending_by_fkey",
-				Columns: []string{"set_pending_by"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
-			ForeignColumns: []string{"id"},
-		},
-		CommunicationCommunicationSetPossibleIssueByFkey: foreignKey{
-			constraint: constraint{
-				Name:    "communication.communication_set_possible_issue_by_fkey",
-				Columns: []string{"set_possible_issue_by"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
-			ForeignColumns: []string{"id"},
-		},
-		CommunicationCommunicationSetPossibleResolvedByFkey: foreignKey{
-			constraint: constraint{
-				Name:    "communication.communication_set_possible_resolved_by_fkey",
-				Columns: []string{"set_possible_resolved_by"},
-				Comment: "",
-			},
-			ForeignTable:   "user_",
 			ForeignColumns: []string{"id"},
 		},
 		CommunicationCommunicationSourceEmailLogIDFkey: foreignKey{
@@ -335,31 +182,20 @@ var Communications = Table[
 }
 
 type communicationColumns struct {
-	Closed                column
-	ClosedBy              column
-	Created               column
-	ID                    column
-	Invalidated           column
-	InvalidatedBy         column
-	Opened                column
-	OpenedBy              column
-	OrganizationID        column
-	ResponseEmailLogID    column
-	ResponseTextLogID     column
-	SetPending            column
-	SetPendingBy          column
-	SourceEmailLogID      column
-	SourceReportID        column
-	SourceTextLogID       column
-	SetPossibleIssue      column
-	SetPossibleIssueBy    column
-	SetPossibleResolved   column
-	SetPossibleResolvedBy column
+	Created            column
+	ID                 column
+	OrganizationID     column
+	ResponseEmailLogID column
+	ResponseTextLogID  column
+	SourceEmailLogID   column
+	SourceReportID     column
+	SourceTextLogID    column
+	Status             column
 }
 
 func (c communicationColumns) AsSlice() []column {
 	return []column{
-		c.Closed, c.ClosedBy, c.Created, c.ID, c.Invalidated, c.InvalidatedBy, c.Opened, c.OpenedBy, c.OrganizationID, c.ResponseEmailLogID, c.ResponseTextLogID, c.SetPending, c.SetPendingBy, c.SourceEmailLogID, c.SourceReportID, c.SourceTextLogID, c.SetPossibleIssue, c.SetPossibleIssueBy, c.SetPossibleResolved, c.SetPossibleResolvedBy,
+		c.Created, c.ID, c.OrganizationID, c.ResponseEmailLogID, c.ResponseTextLogID, c.SourceEmailLogID, c.SourceReportID, c.SourceTextLogID, c.Status,
 	}
 }
 
@@ -374,23 +210,17 @@ func (i communicationIndexes) AsSlice() []index {
 }
 
 type communicationForeignKeys struct {
-	CommunicationCommunicationClosedByFkey              foreignKey
-	CommunicationCommunicationInvalidatedByFkey         foreignKey
-	CommunicationCommunicationOpenedByFkey              foreignKey
-	CommunicationCommunicationOrganizationIDFkey        foreignKey
-	CommunicationCommunicationResponseEmailLogIDFkey    foreignKey
-	CommunicationCommunicationResponseTextLogIDFkey     foreignKey
-	CommunicationCommunicationSetPendingByFkey          foreignKey
-	CommunicationCommunicationSetPossibleIssueByFkey    foreignKey
-	CommunicationCommunicationSetPossibleResolvedByFkey foreignKey
-	CommunicationCommunicationSourceEmailLogIDFkey      foreignKey
-	CommunicationCommunicationSourceReportIDFkey        foreignKey
-	CommunicationCommunicationSourceTextLogIDFkey       foreignKey
+	CommunicationCommunicationOrganizationIDFkey     foreignKey
+	CommunicationCommunicationResponseEmailLogIDFkey foreignKey
+	CommunicationCommunicationResponseTextLogIDFkey  foreignKey
+	CommunicationCommunicationSourceEmailLogIDFkey   foreignKey
+	CommunicationCommunicationSourceReportIDFkey     foreignKey
+	CommunicationCommunicationSourceTextLogIDFkey    foreignKey
 }
 
 func (f communicationForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{
-		f.CommunicationCommunicationClosedByFkey, f.CommunicationCommunicationInvalidatedByFkey, f.CommunicationCommunicationOpenedByFkey, f.CommunicationCommunicationOrganizationIDFkey, f.CommunicationCommunicationResponseEmailLogIDFkey, f.CommunicationCommunicationResponseTextLogIDFkey, f.CommunicationCommunicationSetPendingByFkey, f.CommunicationCommunicationSetPossibleIssueByFkey, f.CommunicationCommunicationSetPossibleResolvedByFkey, f.CommunicationCommunicationSourceEmailLogIDFkey, f.CommunicationCommunicationSourceReportIDFkey, f.CommunicationCommunicationSourceTextLogIDFkey,
+		f.CommunicationCommunicationOrganizationIDFkey, f.CommunicationCommunicationResponseEmailLogIDFkey, f.CommunicationCommunicationResponseTextLogIDFkey, f.CommunicationCommunicationSourceEmailLogIDFkey, f.CommunicationCommunicationSourceReportIDFkey, f.CommunicationCommunicationSourceTextLogIDFkey,
 	}
 }
 

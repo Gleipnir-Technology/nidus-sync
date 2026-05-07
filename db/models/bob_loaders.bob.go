@@ -26,6 +26,7 @@ type preloaders struct {
 	CommsTextJob                       commsTextJobPreloader
 	CommsTextLog                       commsTextLogPreloader
 	Communication                      communicationPreloader
+	CommunicationLogEntry              communicationLogEntryPreloader
 	ComplianceReportRequest            complianceReportRequestPreloader
 	ComplianceReportRequestMailer      complianceReportRequestMailerPreloader
 	DistrictSubscriptionEmail          districtSubscriptionEmailPreloader
@@ -120,6 +121,7 @@ func getPreloaders() preloaders {
 		CommsTextJob:                       buildCommsTextJobPreloader(),
 		CommsTextLog:                       buildCommsTextLogPreloader(),
 		Communication:                      buildCommunicationPreloader(),
+		CommunicationLogEntry:              buildCommunicationLogEntryPreloader(),
 		ComplianceReportRequest:            buildComplianceReportRequestPreloader(),
 		ComplianceReportRequestMailer:      buildComplianceReportRequestMailerPreloader(),
 		DistrictSubscriptionEmail:          buildDistrictSubscriptionEmailPreloader(),
@@ -220,6 +222,7 @@ type thenLoaders[Q orm.Loadable] struct {
 	CommsTextJob                       commsTextJobThenLoader[Q]
 	CommsTextLog                       commsTextLogThenLoader[Q]
 	Communication                      communicationThenLoader[Q]
+	CommunicationLogEntry              communicationLogEntryThenLoader[Q]
 	ComplianceReportRequest            complianceReportRequestThenLoader[Q]
 	ComplianceReportRequestMailer      complianceReportRequestMailerThenLoader[Q]
 	DistrictSubscriptionEmail          districtSubscriptionEmailThenLoader[Q]
@@ -314,6 +317,7 @@ func getThenLoaders[Q orm.Loadable]() thenLoaders[Q] {
 		CommsTextJob:                       buildCommsTextJobThenLoader[Q](),
 		CommsTextLog:                       buildCommsTextLogThenLoader[Q](),
 		Communication:                      buildCommunicationThenLoader[Q](),
+		CommunicationLogEntry:              buildCommunicationLogEntryThenLoader[Q](),
 		ComplianceReportRequest:            buildComplianceReportRequestThenLoader[Q](),
 		ComplianceReportRequestMailer:      buildComplianceReportRequestMailerThenLoader[Q](),
 		DistrictSubscriptionEmail:          buildDistrictSubscriptionEmailThenLoader[Q](),

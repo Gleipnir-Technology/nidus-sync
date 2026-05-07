@@ -9,26 +9,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
+	tablepublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/table"
 	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	tablepublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/table"
 	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
 	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
-	//"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
+	"github.com/go-jet/jet/v2/postgres"
 	"github.com/rs/zerolog/log"
 )
 
@@ -86,7 +80,7 @@ func PublicReportByIDWater(ctx context.Context, report_id string, is_public bool
 	return publicreport.ByIDWater(ctx, report_id, is_public)
 }
 func PublicReportInvalid(ctx context.Context, user User, public_id string) error {
-	report, err := publicReportFromID(ctx, public_id)
+	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
 	}
@@ -94,11 +88,16 @@ func PublicReportInvalid(ctx context.Context, user User, public_id string) error
 		return fmt.Errorf("user is from a different organization")
 	}
 
-	err = report.Update(ctx, db.PGInstance.BobDB, &models.PublicreportReportSetter{
-		Reviewed:   omitnull.From(time.Now()),
-		ReviewerID: omitnull.From(int32(user.ID)),
-		Status:     omit.From(enums.PublicreportReportstatustypeInvalidated),
-	})
+	now := time.Now()
+	report_updater := querypublicreport.ReportUpdater{}
+	report_updater.Model.Reviewed = &now
+	report_updater.Set(tablepublicreport.Report.Reviewed)
+	reporter_id := int32(user.ID)
+	report_updater.Model.ReviewerID = &reporter_id
+	report_updater.Set(tablepublicreport.Report.ReviewerID)
+	report_updater.Model.Status = modelpublicreport.Reportstatustype_Invalidated
+	report_updater.Set(tablepublicreport.Report.Status)
+	err = report_updater.Execute(ctx, db.PGInstance.PGXPool, report.ID)
 
 	log.Info().Int32("id", report.ID).Msg("Report marked as invalid")
 	event.Updated(event.TypeRMOPublicReport, user.Organization.ID, public_id)
@@ -112,7 +111,7 @@ func PublicReportMessageCreate(ctx context.Context, user User, public_id, messag
 	}
 	defer txn.Rollback(ctx)
 
-	report, err := publicReportFromID(ctx, public_id)
+	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
@@ -144,76 +143,72 @@ func PublicReportMessageCreate(ctx context.Context, user User, public_id, messag
 		return nil, errors.New("no contact methods available")
 	}
 }
-func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_setter *models.PublicreportReportSetter, compliance_setter *models.PublicreportComplianceSetter, address *types.Address, location *types.Location) (*types.PublicReportCompliance, error) {
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_updates querypublicreport.ReportUpdater, compliance_updates querypublicreport.ComplianceUpdater, address *types.Address, location *types.Location) error {
+	//txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	txn, err := db.BeginTxn(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("create txn: %w", err)
+		return fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
-	report, err := publicReportFromID(ctx, public_id)
+	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
-		return nil, fmt.Errorf("query report existence: %w", err)
+		return fmt.Errorf("query report existence: %w", err)
 	}
-	compliance, err := models.FindPublicreportCompliance(ctx, txn, report.ID)
+	//compliance, err := models.FindPublicreportCompliance(ctx, txn, report.ID)
+	compliance, err := querypublicreport.ComplianceFromID(ctx, txn, int64(report.ID))
 	if err != nil {
-		return nil, fmt.Errorf("find compliance %d: %w", report.ID, err)
+		return fmt.Errorf("find compliance %d: %w", report.ID, err)
 	}
 	// Don't allow modifying of the submission date if it's set
-	if compliance_setter.Submitted.IsValue() {
-		if compliance.Submitted.IsValue() {
-			compliance_setter.Submitted.Unset()
+	if compliance_updates.Has(tablepublicreport.Compliance.Submitted) {
+		if compliance.Submitted != nil {
+			compliance_updates.Unset(tablepublicreport.Compliance.Submitted)
 		} else {
-			comm := &model.Communication{
+			comm := model.Communication{
 				OrganizationID: report.OrganizationID,
 				SourceReportID: &report.ID,
 			}
-			comm, err := querypublic.CommunicationInsert(ctx, txn, comm)
+			comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
 			if err != nil {
-				return nil, fmt.Errorf("insert communication: %w", err)
+				return fmt.Errorf("insert communication: %w", err)
+			}
+			comm_log := model.CommunicationLogEntry{
+				CommunicationID: comm.ID,
+				Created:         time.Now(),
+				Type:            model.Communicationlogentry_Created,
+				User:            nil,
+			}
+			comm_log, err = querypublic.CommunicationLogEntryInsert(ctx, txn, comm_log)
+			if err != nil {
+				return fmt.Errorf("insert communication log entry: %w", err)
 			}
 			log.Debug().Int32("id", comm.ID).Msg("inserted new communication")
 		}
 	}
 
 	// Avoid attempting to perform an empty update
-	if report_setter.LatlngAccuracyValue.IsValue() ||
-		report_setter.ReporterEmail.IsValue() ||
-		report_setter.ReporterName.IsValue() ||
-		report_setter.ReporterPhone.IsValue() {
-		err = report.Update(ctx, txn, report_setter)
-		if err != nil {
-			return nil, fmt.Errorf("update report: %w", err)
-		}
+	err = report_updates.Execute(ctx, txn, int64(report.ID))
+	if err != nil {
+		return fmt.Errorf("update report: %w", err)
 	}
-	// Avoid attempting to perform an empty update
-	if compliance_setter.AccessInstructions.IsValue() ||
-		compliance_setter.AvailabilityNotes.IsValue() ||
-		compliance_setter.Comments.IsValue() ||
-		compliance_setter.GateCode.IsValue() ||
-		compliance_setter.HasDog.IsValue() ||
-		compliance_setter.PermissionType.IsValue() ||
-		compliance_setter.ReportPhoneCanText.IsValue() ||
-		compliance_setter.Submitted.IsValue() ||
-		compliance_setter.WantsScheduled.IsValue() {
-		err = compliance.Update(ctx, txn, compliance_setter)
-		if err != nil {
-			return nil, fmt.Errorf("update compliance: %w", err)
-		}
+	err = compliance_updates.Execute(ctx, txn, int64(compliance.ReportID))
+	if err != nil {
+		return fmt.Errorf("update compliance: %w", err)
 	}
 	if address != nil {
 		err = publicReportUpdateAddress(ctx, txn, report, *address)
 		if err != nil {
-			return nil, fmt.Errorf("update address: %w", err)
+			return fmt.Errorf("update address: %w", err)
 		}
 	}
 	if location != nil {
 		err = publicReportUpdateLocation(ctx, txn, report.ID, *location)
 		if err != nil {
-			return nil, fmt.Errorf("update location: %w", err)
+			return fmt.Errorf("update location: %w", err)
 		}
 	}
 	txn.Commit(ctx)
-	return publicreport.ByIDCompliance(ctx, public_id, false)
+	return nil
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
 	event.Updated(event.TypeRMOPublicReport, org_id, report_id)
@@ -221,13 +216,13 @@ func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id st
 func PublicReportsForOrganization(ctx context.Context, org_id int32, is_public bool) ([]*types.PublicReport, error) {
 	return publicreport.ReportsForOrganization(ctx, org_id, is_public)
 }
-func PublicReportsFromIDs(ctx context.Context, report_ids []int64) ([]*modelpublicreport.Report, error) {
-	return querypublicreport.PublicReportsFromIDs(ctx, report_ids)
+func PublicReportsFromIDs(ctx context.Context, report_ids []int64) ([]modelpublicreport.Report, error) {
+	return querypublicreport.ReportsFromIDs(ctx, report_ids)
 }
-func PublicReportComplianceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_compliance models.PublicreportComplianceSetter, org_id int32) (*models.PublicreportReport, error) {
-	return publicReportCreate(ctx, setter_report, nil, nil, nil, org_id, func(ctx context.Context, txn bob.Executor, report_id int32) error {
-		setter_compliance.ReportID = omit.From(report_id)
-		_, err := models.PublicreportCompliances.Insert(&setter_compliance).One(ctx, txn)
+func PublicReportComplianceCreate(ctx context.Context, setter_report modelpublicreport.Report, setter_compliance modelpublicreport.Compliance, org_id int32) (modelpublicreport.Report, error) {
+	return publicReportCreate(ctx, setter_report, nil, nil, nil, org_id, func(ctx context.Context, txn db.Ex, report_id int32) error {
+		setter_compliance.ReportID = report_id
+		_, err := querypublicreport.ComplianceInsert(ctx, txn, setter_compliance)
 		if err != nil {
 			return fmt.Errorf("Failed to create nuisance database record: %w", err)
 		}
@@ -235,13 +230,13 @@ func PublicReportComplianceCreate(ctx context.Context, setter_report models.Publ
 	})
 }
 func PublicReportImageCreate(ctx context.Context, public_id string, images []ImageUpload) error {
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	txn, err := db.BeginTxn(ctx)
 	if err != nil {
 		return fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
 
-	report, err := publicReportFromID(ctx, public_id)
+	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
 		return fmt.Errorf("report from ID: %w", err)
 	}
@@ -250,14 +245,14 @@ func PublicReportImageCreate(ctx context.Context, public_id string, images []Ima
 		return fmt.Errorf("Failed to save image uploads: %w", err)
 	}
 	if len(saved_images) > 0 {
-		setters := make([]*models.PublicreportReportImageSetter, 0)
-		for _, image := range saved_images {
-			setters = append(setters, &models.PublicreportReportImageSetter{
-				ImageID:  omit.From(int32(image.ID)),
-				ReportID: omit.From(int32(report.ID)),
-			})
+		report_images := make([]modelpublicreport.ReportImage, len(saved_images))
+		for i, image := range saved_images {
+			report_images[i] = modelpublicreport.ReportImage{
+				ImageID:  image.ID,
+				ReportID: report.ID,
+			}
 		}
-		_, err = models.PublicreportReportImages.Insert(bob.ToMods(setters...)).Exec(ctx, txn)
+		_, err := querypublicreport.ReportImagesInsert(ctx, txn, report_images)
 		if err != nil {
 			return fmt.Errorf("Failed to save reference to images: %w", err)
 		}
@@ -266,10 +261,10 @@ func PublicReportImageCreate(ctx context.Context, public_id string, images []Ima
 	txn.Commit(ctx)
 	return nil
 }
-func PublicReportNuisanceCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_nuisance models.PublicreportNuisanceSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return publicReportCreate(ctx, setter_report, &location, &address, images, 0, func(ctx context.Context, txn bob.Executor, report_id int32) error {
-		setter_nuisance.ReportID = omit.From(report_id)
-		_, err := models.PublicreportNuisances.Insert(&setter_nuisance).One(ctx, txn)
+func PublicReportNuisanceCreate(ctx context.Context, setter_report modelpublicreport.Report, setter_nuisance modelpublicreport.Nuisance, location types.Location, address Address, images []ImageUpload) (modelpublicreport.Report, error) {
+	return publicReportCreate(ctx, setter_report, &location, &address, images, 0, func(ctx context.Context, txn db.Ex, report_id int32) error {
+		setter_nuisance.ReportID = report_id
+		_, err := querypublicreport.NuisanceInsert(ctx, txn, setter_nuisance)
 		if err != nil {
 			return fmt.Errorf("Failed to create nuisance database record: %w", err)
 		}
@@ -277,10 +272,10 @@ func PublicReportNuisanceCreate(ctx context.Context, setter_report models.Public
 	})
 }
 
-func PublicReportWaterCreate(ctx context.Context, setter_report models.PublicreportReportSetter, setter_water models.PublicreportWaterSetter, location types.Location, address Address, images []ImageUpload) (*models.PublicreportReport, error) {
-	return publicReportCreate(ctx, setter_report, &location, &address, images, 0, func(ctx context.Context, txn bob.Executor, report_id int32) error {
-		setter_water.ReportID = omit.From(report_id)
-		_, err := models.PublicreportWaters.Insert(&setter_water).One(ctx, txn)
+func PublicReportWaterCreate(ctx context.Context, setter_report modelpublicreport.Report, setter_water modelpublicreport.Water, location types.Location, address Address, images []ImageUpload) (modelpublicreport.Report, error) {
+	return publicReportCreate(ctx, setter_report, &location, &address, images, 0, func(ctx context.Context, txn db.Ex, report_id int32) error {
+		setter_water.ReportID = report_id
+		_, err := querypublicreport.WaterInsert(ctx, txn, setter_water)
 		if err != nil {
 			return fmt.Errorf("Failed to create water database record: %w", err)
 		}
@@ -288,56 +283,52 @@ func PublicReportWaterCreate(ctx context.Context, setter_report models.Publicrep
 	})
 }
 func PublicReportTypeByID(ctx context.Context, public_id string) (string, error) {
-	report, err := models.PublicreportReports.Query(
-		models.SelectWhere.PublicreportReports.PublicID.EQ(public_id),
-	).One(ctx, db.PGInstance.BobDB)
+	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
 		return "", fmt.Errorf("query report '%s': %w", public_id, err)
 	}
 	return report.ReportType.String(), nil
 }
 
-type funcSetReportDetail = func(context.Context, bob.Executor, int32) error
+type funcSetReportDetail = func(context.Context, db.Ex, int32) error
 
-func publicReportCreate(ctx context.Context, setter_report models.PublicreportReportSetter, location *types.Location, address *Address, images []ImageUpload, organization_id int32, detail_setter funcSetReportDetail) (result *models.PublicreportReport, err error) {
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+func publicReportCreate(ctx context.Context, setter_report modelpublicreport.Report, location *types.Location, address *Address, images []ImageUpload, organization_id int32, detail_setter funcSetReportDetail) (result modelpublicreport.Report, err error) {
+	txn, err := db.BeginTxn(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("create txn: %w", err)
+		return result, fmt.Errorf("create txn: %w", err)
 	}
 	defer txn.Rollback(ctx)
 
-	if setter_report.PublicID.IsUnset() {
+	if setter_report.PublicID == "" {
 		public_id, err := GenerateReportID()
 		if err != nil {
-			return nil, fmt.Errorf("create public ID: %w", err)
+			return result, fmt.Errorf("create public ID: %w", err)
 		}
-		setter_report.PublicID = omit.From(public_id)
+		setter_report.PublicID = public_id
 	}
 
-	var addr *models.Address
+	var addr *types.Address
 	if address != nil {
 		if address.GID != "" {
-			addr, err = geocode.EnsureAddress(ctx, txn, *address)
+			addr_existing, err := geocode.EnsureAddress(ctx, txn, *address)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to ensure address: %w", err)
+				return result, fmt.Errorf("Failed to ensure address: %w", err)
 			}
+			addr = &addr_existing
 		} else if address.Raw != "" {
 			geo_res, err := geocode.GeocodeRaw(ctx, nil, address.Raw)
 			if err != nil {
-				return nil, fmt.Errorf("Failed to geocode raw: %w", err)
+				return result, fmt.Errorf("Failed to geocode raw: %w", err)
 			}
-			addr, err = models.FindAddress(ctx, txn, *geo_res.Address.ID)
-			if err != nil {
-				return nil, fmt.Errorf("Failed to lookup address: %w", err)
-			}
+			addr = &geo_res.Address
 		} else {
-			return nil, fmt.Errorf("empty address")
+			return result, fmt.Errorf("empty address")
 		}
 	}
 
 	saved_images, err := saveImageUploads(ctx, txn, images)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to save image uploads: %w", err)
+		return result, fmt.Errorf("Failed to save image uploads: %w", err)
 	}
 	if organization_id == 0 {
 		organization_id, err = matchDistrict(ctx, location, images, addr)
@@ -345,14 +336,14 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 			log.Warn().Err(err).Msg("Failed to match district")
 		}
 	}
-	setter_report.OrganizationID = omit.From(organization_id)
+	setter_report.OrganizationID = organization_id
 
 	if addr != nil {
-		setter_report.AddressID = omitnull.From(addr.ID)
+		setter_report.AddressID = addr.ID
 	}
-	result, err = models.PublicreportReports.Insert(&setter_report).One(ctx, txn)
+	result, err = querypublicreport.ReportInsert(ctx, txn, setter_report)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create report database record: %w", err)
+		return result, fmt.Errorf("Failed to create report database record: %w", err)
 	}
 	if location != nil {
 		l := *location
@@ -360,48 +351,48 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 			publicReportUpdateLocation(ctx, txn, result.ID, l)
 		}
 	}
-	log.Info().Str("public_id", setter_report.PublicID.GetOr("")).Int32("id", result.ID).Msg("Created base report")
+	log.Info().Str("public_id", setter_report.PublicID).Int32("id", result.ID).Msg("Created base report")
 
 	if len(saved_images) > 0 {
-		setters := make([]*models.PublicreportReportImageSetter, 0)
-		for _, image := range saved_images {
-			setters = append(setters, &models.PublicreportReportImageSetter{
-				ImageID:  omit.From(int32(image.ID)),
-				ReportID: omit.From(int32(result.ID)),
-			})
+		setters := make([]modelpublicreport.ReportImage, len(saved_images))
+		for i, image := range saved_images {
+			setters[i] = modelpublicreport.ReportImage{
+				ImageID:  int32(image.ID),
+				ReportID: int32(result.ID),
+			}
 		}
-		_, err = models.PublicreportReportImages.Insert(bob.ToMods(setters...)).Exec(ctx, txn)
+		_, err = querypublicreport.ReportImagesInsert(ctx, txn, setters)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to save reference to images: %w", err)
+			return result, fmt.Errorf("Failed to save reference to images: %w", err)
 		}
 		log.Info().Int("len", len(images)).Msg("saved uploaded images")
 	}
 
 	err = detail_setter(ctx, txn, result.ID)
 	if err != nil {
-		return nil, fmt.Errorf("detail setter: %w", err)
+		return result, fmt.Errorf("detail setter: %w", err)
 	}
 
-	models.PublicreportReportLogs.Insert(&models.PublicreportReportLogSetter{
-		Created:    omit.From(time.Now()),
-		EmailLogID: omitnull.FromPtr[int32](nil),
+	_, err = querypublicreport.ReportLogInsert(ctx, txn, modelpublicreport.ReportLog{
+		Created:    time.Now(),
+		EmailLogID: nil,
 		// ID
-		ReportID:  omit.From(result.ID),
-		TextLogID: omitnull.FromPtr[int32](nil),
-		Type:      omit.From(enums.PublicreportReportlogtypeCreated),
-		UserID:    omitnull.FromPtr[int32](nil),
-	}).One(ctx, txn)
+		ReportID:  result.ID,
+		TextLogID: nil,
+		Type:      modelpublicreport.Reportlogtype_Created,
+		UserID:    nil,
+	})
 
 	// Only create communication entries for compliance when they're submitted
-	report_type := setter_report.ReportType.MustGet()
-	if report_type != enums.PublicreportReporttypeCompliance {
-		comm := &model.Communication{
+	report_type := setter_report.ReportType
+	if report_type != modelpublicreport.Reporttype_Compliance {
+		comm := model.Communication{
 			OrganizationID: result.OrganizationID,
 			SourceReportID: &result.ID,
 		}
 		comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
 		if err != nil {
-			return nil, fmt.Errorf("insert communication: %w", err)
+			return result, fmt.Errorf("insert communication: %w", err)
 		}
 		log.Debug().Int32("id", comm.ID).Msg("inserted new communication")
 	}
@@ -415,49 +406,55 @@ func publicReportCreate(ctx context.Context, setter_report models.PublicreportRe
 	)
 	return result, nil
 }
-func publicReportFromID(ctx context.Context, public_id string) (*models.PublicreportReport, error) {
-	report, err := models.PublicreportReports.Query(
-		models.SelectWhere.PublicreportReports.PublicID.EQ(public_id),
-	).One(ctx, db.PGInstance.BobDB)
-	if err != nil {
-		return nil, err
-	}
-	return report, nil
-}
-func publicReportUpdateAddress(ctx context.Context, txn bob.Executor, report *models.PublicreportReport, address types.Address) error {
-	err := report.Update(ctx, txn, &models.PublicreportReportSetter{
-		AddressGid: omit.From(address.GID),
-		AddressRaw: omit.From(address.Raw),
-	})
+func publicReportUpdateAddress(ctx context.Context, txn db.Tx, report *modelpublicreport.Report, address types.Address) error {
+	statement := tablepublicreport.Report.UPDATE(
+		tablepublicreport.Report.AddressGid,
+		tablepublicreport.Report.AddressRaw,
+	).SET(
+		postgres.String(address.GID),
+		postgres.String(address.Raw),
+	).FROM(tablepublic.Address).
+		WHERE(
+			tablepublicreport.Report.ID.EQ(postgres.Int(int64(report.ID))),
+		)
+	err := db.ExecuteNoneTx(ctx, txn, statement)
+
 	if err != nil {
 		return fmt.Errorf("update report: %w", err)
 	}
-	_, err = psql.Update(
-		um.Table("publicreport.report"),
-		um.SetCol("address_id").To(
-			psql.Select(
-				sm.Columns("id"),
-				sm.From("address"),
-				sm.Where(psql.Quote("gid").EQ(psql.Arg(address.GID))),
-				sm.Limit(1),
-			),
-		),
-		um.Where(psql.Quote("publicreport", "report", "id").EQ(psql.Arg(report.ID))),
-	).Exec(ctx, txn)
+	statement = tablepublicreport.Report.UPDATE(
+		tablepublicreport.Report.AddressID,
+	).SET(
+		tablepublic.Address.SELECT(
+			tablepublic.Address.ID,
+		).WHERE(
+			tablepublic.Address.Gid.EQ(postgres.String(address.GID)),
+		).LIMIT(1),
+	).WHERE(
+		tablepublicreport.Report.ID.EQ(postgres.Int(int64(report.ID))),
+	)
+	err = db.ExecuteNoneTx(ctx, txn, statement)
 	if err != nil {
 		return fmt.Errorf("update report address_id: %w", err)
 	}
 	return nil
 }
-func publicReportUpdateLocation(ctx context.Context, txn bob.Executor, id int32, location types.Location) error {
+func publicReportUpdateLocation(ctx context.Context, txn db.Tx, id int32, location types.Location) error {
 	h3cell, _ := location.H3Cell()
+	if h3cell == nil {
+		return fmt.Errorf("nil h3 cell")
+	}
 	geom_query, _ := location.GeometryQuery()
-	_, err := psql.Update(
-		um.Table("publicreport.report"),
-		um.SetCol("h3cell").ToArg(h3cell),
-		um.SetCol("location").To(geom_query),
-		um.Where(psql.Quote("id").EQ(psql.Arg(id))),
-	).Exec(ctx, txn)
+	statement := tablepublicreport.Report.UPDATE(
+		tablepublicreport.Report.H3cell,
+		tablepublicreport.Report.Location,
+	).SET(
+		postgres.Int(int64(*h3cell)),
+		postgres.Raw(geom_query),
+	).WHERE(
+		tablepublicreport.Report.ID.EQ(postgres.Int(int64(id))),
+	)
+	err := db.ExecuteNoneTx(ctx, txn, statement)
 	if err != nil {
 		return fmt.Errorf("Failed to insert publicreport.report geospatial", err)
 	}

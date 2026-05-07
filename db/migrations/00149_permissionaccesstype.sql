@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TYPE publicreport.PermissionAccessType AS ENUM (
+CREATE TYPE publicreport.PermissionAccess AS ENUM (
 	'denied',
 	'granted',
 	'unselected',
@@ -7,7 +7,7 @@ CREATE TYPE publicreport.PermissionAccessType AS ENUM (
 );
 ALTER TABLE publicreport.compliance
 	ALTER COLUMN permission_type
-	TYPE publicreport.PermissionAccessType USING permission_type::text::publicreport.PermissionAccessType;
+	TYPE publicreport.PermissionAccess USING permission_type::text::publicreport.PermissionAccess;
 DROP TYPE PermissionAccessType;
 -- +goose Down
 CREATE TYPE PermissionAccessType AS ENUM (
@@ -18,5 +18,5 @@ CREATE TYPE PermissionAccessType AS ENUM (
 );
 ALTER TABLE publicreport.compliance
 	ALTER COLUMN permission_type
-	TYPE PermissionAccessType;
+	TYPE PermissionAccessType USING permission_type::text::PermissionAccessType;
 DROP TYPE publicreport.PermissionAccessType;

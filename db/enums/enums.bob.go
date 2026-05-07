@@ -582,6 +582,276 @@ func (e *CommsTextorigin) Scan(value any) error {
 	return nil
 }
 
+// Enum values for Communicationlogentry
+const (
+	CommunicationlogentryCreated                   Communicationlogentry = "created"
+	CommunicationlogentryStatusU2eclosed           Communicationlogentry = "status.closed"
+	CommunicationlogentryStatusU2einvalidated      Communicationlogentry = "status.invalidated"
+	CommunicationlogentryStatusU2eopened           Communicationlogentry = "status.opened"
+	CommunicationlogentryStatusU2epending          Communicationlogentry = "status.pending"
+	CommunicationlogentryStatusU2epossibleIssue    Communicationlogentry = "status.possible-issue"
+	CommunicationlogentryStatusU2epossibleResolved Communicationlogentry = "status.possible-resolved"
+)
+
+func AllCommunicationlogentry() []Communicationlogentry {
+	return []Communicationlogentry{
+		CommunicationlogentryCreated,
+		CommunicationlogentryStatusU2eclosed,
+		CommunicationlogentryStatusU2einvalidated,
+		CommunicationlogentryStatusU2eopened,
+		CommunicationlogentryStatusU2epending,
+		CommunicationlogentryStatusU2epossibleIssue,
+		CommunicationlogentryStatusU2epossibleResolved,
+	}
+}
+
+type Communicationlogentry string
+
+func (e Communicationlogentry) String() string {
+	return string(e)
+}
+
+func (e Communicationlogentry) Valid() bool {
+	switch e {
+	case CommunicationlogentryCreated,
+		CommunicationlogentryStatusU2eclosed,
+		CommunicationlogentryStatusU2einvalidated,
+		CommunicationlogentryStatusU2eopened,
+		CommunicationlogentryStatusU2epending,
+		CommunicationlogentryStatusU2epossibleIssue,
+		CommunicationlogentryStatusU2epossibleResolved:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Communicationlogentry) All() []Communicationlogentry {
+	return AllCommunicationlogentry()
+}
+
+func (e Communicationlogentry) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Communicationlogentry) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Communicationlogentry) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Communicationlogentry) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Communicationlogentry) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Communicationlogentry) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Communicationlogentry(x)
+	case []byte:
+		*e = Communicationlogentry(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Communicationlogentry")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Communicationlogentry value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for Communicationstatus
+const (
+	CommunicationstatusClosed           Communicationstatus = "closed"
+	CommunicationstatusInvalid          Communicationstatus = "invalid"
+	CommunicationstatusNew              Communicationstatus = "new"
+	CommunicationstatusOpened           Communicationstatus = "opened"
+	CommunicationstatusPending          Communicationstatus = "pending"
+	CommunicationstatusPossibleIssue    Communicationstatus = "possible-issue"
+	CommunicationstatusPossibleResolved Communicationstatus = "possible-resolved"
+	CommunicationstatusResolved         Communicationstatus = "resolved"
+)
+
+func AllCommunicationstatus() []Communicationstatus {
+	return []Communicationstatus{
+		CommunicationstatusClosed,
+		CommunicationstatusInvalid,
+		CommunicationstatusNew,
+		CommunicationstatusOpened,
+		CommunicationstatusPending,
+		CommunicationstatusPossibleIssue,
+		CommunicationstatusPossibleResolved,
+		CommunicationstatusResolved,
+	}
+}
+
+type Communicationstatus string
+
+func (e Communicationstatus) String() string {
+	return string(e)
+}
+
+func (e Communicationstatus) Valid() bool {
+	switch e {
+	case CommunicationstatusClosed,
+		CommunicationstatusInvalid,
+		CommunicationstatusNew,
+		CommunicationstatusOpened,
+		CommunicationstatusPending,
+		CommunicationstatusPossibleIssue,
+		CommunicationstatusPossibleResolved,
+		CommunicationstatusResolved:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Communicationstatus) All() []Communicationstatus {
+	return AllCommunicationstatus()
+}
+
+func (e Communicationstatus) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Communicationstatus) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Communicationstatus) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Communicationstatus) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Communicationstatus) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Communicationstatus) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Communicationstatus(x)
+	case []byte:
+		*e = Communicationstatus(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Communicationstatus")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Communicationstatus value: %s", *e)
+	}
+
+	return nil
+}
+
+// Enum values for Communicationstatustype
+const (
+	CommunicationstatustypeClosed           Communicationstatustype = "closed"
+	CommunicationstatustypeInvalid          Communicationstatustype = "invalid"
+	CommunicationstatustypeNew              Communicationstatustype = "new"
+	CommunicationstatustypeOpened           Communicationstatustype = "opened"
+	CommunicationstatustypePending          Communicationstatustype = "pending"
+	CommunicationstatustypePossibleIssue    Communicationstatustype = "possible-issue"
+	CommunicationstatustypePossibleResolved Communicationstatustype = "possible-resolved"
+	CommunicationstatustypeResolved         Communicationstatustype = "resolved"
+)
+
+func AllCommunicationstatustype() []Communicationstatustype {
+	return []Communicationstatustype{
+		CommunicationstatustypeClosed,
+		CommunicationstatustypeInvalid,
+		CommunicationstatustypeNew,
+		CommunicationstatustypeOpened,
+		CommunicationstatustypePending,
+		CommunicationstatustypePossibleIssue,
+		CommunicationstatustypePossibleResolved,
+		CommunicationstatustypeResolved,
+	}
+}
+
+type Communicationstatustype string
+
+func (e Communicationstatustype) String() string {
+	return string(e)
+}
+
+func (e Communicationstatustype) Valid() bool {
+	switch e {
+	case CommunicationstatustypeClosed,
+		CommunicationstatustypeInvalid,
+		CommunicationstatustypeNew,
+		CommunicationstatustypeOpened,
+		CommunicationstatustypePending,
+		CommunicationstatustypePossibleIssue,
+		CommunicationstatustypePossibleResolved,
+		CommunicationstatustypeResolved:
+		return true
+	default:
+		return false
+	}
+}
+
+// useful when testing in other packages
+func (e Communicationstatustype) All() []Communicationstatustype {
+	return AllCommunicationstatustype()
+}
+
+func (e Communicationstatustype) MarshalText() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Communicationstatustype) UnmarshalText(text []byte) error {
+	return e.Scan(text)
+}
+
+func (e Communicationstatustype) MarshalBinary() ([]byte, error) {
+	return []byte(e), nil
+}
+
+func (e *Communicationstatustype) UnmarshalBinary(data []byte) error {
+	return e.Scan(data)
+}
+
+func (e Communicationstatustype) Value() (driver.Value, error) {
+	return string(e), nil
+}
+
+func (e *Communicationstatustype) Scan(value any) error {
+	switch x := value.(type) {
+	case string:
+		*e = Communicationstatustype(x)
+	case []byte:
+		*e = Communicationstatustype(x)
+	case nil:
+		return fmt.Errorf("cannot nil into Communicationstatustype")
+	default:
+		return fmt.Errorf("cannot scan type %T: %v", value, value)
+	}
+
+	if !e.Valid() {
+		return fmt.Errorf("invalid Communicationstatustype value: %s", *e)
+	}
+
+	return nil
+}
+
 // Enum values for FileuploadCsvtype
 const (
 	FileuploadCsvtypePoollist FileuploadCsvtype = "PoolList"
@@ -1550,35 +1820,35 @@ func (e *PublicreportNuisancedurationtype) Scan(value any) error {
 	return nil
 }
 
-// Enum values for PublicreportPermissionaccesstype
+// Enum values for PublicreportPermissionaccess
 const (
-	PublicreportPermissionaccesstypeDenied     PublicreportPermissionaccesstype = "denied"
-	PublicreportPermissionaccesstypeGranted    PublicreportPermissionaccesstype = "granted"
-	PublicreportPermissionaccesstypeUnselected PublicreportPermissionaccesstype = "unselected"
-	PublicreportPermissionaccesstypeWithOwner  PublicreportPermissionaccesstype = "with-owner"
+	PublicreportPermissionaccessDenied     PublicreportPermissionaccess = "denied"
+	PublicreportPermissionaccessGranted    PublicreportPermissionaccess = "granted"
+	PublicreportPermissionaccessUnselected PublicreportPermissionaccess = "unselected"
+	PublicreportPermissionaccessWithOwner  PublicreportPermissionaccess = "with-owner"
 )
 
-func AllPublicreportPermissionaccesstype() []PublicreportPermissionaccesstype {
-	return []PublicreportPermissionaccesstype{
-		PublicreportPermissionaccesstypeDenied,
-		PublicreportPermissionaccesstypeGranted,
-		PublicreportPermissionaccesstypeUnselected,
-		PublicreportPermissionaccesstypeWithOwner,
+func AllPublicreportPermissionaccess() []PublicreportPermissionaccess {
+	return []PublicreportPermissionaccess{
+		PublicreportPermissionaccessDenied,
+		PublicreportPermissionaccessGranted,
+		PublicreportPermissionaccessUnselected,
+		PublicreportPermissionaccessWithOwner,
 	}
 }
 
-type PublicreportPermissionaccesstype string
+type PublicreportPermissionaccess string
 
-func (e PublicreportPermissionaccesstype) String() string {
+func (e PublicreportPermissionaccess) String() string {
 	return string(e)
 }
 
-func (e PublicreportPermissionaccesstype) Valid() bool {
+func (e PublicreportPermissionaccess) Valid() bool {
 	switch e {
-	case PublicreportPermissionaccesstypeDenied,
-		PublicreportPermissionaccesstypeGranted,
-		PublicreportPermissionaccesstypeUnselected,
-		PublicreportPermissionaccesstypeWithOwner:
+	case PublicreportPermissionaccessDenied,
+		PublicreportPermissionaccessGranted,
+		PublicreportPermissionaccessUnselected,
+		PublicreportPermissionaccessWithOwner:
 		return true
 	default:
 		return false
@@ -1586,44 +1856,44 @@ func (e PublicreportPermissionaccesstype) Valid() bool {
 }
 
 // useful when testing in other packages
-func (e PublicreportPermissionaccesstype) All() []PublicreportPermissionaccesstype {
-	return AllPublicreportPermissionaccesstype()
+func (e PublicreportPermissionaccess) All() []PublicreportPermissionaccess {
+	return AllPublicreportPermissionaccess()
 }
 
-func (e PublicreportPermissionaccesstype) MarshalText() ([]byte, error) {
+func (e PublicreportPermissionaccess) MarshalText() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *PublicreportPermissionaccesstype) UnmarshalText(text []byte) error {
+func (e *PublicreportPermissionaccess) UnmarshalText(text []byte) error {
 	return e.Scan(text)
 }
 
-func (e PublicreportPermissionaccesstype) MarshalBinary() ([]byte, error) {
+func (e PublicreportPermissionaccess) MarshalBinary() ([]byte, error) {
 	return []byte(e), nil
 }
 
-func (e *PublicreportPermissionaccesstype) UnmarshalBinary(data []byte) error {
+func (e *PublicreportPermissionaccess) UnmarshalBinary(data []byte) error {
 	return e.Scan(data)
 }
 
-func (e PublicreportPermissionaccesstype) Value() (driver.Value, error) {
+func (e PublicreportPermissionaccess) Value() (driver.Value, error) {
 	return string(e), nil
 }
 
-func (e *PublicreportPermissionaccesstype) Scan(value any) error {
+func (e *PublicreportPermissionaccess) Scan(value any) error {
 	switch x := value.(type) {
 	case string:
-		*e = PublicreportPermissionaccesstype(x)
+		*e = PublicreportPermissionaccess(x)
 	case []byte:
-		*e = PublicreportPermissionaccesstype(x)
+		*e = PublicreportPermissionaccess(x)
 	case nil:
-		return fmt.Errorf("cannot nil into PublicreportPermissionaccesstype")
+		return fmt.Errorf("cannot nil into PublicreportPermissionaccess")
 	default:
 		return fmt.Errorf("cannot scan type %T: %v", value, value)
 	}
 
 	if !e.Valid() {
-		return fmt.Errorf("invalid PublicreportPermissionaccesstype value: %s", *e)
+		return fmt.Errorf("invalid PublicreportPermissionaccess value: %s", *e)
 	}
 
 	return nil

@@ -26,6 +26,7 @@ func Where[Q psql.Filterable]() struct {
 	CommsTextJobs                        commsTextJobWhere[Q]
 	CommsTextLogs                        commsTextLogWhere[Q]
 	Communications                       communicationWhere[Q]
+	CommunicationLogEntries              communicationLogEntryWhere[Q]
 	ComplianceReportRequests             complianceReportRequestWhere[Q]
 	ComplianceReportRequestMailers       complianceReportRequestMailerWhere[Q]
 	DistrictSubscriptionEmails           districtSubscriptionEmailWhere[Q]
@@ -128,6 +129,7 @@ func Where[Q psql.Filterable]() struct {
 		CommsTextJobs                        commsTextJobWhere[Q]
 		CommsTextLogs                        commsTextLogWhere[Q]
 		Communications                       communicationWhere[Q]
+		CommunicationLogEntries              communicationLogEntryWhere[Q]
 		ComplianceReportRequests             complianceReportRequestWhere[Q]
 		ComplianceReportRequestMailers       complianceReportRequestMailerWhere[Q]
 		DistrictSubscriptionEmails           districtSubscriptionEmailWhere[Q]
@@ -229,6 +231,7 @@ func Where[Q psql.Filterable]() struct {
 		CommsTextJobs:                        buildCommsTextJobWhere[Q](CommsTextJobs.Columns),
 		CommsTextLogs:                        buildCommsTextLogWhere[Q](CommsTextLogs.Columns),
 		Communications:                       buildCommunicationWhere[Q](Communications.Columns),
+		CommunicationLogEntries:              buildCommunicationLogEntryWhere[Q](CommunicationLogEntries.Columns),
 		ComplianceReportRequests:             buildComplianceReportRequestWhere[Q](ComplianceReportRequests.Columns),
 		ComplianceReportRequestMailers:       buildComplianceReportRequestMailerWhere[Q](ComplianceReportRequestMailers.Columns),
 		DistrictSubscriptionEmails:           buildDistrictSubscriptionEmailWhere[Q](DistrictSubscriptionEmails.Columns),

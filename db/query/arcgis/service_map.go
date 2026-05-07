@@ -10,14 +10,14 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 )
 
-func ServiceMapFromID(ctx context.Context, id string) (*model.ServiceMap, error) {
+func ServiceMapFromID(ctx context.Context, id string) (model.ServiceMap, error) {
 	statement := table.ServiceMap.SELECT(
 		table.ServiceMap.AllColumns,
 	).FROM(table.ServiceMap).
 		WHERE(table.ServiceMap.ArcgisID.EQ(postgres.String(id)))
 	return db.ExecuteOne[model.ServiceMap](ctx, statement)
 }
-func ServiceMapsFromAccountID(ctx context.Context, account_id string) ([]*model.ServiceMap, error) {
+func ServiceMapsFromAccountID(ctx context.Context, account_id string) ([]model.ServiceMap, error) {
 	statement := table.ServiceMap.SELECT(
 		table.ServiceMap.AllColumns,
 	).FROM(table.ServiceMap).

@@ -13,16 +13,15 @@ import (
 	"math"
 	"time"
 
-	"github.com/Gleipnir-Technology/bob"
-	"github.com/Gleipnir-Technology/bob/dialect/psql"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
+	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
+	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
+	"github.com/Gleipnir-Technology/nidus-sync/geomutil"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/rwcarlsen/goexif/tiff"
+	"github.com/twpayne/go-geom"
 	//exif "github.com/rwcarlsen/goexif/exif"
 	//"github.com/dsoprea/go-exif-extra/format"
 )
@@ -87,49 +86,44 @@ func ImageExtractExif(content_type string, file_bytes []byte) (result *ExifColle
 	return result, err
 }
 
-func saveImageUploads(ctx context.Context, tx bob.Tx, uploads []ImageUpload) (models.PublicreportImageSlice, error) {
-	images := make(models.PublicreportImageSlice, 0)
+func saveImageUploads(ctx context.Context, txn db.Ex, uploads []ImageUpload) ([]model.Image, error) {
+	images := make([]model.Image, 0)
 	for _, u := range uploads {
-		image, err := models.PublicreportImages.Insert(&models.PublicreportImageSetter{
-			ContentType: omit.From(u.ContentType),
-
-			Created: omit.From(time.Now()),
-			//Location: 	psql.Raw("NULL"),
-			Location:         omitnull.FromPtr[string](nil),
-			ResolutionX:      omit.From(int32(u.Bounds.Max.X)),
-			ResolutionY:      omit.From(int32(u.Bounds.Max.Y)),
-			StorageUUID:      omit.From(u.UUID),
-			StorageSize:      omit.From(int64(u.UploadFilesize)),
-			UploadedFilename: omit.From(u.UploadFilename),
-		}).One(ctx, tx)
+		var location *geom.T
+		if u.Exif != nil && u.Exif.GPS != nil && !(math.IsNaN(u.Exif.GPS.Longitude) || math.IsNaN(u.Exif.GPS.Latitude)) {
+			l := geomutil.PointFromLngLat(u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)
+			location = &l
+		}
+		image := model.Image{
+			// ID:
+			ContentType:      u.ContentType,
+			Created:          time.Now(),
+			Location:         location,
+			ResolutionX:      int32(u.Bounds.Max.X),
+			ResolutionY:      int32(u.Bounds.Max.Y),
+			StorageUUID:      u.UUID,
+			StorageSize:      int64(u.UploadFilesize),
+			UploadedFilename: u.UploadFilename,
+		}
+		image, err := querypublicreport.ImageInsert(ctx, txn, image)
 		if err != nil {
 			return images, fmt.Errorf("Failed to create photo records: %w", err)
 		}
 
 		// TODO: figure out how to do this via the setter...?
 		if u.Exif != nil {
-			if u.Exif.GPS != nil && !(math.IsNaN(u.Exif.GPS.Longitude) || math.IsNaN(u.Exif.GPS.Latitude)) {
-				_, err = psql.Update(
-					um.Table("publicreport.image"),
-					um.SetCol("location").To(fmt.Sprintf("ST_Point(%f, %f, 4326)", u.Exif.GPS.Longitude, u.Exif.GPS.Latitude)),
-					um.Where(psql.Quote("id").EQ(psql.Arg(image.ID))),
-				).Exec(ctx, tx)
-				if err != nil {
-					return images, fmt.Errorf("set location: %w", err)
-				}
-			}
-
-			exif_setters := make([]*models.PublicreportImageExifSetter, 0)
+			exif_models := make([]model.ImageExif, len(u.Exif.Tags))
+			i := 0
 			for k, v := range u.Exif.Tags {
 				to_save := trimQuotes(v)
-				exif_setters = append(exif_setters, &models.PublicreportImageExifSetter{
-					ImageID: omit.From(image.ID),
-					Name:    omit.From(k),
-					Value:   omit.From(to_save),
-				})
+				exif_models[i] = model.ImageExif{
+					ImageID: image.ID,
+					Name:    k,
+					Value:   to_save,
+				}
 			}
-			if len(exif_setters) > 0 {
-				_, err = models.PublicreportImageExifs.Insert(bob.ToMods(exif_setters...)).Exec(ctx, tx)
+			if len(exif_models) > 0 {
+				_, err = querypublicreport.ImageExifInserts(ctx, txn, exif_models)
 				if err != nil {
 					return images, fmt.Errorf("Failed to create photo exif records: %w", err)
 				}

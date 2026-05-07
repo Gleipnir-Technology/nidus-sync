@@ -102,7 +102,7 @@ func GetOAuthForOrg(ctx context.Context, org *models.Organization) (*model.OAuth
 			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
 		}
 		for _, oauth := range oauths {
-			return oauth, nil
+			return &oauth, nil
 		}
 	}
 	return nil, nil
@@ -125,7 +125,7 @@ func RefreshAccessToken(ctx context.Context, oauth *model.OAuthToken) error {
 		AccessTokenExpires: accessExpires,
 		Username:           token.Username,
 	}
-	err = queryarcgis.OAuthTokenUpdateAccessToken(ctx, int64(oauth.ID), &model)
+	err = queryarcgis.OAuthTokenUpdateAccessToken(ctx, int64(oauth.ID), model)
 	if err != nil {
 		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}
@@ -152,7 +152,7 @@ func RefreshRefreshToken(ctx context.Context, oauth *model.OAuthToken) error {
 		RefreshTokenExpires: refreshExpires,
 		Username:            token.Username,
 	}
-	err = queryarcgis.OAuthTokenUpdateRefreshToken(ctx, int64(oauth.ID), &model)
+	err = queryarcgis.OAuthTokenUpdateRefreshToken(ctx, int64(oauth.ID), model)
 	if err != nil {
 		return fmt.Errorf("Failed to update oauth in database: %w", err)
 	}

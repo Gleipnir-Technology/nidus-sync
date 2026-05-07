@@ -40,7 +40,7 @@ func DistrictForLocation(ctx context.Context, lng float64, lat float64) (*models
 		return nil, errors.New("too many organizations")
 	}
 }
-func matchDistrict(ctx context.Context, location *types.Location, images []ImageUpload, address *models.Address) (int32, error) {
+func matchDistrict(ctx context.Context, location *types.Location, images []ImageUpload, address *types.Address) (int32, error) {
 	var err error
 	var org *models.Organization
 	for _, image := range images {
@@ -67,7 +67,7 @@ func matchDistrict(ctx context.Context, location *types.Location, images []Image
 	}
 	if address != nil {
 		log.Debug().Msg("doing district match via address...")
-		location, err = AddressLocation(ctx, address)
+		location, err = AddressLocation(ctx, *address)
 		if err != nil {
 			return 0, fmt.Errorf("location for address: %w", err)
 		}

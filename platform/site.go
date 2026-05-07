@@ -12,7 +12,9 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/types/pgtypes"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
@@ -101,20 +103,7 @@ func SitesByID(ctx context.Context, ids []int32) (map[int32]*models.Site, error)
 	}
 	return results, err
 }
-func siteFromAddress(ctx context.Context, txn bob.Tx, user User, address_id int32) (*models.Site, error) {
-	site, err := models.Sites.Query(
-		models.SelectWhere.Sites.AddressID.EQ(address_id),
-		models.SelectWhere.Sites.OrganizationID.EQ(user.Organization.ID),
-	).One(ctx, txn)
-	if err == nil {
-		return site, nil
-	}
-	if err.Error() != "sql: no rows in result set" {
-		return nil, fmt.Errorf("query site: %w", err)
-	}
-	return SiteCreate(ctx, txn, user, address_id)
-}
-func siteFromAddressRaw(ctx context.Context, txn bob.Tx, user User, address string) (*models.Site, error) {
+func siteFromAddressRaw(ctx context.Context, txn db.Ex, user User, address string) (*model.Site, error) {
 	// Geocode
 	geo, err := geocode.GeocodeRaw(ctx, user.Organization.model, address)
 	if err != nil {
@@ -124,9 +113,9 @@ func siteFromAddressRaw(ctx context.Context, txn bob.Tx, user User, address stri
 	if err != nil {
 		return nil, fmt.Errorf("ensure address: %w", err)
 	}
-	return siteFromAddress(ctx, txn, user, a.ID)
+	return querypublic.SiteFromAddressIDForOrg(ctx, txn, int64(*a.ID), int64(user.Organization.ID))
 }
-func siteFromLocation(ctx context.Context, txn bob.Tx, user User, location types.Location) (*models.Site, error) {
+func siteFromLocation(ctx context.Context, txn db.Ex, user User, location types.Location) (*model.Site, error) {
 	// Reverse geocode at the location
 	resp, err := geocode.ReverseGeocode(ctx, location)
 	if err != nil {
@@ -137,7 +126,7 @@ func siteFromLocation(ctx context.Context, txn bob.Tx, user User, location types
 	if err != nil {
 		return nil, fmt.Errorf("ensure address: %w", err)
 	}
-	return siteFromAddress(ctx, txn, user, a.ID)
+	return querypublic.SiteFromAddressIDForOrg(ctx, txn, int64(*a.ID), int64(user.Organization.ID))
 }
 func siteQuery() bob.BaseQuery[*dialect.SelectQuery] {
 	return psql.Select(

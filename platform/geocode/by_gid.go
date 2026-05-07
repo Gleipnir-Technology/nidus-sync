@@ -30,7 +30,7 @@ func ByGID(ctx context.Context, gid string) (*GeocodeResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("latlngtocell: %w", err)
 	}
-	id, err := ensureAddressFromFeature(ctx, db.PGInstance.BobDB, feature)
+	addr, err := ensureAddressFromFeature(ctx, db.PGInstance.PGXPool, feature)
 	if err != nil {
 		return nil, fmt.Errorf("insert address: %w", err)
 	}
@@ -38,7 +38,7 @@ func ByGID(ctx context.Context, gid string) (*GeocodeResult, error) {
 		Address: types.Address{
 			Country:    feature.Properties.Context.ISO3166A3,
 			GID:        feature.Properties.GID,
-			ID:         &id,
+			ID:         addr.ID,
 			Locality:   feature.Properties.Context.WhosOnFirst.Locality.Name,
 			Location:   &location,
 			Number:     feature.Properties.AddressComponents.Number,

@@ -33,7 +33,7 @@ func GetOAuthForUser(ctx context.Context, user User) (*model.OAuthToken, error) 
 		}
 		return nil, err
 	}
-	return oauth, nil
+	return &oauth, nil
 }
 
 func HandleOauthAccessCode(ctx context.Context, user User, code string) error {
@@ -66,6 +66,6 @@ func HandleOauthAccessCode(ctx context.Context, user User, code string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to save token to database: %w", err)
 	}
-	go updateArcgisUserData(context.Background(), user.model, oauth)
+	go updateArcgisUserData(context.Background(), user.model, &oauth)
 	return nil
 }

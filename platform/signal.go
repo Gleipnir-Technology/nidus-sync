@@ -11,19 +11,19 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/im"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
-	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
+	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
+	tablepublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/table"
+	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
+	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
+	"github.com/Gleipnir-Technology/nidus-sync/geomutil"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
-	//"github.com/Gleipnir-Technology/nidus-sync/platform/geocode"
-	//"github.com/Gleipnir-Technology/nidus-sync/platform/geom"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
+	"github.com/twpayne/go-geom"
 )
 
 type Signal struct {
@@ -113,16 +113,13 @@ func SignalCreateFromPool(ctx context.Context, txn bob.Executor, user User, site
 
 // Create a lead from the given signal and site
 func SignalCreateFromPublicreport(ctx context.Context, user User, report_id string) (*int32, error) {
-	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)
+	txn, err := db.BeginTxn(ctx)
 	defer txn.Rollback(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("start transaction: %w", err)
 	}
 
-	report, err := models.PublicreportReports.Query(
-		models.SelectWhere.PublicreportReports.PublicID.EQ(report_id),
-		models.SelectWhere.PublicreportReports.OrganizationID.EQ(user.Organization.ID),
-	).One(ctx, txn)
+	report, err := querypublicreport.ReportFromPublicIDForOrg(ctx, txn, report_id, int64(user.Organization.ID))
 	if err != nil {
 		return nil, fmt.Errorf("query report existence: %w", err)
 	}
@@ -130,33 +127,31 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	// At this point we have a report. We need to decide where to put it based on either the address or
 	// the location.
 	var site_id int32
-	var location string
-	if report.AddressID.IsValue() {
-		address_id := report.AddressID.MustGet()
-		address, err := models.FindAddress(ctx, txn, address_id)
+	var location geom.T
+	if report.AddressID != nil {
+		address_id := *report.AddressID
+		address, err := querypublic.AddressFromID(ctx, txn, int64(address_id))
 		if err != nil {
 			return nil, fmt.Errorf("find address: %w", err)
 		}
-		site, err := siteFromAddress(ctx, txn, user, address_id)
+		site, err := querypublic.SiteFromAddressIDForOrg(ctx, txn, int64(address_id), int64(user.Organization.ID))
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
 		site_id = site.ID
-		lat := address.LocationLatitude.GetOr(0.0)
-		lng := address.LocationLongitude.GetOr(0.0)
-		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
-	} else if report.LocationLatitude.IsValue() && report.LocationLongitude.IsValue() {
-		lat := report.LocationLatitude.MustGet()
-		lng := report.LocationLongitude.MustGet()
+		location = geomutil.PointFromLngLat(*address.LocationLongitude, *address.LocationLatitude)
+	} else if report.LocationLatitude != nil && report.LocationLongitude != nil {
+		lat := report.LocationLatitude
+		lng := report.LocationLongitude
 		site, err := siteFromLocation(ctx, txn, user, types.Location{
-			Latitude:  lat,
-			Longitude: lng,
+			Latitude:  *lat,
+			Longitude: *lng,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
 		site_id = site.ID
-		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
+		location = geomutil.PointFromLngLat(*lng, *lat)
 	} else if report.AddressRaw != "" {
 		// At this point we don't have an address, and we don't have GPS
 		// We'll try geocoding and creating an address from that.
@@ -164,54 +159,57 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 		if err != nil {
 			return nil, fmt.Errorf("site from address: %w", err)
 		}
-		address, err := models.FindAddress(ctx, txn, site.AddressID)
+		address, err := querypublic.AddressFromID(ctx, txn, int64(site.AddressID))
 		if err != nil {
 			return nil, fmt.Errorf("find address from raw: %w", err)
 		}
 		site_id = site.ID
-		lat := address.LocationLatitude.GetOr(0.0)
-		lng := address.LocationLongitude.GetOr(0.0)
-		location = fmt.Sprintf("POINT(%f %f)", lng, lat)
+		lat := address.LocationLatitude
+		lng := address.LocationLongitude
+		location = geomutil.PointFromLngLat(*lng, *lat)
 	} else {
 		// We have no structured address, no GPS, no unstructued address.
 		// There's really nothing we can make this lead from and have it be meaningful
 		return nil, errors.New("Refusing to create a signal with no location data.")
 	}
 
-	var signal_type enums.Signaltype
+	var signal_type modelpublic.Signaltype
 	switch report.ReportType {
-	case enums.PublicreportReporttypeNuisance:
-		signal_type = enums.SignaltypePublicreportNuisance
-	case enums.PublicreportReporttypeWater:
-		signal_type = enums.SignaltypePublicreportWater
+	case modelpublicreport.Reporttype_Nuisance:
+		signal_type = modelpublic.Signaltype_PublicreportNuisance
+	case modelpublicreport.Reporttype_Water:
+		signal_type = modelpublic.Signaltype_PublicreportWater
 	default:
 		return nil, fmt.Errorf("Unrecognized report type %s", string(report.ReportType))
 	}
-	log.Debug().Str("location", location).Msg("inserting signal")
-	signal, err := models.Signals.Insert(&models.SignalSetter{
-		Addressed:            omitnull.FromPtr[time.Time](nil),
-		Addressor:            omitnull.FromPtr[int32](nil),
-		Created:              omit.From(time.Now()),
-		Creator:              omit.From(int32(user.ID)),
-		FeaturePoolFeatureID: omitnull.FromPtr[int32](nil),
+	signal := modelpublic.Signal{
+		Addressed:            nil,
+		Addressor:            nil,
+		Created:              time.Now(),
+		Creator:              int32(user.ID),
+		FeaturePoolFeatureID: nil,
 		// ID
-		OrganizationID: omit.From(int32(user.Organization.ID)),
-		Location:       omit.From(location),
-		ReportID:       omitnull.From(report.ID),
-		Species:        omitnull.FromPtr[enums.Mosquitospecies](nil),
-		SiteID:         omitnull.From(site_id),
-		Type:           omit.From[enums.Signaltype](signal_type),
-	}).One(ctx, txn)
+		OrganizationID: int32(user.Organization.ID),
+		Location:       location,
+		ReportID:       &report.ID,
+		Species:        nil,
+		SiteID:         &site_id,
+		Type:           signal_type,
+	}
+	signal, err = querypublic.SignalInsert(ctx, txn, signal)
 	if err != nil {
 		return nil, fmt.Errorf("create signal: %w", err)
 	}
-	_, err = psql.Update(
-		um.Table(psql.Quote("publicreport", "report")),
-		um.SetCol("reviewed").ToArg(time.Now()),
-		um.SetCol("reviewer_id").ToArg(user.ID),
-		um.SetCol("status").ToArg(enums.PublicreportReportstatustypeReviewed),
-		um.Where(psql.Quote("public_id").EQ(psql.Arg(report_id))),
-	).Exec(ctx, txn)
+	report_updater := querypublicreport.ReportUpdater{}
+	now := time.Now()
+	report_updater.Model.Reviewed = &now
+	report_updater.Set(tablepublicreport.Report.Reviewed)
+	user_id := int32(user.ID)
+	report_updater.Model.ReviewerID = &user_id
+	report_updater.Set(tablepublicreport.Report.ReviewerID)
+	report_updater.Model.Status = modelpublicreport.Reportstatustype_Reviewed
+	report_updater.Set(tablepublicreport.Report.Status)
+	err = report_updater.Execute(ctx, txn, report_id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update report %d: %w", report_id, err)
 	}

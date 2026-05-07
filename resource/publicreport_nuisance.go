@@ -6,14 +6,13 @@ import (
 	"slices"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
+	//tablepublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/table"
+	//querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
-	"github.com/aarondl/opt/omit"
-	"github.com/aarondl/opt/omitnull"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -63,7 +62,7 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	if err != nil {
 		return nil, nhttp.NewError("Failed to ensure client: %w", err)
 	}
-	duration := enums.PublicreportNuisancedurationtypeNone
+	duration := modelpublicreport.Nuisancedurationtype_None
 	is_location_frontyard := slices.Contains(n.SourceLocations, "frontyard")
 	is_location_backyard := slices.Contains(n.SourceLocations, "backyard")
 	is_location_garden := slices.Contains(n.SourceLocations, "garden")
@@ -84,44 +83,44 @@ func (res *nuisanceR) Create(ctx context.Context, r *http.Request, n nuisanceFor
 	if n.Location.Accuracy != nil {
 		accuracy = *n.Location.Accuracy
 	}
-	setter_report := models.PublicreportReportSetter{
-		//AddressID:              omitnull.From(latlng.Cell.String()),
-		AddressGid: omit.From(n.Address.GID),
-		AddressRaw: omit.From(n.Address.Raw),
-		ClientUUID: omitnull.From(n.ClientID),
-		Created:    omit.From(time.Now()),
+	setter_report := modelpublicreport.Report{
+		//AddressID:              omitnull.From(...),
+		AddressGid: "",
+		AddressRaw: "",
+		ClientUUID: &n.ClientID,
+		Created:    time.Now(),
 		//H3cell:              omitnull.From(latlng.Cell.String()),
-		LatlngAccuracyType:  omit.From(enums.PublicreportAccuracytypeBrowser),
-		LatlngAccuracyValue: omit.From(accuracy),
+		LatlngAccuracyType:  modelpublicreport.Accuracytype_Browser,
+		LatlngAccuracyValue: accuracy,
 		//Location: omitnull.From(fmt.Sprintf("ST_GeometryFromText(Point(%s %s))", longitude, latitude)),
-		Location: omitnull.FromPtr[string](nil),
-		MapZoom:  omit.From(float32(0.0)),
-		//OrganizationID:    omitnull.FromPtr(organization_id),
-		//PublicID:          omit.From(public_id),
-		ReporterEmail:       omit.From(""),
-		ReporterName:        omit.From(""),
-		ReporterPhone:       omit.From(""),
-		ReporterPhoneCanSMS: omit.From(true),
-		ReportType:          omit.From(enums.PublicreportReporttypeNuisance),
-		Status:              omit.From(enums.PublicreportReportstatustypeReported),
+		Location: nil,
+		MapZoom:  float32(0.0),
+		//OrganizationID:      ,
+		//PublicID:
+		ReporterEmail:       "",
+		ReporterName:        "",
+		ReporterPhone:       "",
+		ReporterPhoneCanSms: true,
+		ReportType:          modelpublicreport.Reporttype_Nuisance,
+		Status:              modelpublicreport.Reportstatustype_Reported,
 	}
-	setter_nuisance := models.PublicreportNuisanceSetter{
-		AdditionalInfo:      omit.From(n.AdditionalInfo),
-		Duration:            omit.From(duration),
-		IsLocationBackyard:  omit.From(is_location_backyard),
-		IsLocationFrontyard: omit.From(is_location_frontyard),
-		IsLocationGarden:    omit.From(is_location_garden),
-		IsLocationOther:     omit.From(is_location_other),
-		IsLocationPool:      omit.From(is_location_pool),
+	setter_nuisance := modelpublicreport.Nuisance{
+		AdditionalInfo:      n.AdditionalInfo,
+		Duration:            duration,
+		IsLocationBackyard:  is_location_backyard,
+		IsLocationFrontyard: is_location_frontyard,
+		IsLocationGarden:    is_location_garden,
+		IsLocationOther:     is_location_other,
+		IsLocationPool:      is_location_pool,
 		//ReportID            omit.Val[int32]
-		SourceContainer:   omit.From(n.SourceContainer),
-		SourceDescription: omit.From(n.SourceDescription),
-		SourceGutter:      omit.From(n.SourceGutters),
-		SourceStagnant:    omit.From(n.SourceStagnant),
-		TodDay:            omit.From(n.TODDay),
-		TodEarly:          omit.From(n.TODEarly),
-		TodEvening:        omit.From(n.TODEvening),
-		TodNight:          omit.From(n.TODNight),
+		SourceContainer:   n.SourceContainer,
+		SourceDescription: n.SourceDescription,
+		SourceGutter:      n.SourceGutters,
+		SourceStagnant:    n.SourceStagnant,
+		TodDay:            n.TODDay,
+		TodEarly:          n.TODEarly,
+		TodEvening:        n.TODEvening,
+		TodNight:          n.TODNight,
 	}
 	report, err := platform.PublicReportNuisanceCreate(ctx, setter_report, setter_nuisance, n.Location, n.Address, uploads)
 	if err != nil {

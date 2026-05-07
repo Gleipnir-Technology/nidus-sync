@@ -28,7 +28,7 @@ type contentSettingOrganization struct {
 type contentSettingIntegration struct {
 	ArcGISAccount *model.Account
 	ArcGISOAuth   *model.OAuthToken
-	ServiceMaps   []*model.ServiceMap
+	ServiceMaps   []model.ServiceMap
 }
 
 func getConfigurationOrganization(ctx context.Context, r *http.Request, u platform.User) (*html.Response[contentSettingOrganization], *nhttp.ErrorWithStatus) {
@@ -83,8 +83,8 @@ func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, u p
 	if err != nil {
 		return nil, nhttp.NewError("Failed to get oauth: %w", err)
 	}
-	var account *model.Account
-	var service_maps []*model.ServiceMap
+	var account model.Account
+	var service_maps []model.ServiceMap
 	account_id := u.Organization.ArcgisAccountID()
 	if account_id != "" {
 		account, err = queryarcgis.AccountFromID(ctx, account_id)
@@ -97,7 +97,7 @@ func getConfigurationIntegrationArcgis(ctx context.Context, r *http.Request, u p
 		}
 	}
 	data := contentSettingIntegration{
-		ArcGISAccount: account,
+		ArcGISAccount: &account,
 		ArcGISOAuth:   oauth,
 		ServiceMaps:   service_maps,
 	}

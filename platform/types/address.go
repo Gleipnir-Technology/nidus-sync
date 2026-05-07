@@ -9,7 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 
-	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	//"github.com/rs/zerolog/log"
 	"github.com/stephenafamo/scan"
 )
@@ -31,7 +31,7 @@ type Address struct {
 func (a Address) String() string {
 	return fmt.Sprintf("%s %s, %s, %s, %s, %s", a.Number, a.Street, a.Locality, a.Region, a.PostalCode, a.Country)
 }
-func AddressFromModel(m *models.Address) Address {
+func AddressFromModel(m model.Address) Address {
 	//log.Debug().Int32("id", m.ID).Float64("lat", m.LocationLatitude.GetOr(0.0)).Float64("lng", m.LocationLongitude.GetOr(0.0)).Msg("converting address")
 	return Address{
 		Country:  m.Country,
@@ -39,12 +39,12 @@ func AddressFromModel(m *models.Address) Address {
 		ID:       &m.ID,
 		Locality: m.Locality,
 		Location: &Location{
-			Latitude:  m.LocationLatitude.GetOr(0.0),
-			Longitude: m.LocationLongitude.GetOr(0.0),
+			Latitude:  *m.LocationLatitude,
+			Longitude: *m.LocationLongitude,
 		},
 		Number:     m.Number,
 		PostalCode: m.PostalCode,
-		Raw:        addressToRaw(*m),
+		Raw:        addressToRaw(m),
 		Region:     m.Region,
 		Street:     m.Street,
 		Unit:       m.Unit,
@@ -82,6 +82,6 @@ func AddressList(ctx context.Context, ids []int32) (map[int32]*Address, error) {
 func AddressToRaw(a Address) string {
 	return fmt.Sprintf("%s %s, %s, %s", a.Number, a.Street, a.Locality, a.Region)
 }
-func addressToRaw(m models.Address) string {
+func addressToRaw(m model.Address) string {
 	return fmt.Sprintf("%s %s, %s, %s", m.Number, m.Street, m.Locality, m.Region)
 }

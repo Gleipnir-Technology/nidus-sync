@@ -17,6 +17,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/stadia/table"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
+	platformaddress "github.com/Gleipnir-Technology/nidus-sync/platform/address"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/stadia"
 	//"github.com/aarondl/opt/omit"
@@ -86,7 +87,7 @@ func GeocodeRaw(ctx context.Context, org *models.Organization, address string) (
 	if err != nil {
 		return nil, fmt.Errorf("client raw geocode failure on %s: %w", address, err)
 	}
-	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	addresses, err := platformaddress.InsertAddresses(ctx, db.PGInstance.PGXPool, resp.Features)
 	if err != nil {
 		return nil, fmt.Errorf("insert addresses: %w", err)
 	}
@@ -106,7 +107,7 @@ func GeocodeStructured(ctx context.Context, org *models.Organization, a types.Ad
 	if err != nil {
 		return nil, fmt.Errorf("client structured geocode failure on %s: %w", a.String(), err)
 	}
-	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	addresses, err := platformaddress.InsertAddresses(ctx, db.PGInstance.PGXPool, resp.Features)
 	if err != nil {
 		return nil, fmt.Errorf("insert addresses: %w", err)
 	}
@@ -139,7 +140,7 @@ func ReverseGeocode(ctx context.Context, location types.Location) (*GeocodeResul
 	if err != nil {
 		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
 	}
-	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	addresses, err := platformaddress.InsertAddresses(ctx, db.PGInstance.PGXPool, resp.Features)
 	if err != nil {
 		return nil, fmt.Errorf("insert addresses: %w", err)
 	}
@@ -155,7 +156,7 @@ func ReverseGeocodeClosest(ctx context.Context, location types.Location) (*Geoco
 	if err != nil {
 		return nil, fmt.Errorf("client reverse geocode failure on %s: %w", location.String(), err)
 	}
-	addresses, err := insertAddresses(ctx, db.PGInstance.BobDB, resp.Features)
+	addresses, err := platformaddress.InsertAddresses(ctx, db.PGInstance.PGXPool, resp.Features)
 	if err != nil {
 		return nil, fmt.Errorf("insert addresses: %w", err)
 	}

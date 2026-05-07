@@ -17,7 +17,7 @@ func EnsureClient(ctx context.Context, client uuid.UUID, user_agent string) erro
 		models.SelectWhere.PublicreportClients.UUID.EQ(client),
 	).One(ctx, db.PGInstance.BobDB)
 	if err == nil {
-		log.Debug().Str("client", client.String()).Msg("already exists")
+		//log.Debug().Str("client", client.String()).Msg("already exists")
 		return nil
 	} else if err != nil && err.Error() != "sql: no rows in result set" {
 		return fmt.Errorf("failed existing client %s: %w", client.String(), err)

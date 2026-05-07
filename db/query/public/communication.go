@@ -2,71 +2,39 @@ package public
 
 import (
 	"context"
-	"time"
 
-	"github.com/Gleipnir-Technology/bob"
+	//"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	//"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/enum"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/table"
 	"github.com/go-jet/jet/v2/postgres"
 )
 
-func CommunicationInsert(ctx context.Context, txn bob.Tx, m *model.Communication) (*model.Communication, error) {
-	m.Created = time.Now()
+func CommunicationInsert(ctx context.Context, txn db.Tx, m model.Communication) (model.Communication, error) {
 	statement := table.Communication.INSERT(table.Communication.MutableColumns).
 		MODEL(m).
 		RETURNING(table.Communication.AllColumns)
 	return db.ExecuteOne[model.Communication](ctx, statement)
 }
-func CommunicationFromID(ctx context.Context, comm_id int64) (*model.Communication, error) {
+func CommunicationFromID(ctx context.Context, comm_id int64) (model.Communication, error) {
 	statement := table.Communication.SELECT(
 		table.Communication.AllColumns,
 	).FROM(table.Communication).
 		WHERE(table.Communication.ID.EQ(postgres.Int(comm_id)))
 	return db.ExecuteOne[model.Communication](ctx, statement)
 }
-func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]*model.Communication, error) {
+func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]model.Communication, error) {
 	statement := table.Communication.SELECT(
 		table.Communication.AllColumns,
 	).FROM(table.Communication).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)))
 	return db.ExecuteMany[model.Communication](ctx, statement)
 }
-func CommunicationMarkInvalid(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
+func CommunicationSetStatus(ctx context.Context, txn db.Tx, org_id int64, comm_id int64, status model.Communicationstatus) error {
 	statement := table.Communication.UPDATE().
 		SET(
-			table.Communication.Invalidated.SET(postgres.TimestampT(time.Now())),
-			table.Communication.InvalidatedBy.SET(postgres.Int(user_id)),
-		).
-		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
-			table.Communication.ID.EQ(postgres.Int(comm_id))))
-	return db.ExecuteNoneTx(ctx, txn, statement)
-}
-func CommunicationMarkPendingResponse(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
-	statement := table.Communication.UPDATE().
-		SET(
-			table.Communication.SetPending.SET(postgres.TimestampT(time.Now())),
-			table.Communication.SetPendingBy.SET(postgres.Int(user_id)),
-		).
-		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
-			table.Communication.ID.EQ(postgres.Int(comm_id))))
-	return db.ExecuteNoneTx(ctx, txn, statement)
-}
-func CommunicationMarkPossibleIssue(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
-	statement := table.Communication.UPDATE().
-		SET(
-			table.Communication.SetPossibleIssue.SET(postgres.TimestampT(time.Now())),
-			table.Communication.SetPossibleIssueBy.SET(postgres.Int(user_id)),
-		).
-		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
-			table.Communication.ID.EQ(postgres.Int(comm_id))))
-	return db.ExecuteNoneTx(ctx, txn, statement)
-}
-func CommunicationMarkPossibleResolved(ctx context.Context, txn db.Tx, org_id int64, user_id int64, comm_id int64) error {
-	statement := table.Communication.UPDATE().
-		SET(
-			table.Communication.SetPossibleResolved.SET(postgres.TimestampT(time.Now())),
-			table.Communication.SetPossibleResolvedBy.SET(postgres.Int(user_id)),
+			table.Communication.Status.SET(postgres.String(status.String())),
 		).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))

@@ -62,7 +62,7 @@ var PublicreportCompliances = Table[
 		},
 		PermissionType: column{
 			Name:      "permission_type",
-			DBType:    "publicreport.permissionaccesstype",
+			DBType:    "publicreport.permissionaccess",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,

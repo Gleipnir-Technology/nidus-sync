@@ -3,9 +3,7 @@ package resource
 import (
 	"context"
 	"net/http"
-	"slices"
 	"strconv"
-	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
@@ -27,17 +25,20 @@ func Communication(r *router) *communicationR {
 	}
 }
 
+type communicationLog struct {
+	Created string `json:"string"`
+	ID      string `json:"id"`
+	Type    string `json:"type"`
+	User    string `json:"user"`
+}
 type communication struct {
-	Closed   *time.Time `json:"closed"`
-	ClosedBy string     `json:"closed_by"`
-	Created  time.Time  `json:"created"`
-	ID       string     `json:"id"`
-	Opened   *time.Time `json:"opened"`
-	OpenedBy string     `json:"opened_by"`
-	Response string     `json:"response"`
-	Source   string     `json:"source"`
-	Type     string     `json:"type"`
-	URI      string     `json:"uri"`
+	ID       string             `json:"id"`
+	Log      []communicationLog `json:"log"`
+	Response string             `json:"response"`
+	Source   string             `json:"source"`
+	Status   string             `json:"status"`
+	Type     string             `json:"type"`
+	URI      string             `json:"uri"`
 }
 
 func toImageURLs(m map[string][]uuid.UUID, id string) []string {
@@ -69,7 +70,7 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 	if err != nil {
 		return nil, nhttp.NewError("public reports from IDs: %w", err)
 	}
-	public_report_id_to_report := make(map[int32]*modelpublicreport.Report, 0)
+	public_report_id_to_report := make(map[int32]modelpublicreport.Report, 0)
 	for _, pr := range public_reports {
 		public_report_id_to_report[pr.ID] = pr
 	}
@@ -79,22 +80,12 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 		if !ok {
 			return nil, nhttp.NewError("lookup report id %d failed", comm.SourceReportID)
 		}
-		c, err := res.hydrateCommunication(*comm, public_report)
+		c, err := res.hydrateCommunication(comm, &public_report)
 		if err != nil {
 			return nil, err
 		}
 		result[i] = c
 	}
-	_by_created := func(a, b communication) int {
-		if a.Created.Equal(b.Created) {
-			return 0
-		} else if a.Created.Before(b.Created) {
-			return 1
-		} else {
-			return -1
-		}
-	}
-	slices.SortFunc(result, _by_created)
 	return result, nil
 }
 
@@ -135,14 +126,6 @@ func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, 
 		}
 		source_uri = "text"
 	}
-	closed_by, err := userURI(res.router, comm.ClosedBy)
-	if err != nil {
-		return communication{}, nhttp.NewError("gen closed_by URI: %w", err)
-	}
-	opened_by, err := userURI(res.router, comm.OpenedBy)
-	if err != nil {
-		return communication{}, nhttp.NewError("gen opened_by URI: %w", err)
-	}
 	response, err := responseURI(*res.router, comm)
 	if err != nil {
 		return communication{}, nhttp.NewError("gen response URI: %w", err)
@@ -152,20 +135,16 @@ func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, 
 		return communication{}, nhttp.NewError("gen comm uri: %w", err)
 	}
 	return communication{
-		Closed:   comm.Closed,
-		ClosedBy: closed_by,
-		Created:  comm.Created,
 		ID:       strconv.Itoa(int(comm.ID)),
-		Opened:   comm.Opened,
-		OpenedBy: opened_by,
 		Response: response,
 		Source:   source_uri,
+		Status:   comm.Status.String(),
 		Type:     type_,
 		URI:      uri,
 	}, nil
 }
 
-type markFunc = func(context.Context, platform.User, int64) error
+type markFunc = func(context.Context, platform.User, int32) error
 
 func (res *communicationR) markCommunication(ctx context.Context, r *http.Request, user platform.User, status string, m markFunc) (communication, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
@@ -177,12 +156,12 @@ func (res *communicationR) markCommunication(ctx context.Context, r *http.Reques
 	if err != nil {
 		return communication{}, nhttp.NewBadRequest("can't turn report ID into an int: %w", err)
 	}
-	m(ctx, user, int64(comm_id))
+	m(ctx, user, int32(comm_id))
 	result, err := platform.CommunicationFromID(ctx, user, int64(comm_id))
 	if result == nil {
 		return communication{}, nhttp.NewUnauthorized("you are not authorized to modify communication %d", comm_id)
 	}
-	var public_report *modelpublicreport.Report
+	var public_report modelpublicreport.Report
 	if result.SourceReportID != nil {
 		comm_ids := []int64{int64(*result.SourceReportID)}
 		public_reports, err := platform.PublicReportsFromIDs(ctx, comm_ids)
@@ -193,7 +172,7 @@ func (res *communicationR) markCommunication(ctx context.Context, r *http.Reques
 	}
 
 	log.Info().Int("communication", comm_id).Str("status", status).Msg("Marked communication")
-	return res.hydrateCommunication(*result, public_report)
+	return res.hydrateCommunication(*result, &public_report)
 }
 func responseURI(r router, comm modelpublic.Communication) (string, error) {
 	if comm.ResponseEmailLogID != nil {

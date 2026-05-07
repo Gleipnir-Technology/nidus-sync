@@ -26,16 +26,16 @@ import (
 
 // PublicreportCompliance is an object representing the database table.
 type PublicreportCompliance struct {
-	AccessInstructions string                                 `db:"access_instructions" `
-	AvailabilityNotes  string                                 `db:"availability_notes" `
-	Comments           string                                 `db:"comments" `
-	GateCode           string                                 `db:"gate_code" `
-	HasDog             null.Val[bool]                         `db:"has_dog" `
-	PermissionType     enums.PublicreportPermissionaccesstype `db:"permission_type" `
-	ReportID           int32                                  `db:"report_id,pk" `
-	ReportPhoneCanText null.Val[bool]                         `db:"report_phone_can_text" `
-	WantsScheduled     null.Val[bool]                         `db:"wants_scheduled" `
-	Submitted          null.Val[time.Time]                    `db:"submitted" `
+	AccessInstructions string                             `db:"access_instructions" `
+	AvailabilityNotes  string                             `db:"availability_notes" `
+	Comments           string                             `db:"comments" `
+	GateCode           string                             `db:"gate_code" `
+	HasDog             null.Val[bool]                     `db:"has_dog" `
+	PermissionType     enums.PublicreportPermissionaccess `db:"permission_type" `
+	ReportID           int32                              `db:"report_id,pk" `
+	ReportPhoneCanText null.Val[bool]                     `db:"report_phone_can_text" `
+	WantsScheduled     null.Val[bool]                     `db:"wants_scheduled" `
+	Submitted          null.Val[time.Time]                `db:"submitted" `
 
 	R publicreportComplianceR `db:"-" `
 }
@@ -101,16 +101,16 @@ func (publicreportComplianceColumns) AliasedAs(alias string) publicreportComplia
 // All values are optional, and do not have to be set
 // Generated columns are not included
 type PublicreportComplianceSetter struct {
-	AccessInstructions omit.Val[string]                                 `db:"access_instructions" `
-	AvailabilityNotes  omit.Val[string]                                 `db:"availability_notes" `
-	Comments           omit.Val[string]                                 `db:"comments" `
-	GateCode           omit.Val[string]                                 `db:"gate_code" `
-	HasDog             omitnull.Val[bool]                               `db:"has_dog" `
-	PermissionType     omit.Val[enums.PublicreportPermissionaccesstype] `db:"permission_type" `
-	ReportID           omit.Val[int32]                                  `db:"report_id,pk" `
-	ReportPhoneCanText omitnull.Val[bool]                               `db:"report_phone_can_text" `
-	WantsScheduled     omitnull.Val[bool]                               `db:"wants_scheduled" `
-	Submitted          omitnull.Val[time.Time]                          `db:"submitted" `
+	AccessInstructions omit.Val[string]                             `db:"access_instructions" `
+	AvailabilityNotes  omit.Val[string]                             `db:"availability_notes" `
+	Comments           omit.Val[string]                             `db:"comments" `
+	GateCode           omit.Val[string]                             `db:"gate_code" `
+	HasDog             omitnull.Val[bool]                           `db:"has_dog" `
+	PermissionType     omit.Val[enums.PublicreportPermissionaccess] `db:"permission_type" `
+	ReportID           omit.Val[int32]                              `db:"report_id,pk" `
+	ReportPhoneCanText omitnull.Val[bool]                           `db:"report_phone_can_text" `
+	WantsScheduled     omitnull.Val[bool]                           `db:"wants_scheduled" `
+	Submitted          omitnull.Val[time.Time]                      `db:"submitted" `
 }
 
 func (s PublicreportComplianceSetter) SetColumns() []string {
@@ -633,7 +633,7 @@ type publicreportComplianceWhere[Q psql.Filterable] struct {
 	Comments           psql.WhereMod[Q, string]
 	GateCode           psql.WhereMod[Q, string]
 	HasDog             psql.WhereNullMod[Q, bool]
-	PermissionType     psql.WhereMod[Q, enums.PublicreportPermissionaccesstype]
+	PermissionType     psql.WhereMod[Q, enums.PublicreportPermissionaccess]
 	ReportID           psql.WhereMod[Q, int32]
 	ReportPhoneCanText psql.WhereNullMod[Q, bool]
 	WantsScheduled     psql.WhereNullMod[Q, bool]
@@ -651,7 +651,7 @@ func buildPublicreportComplianceWhere[Q psql.Filterable](cols publicreportCompli
 		Comments:           psql.Where[Q, string](cols.Comments),
 		GateCode:           psql.Where[Q, string](cols.GateCode),
 		HasDog:             psql.WhereNull[Q, bool](cols.HasDog),
-		PermissionType:     psql.Where[Q, enums.PublicreportPermissionaccesstype](cols.PermissionType),
+		PermissionType:     psql.Where[Q, enums.PublicreportPermissionaccess](cols.PermissionType),
 		ReportID:           psql.Where[Q, int32](cols.ReportID),
 		ReportPhoneCanText: psql.WhereNull[Q, bool](cols.ReportPhoneCanText),
 		WantsScheduled:     psql.WhereNull[Q, bool](cols.WantsScheduled),

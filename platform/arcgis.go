@@ -34,7 +34,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	queryarcgis "github.com/Gleipnir-Technology/nidus-sync/db/query/arcgis"
 	"github.com/Gleipnir-Technology/nidus-sync/db/sql"
-	"github.com/Gleipnir-Technology/nidus-sync/db/types"
 	"github.com/Gleipnir-Technology/nidus-sync/debug"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/lint"
@@ -45,6 +44,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/twpayne/go-geom"
 	"github.com/uber/h3-go/v4"
 )
 
@@ -57,7 +57,7 @@ func HasFieldseekerConnection(ctx context.Context, user_id int32) (bool, error) 
 	if err != nil {
 		return false, err
 	}
-	return *result, nil
+	return result, nil
 }
 
 func IsSyncOngoing(org_id int32) bool {
@@ -74,7 +74,7 @@ func getOAuthForOrg(ctx context.Context, org *models.Organization) (*model.OAuth
 			return nil, fmt.Errorf("Failed to query all oauth tokens for org: %w", err)
 		}
 		for _, oauth := range oauths {
-			return oauth, nil
+			return &oauth, nil
 		}
 	}
 	return nil, nil
@@ -100,9 +100,9 @@ func refreshFieldseekerData(background_ctx context.Context, newOauthCh <-chan st
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				err := maintainOAuth(workerCtx, oauth)
+				err := maintainOAuth(workerCtx, &oauth)
 				if err != nil {
-					markTokenFailed(ctx, oauth)
+					markTokenFailed(ctx, &oauth)
 					if errors.Is(err, arcgis.ErrorInvalidRefreshToken) {
 						log.Info().Int("oauth_token.id", int(oauth.ID)).Msg("Marked invalid by the server")
 					} else {
@@ -259,7 +259,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *model.O
 		ArcgisID:            &ag_user.ID,
 		ArcgisLicenseTypeID: &ag_user.UserLicenseTypeID,
 	}
-	err = queryarcgis.OAuthTokenUpdateLicense(ctx, oauth.RefreshToken, &model)
+	err = queryarcgis.OAuthTokenUpdateLicense(ctx, oauth.RefreshToken, model)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to update oauth token portal data")
 		return
@@ -402,7 +402,7 @@ func updateArcgisAccount(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS,
 		}
 	}
 	log.Info().Str("username", p.User.Username).Str("user_id", p.User.ID).Str("org_id", p.User.OrgID).Str("org_name", p.Name).Str("license_type_id", p.User.UserLicenseTypeID).Msg("Updated portals data")
-	return account, ag_user, nil
+	return account, &ag_user, nil
 }
 func updateServiceData(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS, user *models.User, account *model.Account) error {
 	service_maps, err := client.MapServices(ctx)
@@ -460,19 +460,20 @@ func ensureServiceFeature(ctx context.Context, txn bob.Tx, client *arcgis.ArcGIS
 		return fmt.Errorf("populate metadata: %w", err)
 	}
 
+	extent := geom.NewBounds(geom.XY)
+	extent.SetCoords(
+		[]float64{metadata.FullExtent.Xmin, metadata.FullExtent.Ymin},
+		[]float64{metadata.FullExtent.Xmax, metadata.FullExtent.Ymax},
+	)
+
 	setter := model.ServiceFeature{
-		AccountID: &account.ID,
-		Extent: types.Box2D{
-			XMax: 180,
-			YMax: 90,
-			XMin: -180,
-			YMin: -90,
-		},
+		AccountID:        &account.ID,
+		Extent:           *extent,
 		ItemID:           metadata.ServiceItemId,
 		SpatialReference: int32(*metadata.SpatialReference.LatestWKID),
 		URL:              service.URL.String(),
 	}
-	return queryarcgis.ServiceFeatureInsert(ctx, txn, &setter)
+	return queryarcgis.ServiceFeatureInsert(ctx, txn, setter)
 }
 
 func maybeCreateWebhook(ctx context.Context, client *fieldseeker.FieldSeeker) {
@@ -640,12 +641,12 @@ func maintainOAuth(ctx context.Context, aot *model.OAuthToken) error {
 		case <-ctx.Done():
 			return nil
 		case <-accessTokenTicker.C:
-			err := oauth.RefreshAccessToken(ctx, oa)
+			err := oauth.RefreshAccessToken(ctx, &oa)
 			if err != nil {
 				return fmt.Errorf("Failed to refresh access token: %w", err)
 			}
 		case <-refreshTokenTicker.C:
-			err := oauth.RefreshRefreshToken(ctx, oa)
+			err := oauth.RefreshRefreshToken(ctx, &oa)
 			if err != nil {
 				return fmt.Errorf("Failed to maintain refresh token: %w", err)
 			}
@@ -1587,7 +1588,7 @@ func ensureArcgisAccount(ctx context.Context, txn bob.Tx, portal *response.Porta
 			return nil, fmt.Errorf("find arcgis account: %w", err)
 		}
 	}
-	return account, nil
+	return &account, nil
 }
 func updateSummaryTables(ctx context.Context, org *models.Organization) {
 	updateSummaryMosquitoSource(ctx, org)

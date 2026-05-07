@@ -46,10 +46,7 @@ func AddressFromComplianceReportRequestID(ctx context.Context, public_id string)
 	return row, nil
 }
 
-func AddressLocation(ctx context.Context, address *models.Address) (*types.Location, error) {
-	if address == nil {
-		return nil, fmt.Errorf("nil address")
-	}
+func AddressLocation(ctx context.Context, address types.Address) (*types.Location, error) {
 	row, err := bob.One(ctx, db.PGInstance.BobDB, psql.Select(
 		sm.Columns(
 			models.Addresses.Columns.LocationLatitude.As("latitude"),
@@ -62,4 +59,8 @@ func AddressLocation(ctx context.Context, address *models.Address) (*types.Locat
 		return nil, fmt.Errorf("query address: %w", err)
 	}
 	return row, nil
+}
+
+func AddressInsert(ctx context.Context) (*types.Address, error) {
+	return nil, nil
 }
