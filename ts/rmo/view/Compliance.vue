@@ -49,8 +49,10 @@ body > .container-fluid {
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { computedAsync } from "@vueuse/core";
+import { useRouter } from "vue-router";
 
 import type { Image } from "@/components/ImageUpload.vue";
+import { useRoutes } from "@/rmo/route/use";
 import { useStoreDistrict } from "@/rmo/store/district";
 import { useStoreLocal } from "@/store/local";
 import { useStoreLocation } from "@/store/location";
@@ -70,11 +72,13 @@ interface Props {
 	public_id: string;
 }
 
+const district = ref<District | undefined>(undefined);
 const isLoading = ref<boolean>(true);
 const isUploading = ref<boolean>(false);
 const props = defineProps<Props>();
 const report = ref<PublicReportCompliance | undefined>(undefined);
-const district = ref<District | undefined>(undefined);
+const router = useRouter();
+const routes = useRoutes();
 const storeDistrict = useStoreDistrict();
 const storeLocal = useStoreLocal();
 const storeLocation = useStoreLocation();
@@ -161,6 +165,10 @@ async function doMounted() {
 	const d = await storeDistrict.byURI(r.district);
 	district.value = d;
 	isLoading.value = false;
+	const pr = r as PublicReportCompliance;
+	if (pr.submitted) {
+		router.replace(routes.ComplianceComplete(r.public_id));
+	}
 }
 function doPermission() {
 	if (!report.value) {
