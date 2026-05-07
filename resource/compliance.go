@@ -86,7 +86,7 @@ func imagePoolGet(ctx context.Context, w http.ResponseWriter, public_id string) 
 	if err != nil {
 		return fmt.Errorf("find address: %w", err)
 	}
-	features, err := platform.FeaturesForSite(ctx, site.ID)
+	features, err := platform.FeaturesForSite(ctx, int64(site.ID))
 	if err != nil {
 		return fmt.Errorf("get features: %w", err)
 	}

@@ -165,11 +165,11 @@ func siteQueryToRows(ctx context.Context, query bob.BaseQuery[*dialect.SelectQue
 	if err != nil {
 		return nil, fmt.Errorf("query sites: %w", err)
 	}
-	site_ids := make([]int32, len(rows))
+	site_ids := make([]int64, len(rows))
 	results := make([]*types.Site, len(rows))
 	for i, row := range rows {
 		results[i] = &row
-		site_ids[i] = row.ID
+		site_ids[i] = int64(row.ID)
 	}
 	features_by_site_id, err := featuresBySiteID(ctx, site_ids)
 	if err != nil {

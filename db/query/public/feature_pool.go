@@ -10,9 +10,9 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 )
 
-func FeaturePoolsFromFeatures(ctx context.Context, txn db.Ex, site_ids []int64) ([]model.FeaturePool, error) {
-	sql_ids := make([]postgres.Expression, len(site_ids))
-	for i, site_id := range site_ids {
+func FeaturePoolsFromFeatures(ctx context.Context, txn db.Ex, feature_ids []int64) ([]model.FeaturePool, error) {
+	sql_ids := make([]postgres.Expression, len(feature_ids))
+	for i, site_id := range feature_ids {
 		sql_ids[i] = postgres.Int(site_id)
 	}
 	statement := table.FeaturePool.SELECT(
