@@ -15,11 +15,15 @@ export const useStoreLocation = defineStore("location", () => {
 			}
 
 			// Default options if none provided
-			const geolocationOptions = options || {
+			const geolocationOptions =
+				options ||
+				{
+					/*
 				enableHighAccuracy: true,
-				timeout: 5000,
+				timeout: 60000,
 				maximumAge: 0,
-			};
+				*/
+				};
 
 			// Call the geolocation API
 			navigator.geolocation.getCurrentPosition(

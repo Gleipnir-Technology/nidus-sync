@@ -174,8 +174,13 @@ function updateModel(
 	emit("update:modelValue", newLocator);
 }
 onMounted(() => {
+	const geo_config = {
+		enableHighAccuracy: true,
+		maximumAge: Infinity,
+		timeout: 10000,
+	};
 	storeLocation
-		.get()
+		.get(geo_config)
 		.then((loc: GeolocationPosition) => {
 			console.log("user geolocation", loc);
 			const coords = loc.coords;
