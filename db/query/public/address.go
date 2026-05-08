@@ -52,6 +52,9 @@ func AddressFromID(ctx context.Context, txn db.Ex, comm_id int64) (model.Address
 	return db.ExecuteOne[model.Address](ctx, statement)
 }
 func AddressesFromIDs(ctx context.Context, txn db.Ex, address_ids []int64) ([]model.Address, error) {
+	if len(address_ids) == 0 {
+		return []model.Address{}, nil
+	}
 	sql_ids := make([]postgres.Expression, len(address_ids))
 	for i, address_id := range address_ids {
 		sql_ids[i] = postgres.Int(address_id)
