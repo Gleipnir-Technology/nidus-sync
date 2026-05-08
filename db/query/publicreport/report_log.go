@@ -10,7 +10,7 @@ import (
 )
 
 func ReportLogInsert(ctx context.Context, txn db.Ex, m model.ReportLog) (model.ReportLog, error) {
-	statement := table.ReportLog.INSERT(table.ReportLog.AllColumns).
+	statement := table.ReportLog.INSERT(table.ReportLog.MutableColumns).
 		MODEL(m).
 		RETURNING(table.ReportLog.AllColumns)
 	return db.ExecuteOneTx[model.ReportLog](ctx, txn, statement)

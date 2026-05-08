@@ -16,7 +16,7 @@ import (
 type ReportUpdater = db.Updater[table.ReportTable, model.Report]
 
 func ReportInsert(ctx context.Context, txn db.Ex, m model.Report) (model.Report, error) {
-	statement := table.Report.INSERT(table.Report.AllColumns).
+	statement := table.Report.INSERT(table.Report.MutableColumns).
 		MODEL(m).
 		RETURNING(table.Report.AllColumns)
 	return db.ExecuteOneTx[model.Report](ctx, txn, statement)
