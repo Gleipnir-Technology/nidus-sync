@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	//"github.com/go-jet/jet/v2"
 	"github.com/go-jet/jet/v2/postgres"
@@ -17,6 +18,13 @@ type Updater[T postgres.Table, M any] struct {
 }
 
 func (u Updater[T, M]) Execute(ctx context.Context, txn Ex, pk_values ...interface{}) error {
+	// We get syntax errors from the database if there are no updates to perform
+	if u.Columns == nil {
+		return fmt.Errorf("nil columns")
+	}
+	if len(u.Columns) == 0 {
+		return nil
+	}
 	statement := u.Table.
 		UPDATE(u.Columns).
 		MODEL(u.Model).
@@ -47,12 +55,12 @@ func (u *Updater[T, M]) Unset(c postgres.Column) {
 	}
 }
 func NewUpdater[T postgres.Table, M any](
-	table T,
+	table *T,
 	pk_columns ...postgres.ColumnInteger,
 ) Updater[T, M] {
 	return Updater[T, M]{
 		Columns: postgres.ColumnList{},
-		Table:   table,
+		Table:   *table,
 		buildWhere: func(pk_values ...interface{}) postgres.BoolExpression {
 			conditions := make([]postgres.BoolExpression, len(pk_columns))
 			for i, col := range pk_columns {

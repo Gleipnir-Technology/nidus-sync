@@ -89,7 +89,7 @@ func PublicReportInvalid(ctx context.Context, user User, public_id string) error
 	}
 
 	now := time.Now()
-	report_updater := querypublicreport.ReportUpdater{}
+	report_updater := querypublicreport.NewReportUpdater()
 	report_updater.Model.Reviewed = &now
 	report_updater.Set(tablepublicreport.Report.Reviewed)
 	reporter_id := int32(user.ID)

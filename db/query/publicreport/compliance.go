@@ -13,9 +13,16 @@ import (
 
 type ComplianceUpdater = db.Updater[table.ComplianceTable, model.Compliance]
 
+func NewComplianceUpdater() ComplianceUpdater {
+	return db.NewUpdater[table.ComplianceTable, model.Compliance](
+		table.Compliance,
+		table.Compliance.ReportID,
+	)
+}
+
 func NewUpdaterCompliance() db.Updater[table.ComplianceTable, model.Compliance] {
 	return db.NewUpdater[table.ComplianceTable, model.Compliance](
-		*table.Compliance,
+		table.Compliance,
 		table.Compliance.ReportID,
 	)
 

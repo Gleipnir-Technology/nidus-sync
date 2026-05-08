@@ -152,7 +152,7 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 	if err != nil {
 		return nil, fmt.Errorf("create signal: %w", err)
 	}
-	report_updater := querypublicreport.ReportUpdater{}
+	report_updater := querypublicreport.NewReportUpdater()
 	now := time.Now()
 	report_updater.Model.Reviewed = &now
 	report_updater.Set(tablepublicreport.Report.Reviewed)

@@ -152,9 +152,9 @@ func (res *complianceR) Update(ctx context.Context, r *http.Request, prf publicR
 	if public_id == "" {
 		return nil, nhttp.NewBadRequest("You must provide an ID")
 	}
-	report_updater := querypublicreport.ReportUpdater{}
+	report_updater := querypublicreport.NewReportUpdater()
 	//report_setter := models.PublicreportReportSetter{}
-	compliance_updater := querypublicreport.ComplianceUpdater{}
+	compliance_updater := querypublicreport.NewComplianceUpdater()
 	//compliance_setter := models.PublicreportComplianceSetter{}
 	var location *types.Location
 	if prf.Location.IsValue() {
