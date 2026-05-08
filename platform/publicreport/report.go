@@ -8,10 +8,10 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
-	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
 	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
+	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
+	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	//"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -80,6 +80,8 @@ func reportQueryToRows(ctx context.Context, reports []modelpublicreport.Report, 
 		report_ids[i] = report.ID
 		if report.AddressID != nil {
 			address_ids = append(address_ids, int64(*report.AddressID))
+		} else {
+			log.Debug().Int32("id", report.ID).Msg("has no address")
 		}
 	}
 	images_by_id, err := loadImagesForReport(ctx, report_ids)
@@ -124,30 +126,34 @@ func reportQueryToRows(ctx context.Context, reports []modelpublicreport.Report, 
 			address = &a
 		}
 		if address == nil {
-			return nil, fmt.Errorf("nil address: %w", err)
+			address = &types.Address{
+				ID:  row.AddressID,
+				GID: row.AddressGid,
+				Raw: row.AddressRaw,
+			}
 		}
 		results[i] = types.PublicReport{
-			Address: *address,
-			Concerns: nil,
-			Created: row.Created,
-			ID: row.ID,
-			Images: images,
-			Location: location,
-			Log: logs,
+			Address:    *address,
+			Concerns:   nil,
+			Created:    row.Created,
+			ID:         row.ID,
+			Images:     images,
+			Location:   location,
+			Log:        logs,
 			DistrictID: &row.OrganizationID,
-			District: nil,
-			PublicID: row.PublicID,
+			District:   nil,
+			PublicID:   row.PublicID,
 			Reporter: types.Contact{
-				CanSMS: &row.ReporterPhoneCanSms,
-				Email: &row.ReporterEmail,
+				CanSMS:   &row.ReporterPhoneCanSms,
+				Email:    &row.ReporterEmail,
 				HasEmail: row.ReporterEmail != "",
 				HasPhone: row.ReporterPhone != "",
-				Name: &row.ReporterName,
-				Phone: &row.ReporterPhone,
+				Name:     &row.ReporterName,
+				Phone:    &row.ReporterPhone,
 			},
 			Status: row.Status.String(),
-			Type: row.ReportType.String(),
-			URI: "",
+			Type:   row.ReportType.String(),
+			URI:    "",
 		}
 	}
 	return results, nil
