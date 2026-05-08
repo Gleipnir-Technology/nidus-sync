@@ -44,14 +44,22 @@ func ExecuteNone(ctx context.Context, stmt postgres.Statement) error {
 func ExecuteNoneTx(ctx context.Context, txn Ex, stmt postgres.Statement) error {
 	query, args := stmt.Sql()
 
-	_, err := txn.Query(ctx, query, args...)
-	return err
+	r, err := txn.Query(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("query: %w", err)
+	}
+	r.Close()
+	return nil
 }
 func ExecuteNoneTxBob(ctx context.Context, txn bob.Tx, stmt postgres.Statement) error {
 	query, args := stmt.Sql()
 
-	_, err := txn.QueryContext(ctx, query, args...)
-	return err
+	r, err := txn.QueryContext(ctx, query, args...)
+	if err != nil {
+		return fmt.Errorf("query: %w", err)
+	}
+	r.Close()
+	return nil
 }
 func ExecuteOne[T any](ctx context.Context, stmt postgres.Statement) (T, error) {
 	query, args := stmt.Sql()
