@@ -187,6 +187,12 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 	}
 
 	// Avoid attempting to perform an empty update
+	if address != nil {
+		report_updates.Model.AddressGid = address.GID
+		report_updates.Set(tablepublicreport.Report.AddressGid)
+		report_updates.Model.AddressRaw = address.Raw
+		report_updates.Set(tablepublicreport.Report.AddressRaw)
+	}
 	err = report_updates.Execute(ctx, txn, int64(report.ID))
 	if err != nil {
 		return fmt.Errorf("update report: %w", err)
@@ -196,7 +202,7 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 		return fmt.Errorf("update compliance: %w", err)
 	}
 	if address != nil {
-		err = publicReportUpdateAddress(ctx, txn, report, *address)
+		err = publicReportUpdateAddressID(ctx, txn, report, *address)
 		if err != nil {
 			return fmt.Errorf("update address: %w", err)
 		}
@@ -406,34 +412,35 @@ func publicReportCreate(ctx context.Context, setter_report modelpublicreport.Rep
 	)
 	return result, nil
 }
-func publicReportUpdateAddress(ctx context.Context, txn db.Tx, report *modelpublicreport.Report, address types.Address) error {
-	statement := tablepublicreport.Report.UPDATE(
-		tablepublicreport.Report.AddressGid,
-		tablepublicreport.Report.AddressRaw,
-	).SET(
-		postgres.String(address.GID),
-		postgres.String(address.Raw),
-	).FROM(tablepublic.Address).
-		WHERE(
+func publicReportUpdateAddressID(ctx context.Context, txn db.Tx, report *modelpublicreport.Report, address types.Address) error {
+	var err error
+	if address.GID == "" && address.Raw != "" {
+		geo_res, err := geocode.GeocodeRaw(ctx, nil, address.Raw)
+		if err != nil {
+			return fmt.Errorf("Failed to geocode raw: %w", err)
+		}
+		statement := tablepublicreport.Report.UPDATE(
+			tablepublicreport.Report.AddressID,
+		).SET(
+			tablepublicreport.Report.AddressID.SET(postgres.Int(int64(*geo_res.Address.ID))),
+		).WHERE(
 			tablepublicreport.Report.ID.EQ(postgres.Int(int64(report.ID))),
 		)
-	err := db.ExecuteNoneTx(ctx, txn, statement)
-
-	if err != nil {
-		return fmt.Errorf("update report: %w", err)
-	}
-	statement = tablepublicreport.Report.UPDATE(
-		tablepublicreport.Report.AddressID,
-	).SET(
-		tablepublic.Address.SELECT(
-			tablepublic.Address.ID,
+		err = db.ExecuteNoneTx(ctx, txn, statement)
+	} else {
+		statement := tablepublicreport.Report.UPDATE(
+			tablepublicreport.Report.AddressID,
+		).SET(
+			tablepublic.Address.SELECT(
+				tablepublic.Address.ID,
+			).WHERE(
+				tablepublic.Address.Gid.EQ(postgres.String(address.GID)),
+			).LIMIT(1),
 		).WHERE(
-			tablepublic.Address.Gid.EQ(postgres.String(address.GID)),
-		).LIMIT(1),
-	).WHERE(
-		tablepublicreport.Report.ID.EQ(postgres.Int(int64(report.ID))),
-	)
-	err = db.ExecuteNoneTx(ctx, txn, statement)
+			tablepublicreport.Report.ID.EQ(postgres.Int(int64(report.ID))),
+		)
+		err = db.ExecuteNoneTx(ctx, txn, statement)
+	}
 	if err != nil {
 		return fmt.Errorf("update report address_id: %w", err)
 	}
