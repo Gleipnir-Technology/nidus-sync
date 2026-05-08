@@ -224,7 +224,7 @@ func PublicReportComplianceCreate(ctx context.Context, setter_report modelpublic
 		setter_compliance.ReportID = report_id
 		_, err := querypublicreport.ComplianceInsert(ctx, txn, setter_compliance)
 		if err != nil {
-			return fmt.Errorf("Failed to create nuisance database record: %w", err)
+			return fmt.Errorf("Failed to create compliance database record: %w", err)
 		}
 		return nil
 	})
