@@ -19,6 +19,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/oauth"
@@ -242,7 +243,7 @@ func loadTileFromDisk(tile_path string) (*TileRaster, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open: %w", err)
 	}
-	defer file.Close()
+	defer lint.LogOnErr(file.Close, "close tile file")
 	img, err := io.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("readall from %s: %w", tile_path, err)

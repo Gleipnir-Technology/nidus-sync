@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -52,7 +54,7 @@ func handleSMSMessage(data *SMSWebhookData) error {
 	for _, media := range data.Payload.Media {
 		filePath, err := downloadMedia(media.URL)
 		if err != nil {
-			fmt.Errorf("Failed to download media from %s: %w", filePath, err)
+			log.Error().Err(err).Str("filePath", filePath).Msg("Failed to download media")
 			continue
 		}
 		fmt.Printf("Downloaded media to: %s\n", filePath)
@@ -68,7 +70,7 @@ func downloadMedia(mediaURL string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to download media: %w", err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close media response body")
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to download media: status code %d", resp.StatusCode)
@@ -87,7 +89,7 @@ func downloadMedia(mediaURL string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create temporary file: %w", err)
 	}
-	defer out.Close()
+	defer lint.LogOnErr(out.Close, "close output file")
 
 	// Write the response body to the file
 	_, err = io.Copy(out, resp.Body)
@@ -167,7 +169,7 @@ func postSMS(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Info().Str("body", string(bodyBytes)).Msg("body")
 	// Close the original body
-	defer r.Body.Close()
+	defer lint.LogOnErr(r.Body.Close, "close request body")
 
 	// Parse JSON into webhook struct
 	var body SMSWebhookBody
@@ -181,7 +183,7 @@ func postSMS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("ok"))
+	lint.Write(w, []byte("ok"))
 }
 func getSMS(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -198,5 +200,5 @@ func getSMS(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-type", "text/plain")
 	// Signifies to Voip.ms that the callback worked.
-	fmt.Fprintf(w, "ok")
+	lint.Fprintf(w, "ok")
 }

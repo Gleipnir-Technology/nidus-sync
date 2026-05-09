@@ -2,6 +2,7 @@ package stadia
 
 import (
 	"crypto/tls"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/rs/zerolog/log"
 	"os"
 	"resty.dev/v3"
@@ -39,5 +40,5 @@ func (s *StadiaMaps) AddResponseMiddleware(m resty.ResponseMiddleware) {
 	s.client.AddResponseMiddleware(m)
 }
 func (s *StadiaMaps) Close() {
-	s.client.Close()
+	lint.LogOnErr(s.client.Close, "close stadia client")
 }

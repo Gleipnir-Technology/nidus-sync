@@ -267,7 +267,7 @@ func (bt *builtTemplate) executeTemplateHTML(w io.Writer, content any) error {
 			return fmt.Errorf("Failed to parse template file: %w", err)
 		}
 		if templ == nil {
-			w.Write([]byte("Failed to read from disk: "))
+			lint.Write(w, []byte("Failed to read from disk: "))
 			return errors.New("Template parsing failed")
 		}
 		//log.Debug().Str("name", templ.Name()).Msg("Parsed template")
@@ -284,7 +284,7 @@ func (bt *builtTemplate) executeTemplateTXT(w io.Writer, content any) error {
 			return fmt.Errorf("Failed to parse template file: %w", err)
 		}
 		if templ == nil {
-			w.Write([]byte("Failed to read from disk: "))
+			lint.Write(w, []byte("Failed to read from disk: "))
 			return errors.New("Template parsing failed")
 		}
 		//log.Debug().Str("name", templ.Name()).Msg("Parsed template")

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/aarondl/opt/omit"
@@ -36,7 +37,7 @@ func getEmailByCode(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "Failed to render email_log: %w", err, http.StatusInternalServerError)
 		return
 	}
-	w.Write(html)
+	lint.Write(w, html)
 }
 func getEmailReportUnsubscribe(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")

@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -20,7 +22,7 @@ func getScssDebug(w http.ResponseWriter, r *http.Request) {
 		respondError(w, "failed to open file", err, http.StatusInternalServerError)
 		return
 	}
-	defer file.Close()
+	defer lint.LogOnErr(file.Close, "close scss file")
 	fileInfo, err := file.Stat()
 	if err != nil {
 		respondError(w, "failed to stat file", err, http.StatusInternalServerError)

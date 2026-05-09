@@ -52,7 +52,7 @@ func (c *Client) GetUser(userID int) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to GET /api/users/%d: %w", userID, err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close response body")
 
 	// Parse response
 	var user User

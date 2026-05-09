@@ -12,6 +12,7 @@ import (
 
 	"github.com/Gleipnir-Technology/arcgis-go"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -48,7 +49,7 @@ func DoTokenRequest(ctx context.Context, form url.Values) (*OAuthTokenResponse, 
 	if err != nil {
 		return nil, fmt.Errorf("Failed to do request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer lint.LogOnErr(resp.Body.Close, "close response body")
 	bodyBytes, err := io.ReadAll(resp.Body)
 	log.Info().Int("status", resp.StatusCode).Msg("Token request")
 	if resp.StatusCode >= http.StatusBadRequest {

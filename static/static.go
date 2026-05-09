@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -136,7 +137,7 @@ func serveFileMaybeEmbedded(w http.ResponseWriter, r *http.Request, fileToServe 
 	http.ServeContent(crw, r, path, startedTime, fileToServe)
 
 	// Close the file
-	fileToServe.Close()
+	lint.LogOnErr(fileToServe.Close, "close static file")
 }
 
 type embeddedFileWrapper struct {
