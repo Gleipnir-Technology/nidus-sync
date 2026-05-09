@@ -33,6 +33,7 @@ type communicationLog struct {
 	User    string    `json:"user"`
 }
 type communication struct {
+	Context  []resourceStub     `json:"context"`
 	Created  time.Time          `json:"created"`
 	ID       string             `json:"id"`
 	Log      []communicationLog `json:"log"`
@@ -47,6 +48,11 @@ type communicationStub struct {
 	ID      string    `json:"id"`
 	Source  string    `json:"source"`
 	Status  string    `json:"status"`
+	Type    string    `json:"type"`
+	URI     string    `json:"uri"`
+}
+type resourceStub struct {
+	Created time.Time `json:"created"`
 	Type    string    `json:"type"`
 	URI     string    `json:"uri"`
 }
