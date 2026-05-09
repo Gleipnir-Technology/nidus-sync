@@ -1,20 +1,12 @@
 package platform
 
 import (
-	"bytes"
 	"context"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -205,21 +197,6 @@ func extractURLParts(urlString string) (string, []string, error) {
 }
 
 // Helper function to generate code challenge from code verifier
-func generateCodeChallenge(codeVerifier string) string {
-	hash := sha256.Sum256([]byte(codeVerifier))
-	return base64.RawURLEncoding.EncodeToString(hash[:])
-}
-
-// Generate a random code verifier for PKCE
-func generateCodeVerifier() string {
-	bytes := make([]byte, 64) // 64 bytes = 512 bits
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return ""
-	}
-	return base64.RawURLEncoding.EncodeToString(bytes)
-}
-
 // Find out what we can about this user
 func updateArcgisUserData(ctx context.Context, user *models.User, oauth *model.OAuthToken) {
 	client, err := arcgis.NewArcGISAuth(
@@ -673,37 +650,6 @@ func markTokenFailed(ctx context.Context, oauth *model.OAuthToken) {
 	log.Info().Int("id", int(oauth.ID)).Msg("Marked oauth token invalid")
 }
 
-func newTimestampedFilename(prefix, suffix string) string {
-	timestamp := time.Now().Format("20060102_150405") // YYYYMMDD_HHMMSS format
-	return prefix + timestamp + suffix
-}
-
-func logResponseHeaders(resp *http.Response) {
-	if resp == nil {
-		log.Info().Msg("Response is nil")
-		return
-	}
-
-	log.Info().Str("status", resp.Status).Int("statusCode", resp.StatusCode).Msg("HTTP Response headers")
-
-	for name, values := range resp.Header {
-		log.Info().Str("name", name).Strs("values", values).Msg("Header")
-	}
-}
-
-func saveResponse(data []byte, filename string) {
-	dest, err := os.Create(filename)
-	if err != nil {
-		log.Error().Str("filename", filename).Str("err", err.Error()).Msg("Failed to create file")
-		return
-	}
-	_, err = io.Copy(dest, bytes.NewReader(data))
-	if err != nil {
-		log.Error().Str("filename", filename).Str("err", err.Error()).Msg("Failed to write")
-		return
-	}
-	log.Info().Str("filename", filename).Msg("Wrote response")
-}
 
 /*
 func saveRawQuery(fssync fieldseeker.FieldSeeker, layer arcgis.LayerFeature, query *arcgis.Query, filename string) {
@@ -727,118 +673,6 @@ func saveRawQuery(fssync fieldseeker.FieldSeeker, layer arcgis.LayerFeature, que
 	log.Info().Str("filename", filename).Msg("Wrote failed query")
 }
 */
-
-func saveOrUpdateDBRecords(ctx context.Context, table string, qr *response.QueryResult, org_id int32) (int, int, error) {
-	inserts, updates := 0, 0
-	sorted_columns := make([]string, 0, len(qr.Fields))
-	for _, f := range qr.Fields {
-		sorted_columns = append(sorted_columns, *f.Name)
-	}
-	sort.Strings(sorted_columns)
-
-	objectids := make([]int, 0)
-	for _, l := range qr.Features {
-		attr := l.Attributes["OBJECTID"]
-		attr_s := attr.String()
-		oid, err := strconv.Atoi(attr_s)
-		if err != nil {
-			log.Warn().Str("attr_s", attr_s).Msg("failed to convert")
-			continue
-		}
-		objectids = append(objectids, oid)
-	}
-
-	rows_by_objectid, err := rowmapViaQuery(ctx, table, sorted_columns, objectids)
-	if err != nil {
-		return inserts, updates, fmt.Errorf("Failed to get existing rows: %w", err)
-	}
-	// log.Println("Rows from query", len(rows_by_objectid))
-
-	for _, feature := range qr.Features {
-		attr := feature.Attributes["OBJECTID"]
-		attr_s := attr.String()
-		oid, err := strconv.Atoi(attr_s)
-		if err != nil {
-			log.Warn().Str("attr_s", attr_s).Msg("failed to convert")
-			continue
-		}
-		row := rows_by_objectid[oid]
-		// If we have no matching row we'll need to create it
-		if len(row) == 0 {
-
-			if err := insertRowFromFeature(ctx, table, sorted_columns, &feature, org_id); err != nil {
-				return inserts, updates, fmt.Errorf("Failed to insert row: %w", err)
-			}
-			inserts += 1
-		} else if hasUpdates(row, feature) {
-			if err := updateRowFromFeature(ctx, table, sorted_columns, &feature, org_id); err != nil {
-				return inserts, updates, fmt.Errorf("Failed to update row: %w", err)
-			}
-			updates += 1
-		}
-	}
-	return inserts, updates, nil
-}
-
-// Produces a map of OBJECTID to a 'row' which is in turn a map of column names to their values as strings
-func rowmapViaQuery(ctx context.Context, table string, sorted_columns []string, objectids []int) (map[int]map[string]string, error) {
-	result := make(map[int]map[string]string)
-
-	query := selectAllFromQueryResult(table, sorted_columns)
-
-	args := pgx.NamedArgs{
-		"objectids": objectids,
-	}
-	rows, err := db.PGInstance.PGXPool.Query(ctx, query, args)
-	if err != nil {
-		return result, fmt.Errorf("Failed to query rows: %w", err)
-	}
-	defer rows.Close()
-
-	// +2 for geometry x and geometry x
-	columnNames := make([]string, len(sorted_columns)+2)
-	copy(columnNames, sorted_columns)
-	columnNames[len(sorted_columns)] = "geometry_x"
-	columnNames[len(sorted_columns)+1] = "geometry_y"
-
-	rowSlice, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (map[string]string, error) {
-		fieldDescriptions := row.FieldDescriptions()
-		values := make([]interface{}, len(fieldDescriptions))
-		valuePtrs := make([]interface{}, len(fieldDescriptions))
-
-		for i := range values {
-			valuePtrs[i] = &values[i]
-		}
-
-		if err := row.Scan(valuePtrs...); err != nil {
-			return nil, err
-		}
-
-		result := make(map[string]string)
-		for i, fd := range fieldDescriptions {
-			if values[i] != nil {
-				result[fd.Name] = fmt.Sprintf("%v", values[i])
-				//log.Printf("col %v type %T val %v", fd.Name, values[i], values[i])
-			} else {
-				result[fd.Name] = ""
-			}
-		}
-
-		return result, nil
-	})
-	if err != nil {
-		return result, fmt.Errorf("Failed to collect rows: %w", err)
-	}
-	for _, row := range rowSlice {
-		o := row["objectid"]
-		objectid, err := strconv.Atoi(o)
-		if err != nil {
-			return result, fmt.Errorf("Failed to parse objectid %s: %w", o, err)
-		}
-		result[objectid] = row
-	}
-	return result, nil
-}
 
 func insertRowFromFeature(ctx context.Context, table string, sorted_columns []string, feature *response.Feature, org_id int32) error {
 	txn, err := db.PGInstance.BobDB.BeginTx(ctx, nil)

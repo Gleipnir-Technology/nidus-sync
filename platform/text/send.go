@@ -33,22 +33,6 @@ func ensureInitialText(ctx context.Context, txn bob.Executor, dst types.E164) er
 	}
 	return sendInitialText(ctx, txn, dst)
 }
-func insertTextLog(ctx context.Context, txn bob.Executor, destination types.E164, source types.E164, origin enums.CommsTextorigin, content string, is_welcome bool, is_visible_to_llm bool) (l *models.CommsTextLog, err error) {
-	l, err = models.CommsTextLogs.Insert(&models.CommsTextLogSetter{
-		//ID:
-		Content:        omit.From(content),
-		Created:        omit.From(time.Now()),
-		Destination:    omit.From(destination.PhoneString()),
-		IsVisibleToLLM: omit.From(is_visible_to_llm),
-		IsWelcome:      omit.From(is_welcome),
-		Origin:         omit.From(origin),
-		Source:         omit.From(source.PhoneString()),
-		TwilioSid:      omitnull.FromPtr[string](nil),
-		TwilioStatus:   omit.From(""),
-	}).One(ctx, txn)
-
-	return l, err
-}
 func resendInitialText(ctx context.Context, txn bob.Executor, dst types.E164) error {
 	phone, err := models.FindCommsPhone(ctx, txn, dst.PhoneString())
 	if err != nil {
