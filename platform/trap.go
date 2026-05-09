@@ -289,83 +289,6 @@ func toTemplateTrapsNearby(locations []sql.TrapLocationBySourceIDRow, trap_data 
 	return results, nil
 }
 
-func toTemplateTrapData(trap_data models.FieldseekerTrapdatumSlice) ([]TrapData, error) {
-	var results []TrapData
-	for _, r := range trap_data {
-		if r.H3cell.IsNull() {
-			continue
-		}
-		cell, err := h3utils.ToCell(r.H3cell.MustGet())
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to get location for trap data")
-			continue
-		}
-		results = append(results, TrapData{
-			// Basic Identifiers
-			OrganizationID: r.OrganizationID,
-			ObjectID:       r.Objectid,
-			GlobalID:       r.Globalid,
-			LocationName:   r.Locationname.GetOr(""),
-			LocationID:     r.LocID.GetOr(uuid.UUID{}),
-			SRID:           r.Srid.GetOr(uuid.UUID{}),
-			Field:          int64(r.Field.GetOr(0)),
-
-			// Trap Information
-			TrapType:         r.Traptype.GetOr(""),
-			TrapCondition:    r.Trapcondition.GetOr(""),
-			TrapActivityType: r.Trapactivitytype.GetOr(""),
-			TrapNights:       r.Trapnights.GetOr(0),
-			Lure:             r.Lure.GetOr(""),
-
-			// Personnel
-			FieldTechnician:        r.Fieldtech.GetOr(""),
-			IdentifiedByTechnician: r.Idbytech.GetOr(""),
-			SortedByTechnician:     r.Sortbytech.GetOr(""),
-
-			// Timing
-			StartDateTime: getTimeOrNull(r.Startdatetime),
-			EndDateTime:   getTimeOrNull(r.Enddatetime),
-
-			// Environmental Conditions
-			AverageTemperature: r.Avetemp.GetOr(0),
-			Rainfall:           r.Raingauge.GetOr(0),
-			WindDirection:      r.Winddir.GetOr(""),
-			WindSpeed:          r.Windspeed.GetOr(0),
-			SiteCondition:      r.Sitecond.GetOr(""),
-
-			// Status and Processing
-			Processed:     fsIntToBool(r.Processed),
-			RecordStatus:  r.Recordstatus.GetOr(0),
-			Reviewed:      fsIntToBool(r.Reviewed),
-			ReviewedBy:    r.Reviewedby.GetOr(""),
-			ReviewedDate:  getTimeOrNull(r.Revieweddate),
-			GatewaySynced: fsIntToBool(r.Gatewaysync),
-			LR:            fsIntToBool(r.LR),
-			Voltage:       r.Voltage.GetOr(0),
-
-			// Location Data
-			H3Cell: cell,
-			Zone:   r.Zone.GetOr(""),
-			Zone2:  r.Zone2.GetOr(""),
-
-			// Vector Survey IDs
-			VectorSurveyTrapDataID:     r.Vectorsurvtrapdataid.GetOr(""),
-			VectorSurveyTrapLocationID: r.Vectorsurvtraplocationid.GetOr(""),
-
-			// Metadata
-			Created:        getTimeOrNull(r.Creationdate),
-			Creator:        r.Creator.GetOr(""),
-			CreatedByUser:  r.CreatedUser.GetOr(""),
-			CreatedDateAlt: getTimeOrNull(r.CreatedDate),
-			Edited:         getTimeOrNull(r.Editdate),
-			Editor:         r.Editor.GetOr(""),
-			LastEditedDate: getTimeOrNull(r.LastEditedDate),
-			LastEditedUser: r.LastEditedUser.GetOr(""),
-			Comments:       r.Comments.GetOr(""),
-		})
-	}
-	return results, nil
-}
 func toTreatment(rows models.FieldseekerTreatmentSlice) ([]Treatment, error) {
 	var results []Treatment
 	for _, r := range rows {
@@ -394,16 +317,6 @@ func toTemplateInspection(rows models.FieldseekerMosquitoinspectionSlice) ([]Ins
 }
 
 // Helper function to convert unix timestamp to time.Time
-func fsToTime(val null.Val[int64]) time.Time {
-	v, ok := val.Get()
-	if !ok {
-		return time.UnixMilli(0)
-	}
-	t := time.UnixMilli(v)
-	return t
-}
-
-// Helper function to convert int16 to bool
 func fsIntToBool(val null.Val[int16]) bool {
 	if !val.IsValue() {
 		return false
