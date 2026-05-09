@@ -241,7 +241,7 @@ func updateArcgisUserData(ctx context.Context, user *models.User, oauth *model.O
 		log.Error().Err(err).Msg("Create transaction")
 		return
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	account, ag_user, err := updateArcgisAccount(ctx, txn, client, user)
 	if err != nil {
@@ -845,7 +845,7 @@ func insertRowFromFeature(ctx context.Context, table string, sorted_columns []st
 	if err != nil {
 		return fmt.Errorf("Unable to start transaction")
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	err = insertRowFromFeatureFS(ctx, txn, table, sorted_columns, feature, org_id)
 	if err != nil {
@@ -857,8 +857,7 @@ func insertRowFromFeature(ctx context.Context, table string, sorted_columns []st
 		return fmt.Errorf("Failed to insert history: %w", err)
 	}
 
-	txn.Commit(ctx)
-	if err != nil {
+	if err := txn.Commit(ctx); err != nil {
 		return fmt.Errorf("Failed to commit transaction: %w", err)
 	}
 	return nil

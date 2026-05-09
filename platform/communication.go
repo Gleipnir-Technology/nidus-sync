@@ -56,7 +56,12 @@ func communicationMark(ctx context.Context, user User, comm_id int32, status mod
 		Type:            log_type,
 		User:            &user_id,
 	}
-	querypublic.CommunicationLogEntryInsert(ctx, txn, log_entry)
-	txn.Commit(ctx)
+	_, err = querypublic.CommunicationLogEntryInsert(ctx, txn, log_entry)
+	if err != nil {
+		return fmt.Errorf("insert communication log entry: %w", err)
+	}
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	return nil
 }
