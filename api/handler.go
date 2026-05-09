@@ -300,7 +300,7 @@ func handlerJSONPost[RequestType any, ResponseType any](f handlerFunctionPost[Re
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		lint.Write(w, body)
 	}
 }
 
@@ -323,7 +323,7 @@ func handlerJSONPut[RequestType any, ResponseType any](f handlerFunctionPost[Req
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		lint.Write(w, body)
 	}
 }
 func handlerFormPost[RequestType any, ResponseType any](f handlerFunctionPostFormMultipart[RequestType, ResponseType]) http.HandlerFunc {

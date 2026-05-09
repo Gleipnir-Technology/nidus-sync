@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	//"github.com/google/uuid"
@@ -17,7 +18,7 @@ func NoteAudioCreate(ctx context.Context, user User, setter models.NoteAudioSett
 	if err != nil {
 		return fmt.Errorf("create txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	note_audio, err := models.NoteAudios.Insert(&setter).One(ctx, txn)
 	if err != nil {
@@ -27,7 +28,9 @@ func NoteAudioCreate(ctx context.Context, user User, setter models.NoteAudioSett
 		}
 	}
 	event.Created(event.TypeNoteAudio, user.Organization.ID, strconv.Itoa(int(note_audio.ID)))
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 
 	return nil
 }
@@ -37,7 +40,7 @@ func NoteImageCreate(ctx context.Context, user User, setter models.NoteImageSett
 	if err != nil {
 		return fmt.Errorf("create txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	note_image, err := models.NoteImages.Insert(&setter).One(ctx, db.PGInstance.BobDB)
 	if err != nil {
 		// Just ignore this failure, it means we already have this content
@@ -46,7 +49,9 @@ func NoteImageCreate(ctx context.Context, user User, setter models.NoteImageSett
 		}
 	}
 	event.Created(event.TypeNoteImage, user.Organization.ID, strconv.Itoa(int(note_image.ID)))
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 
 	return err
 }

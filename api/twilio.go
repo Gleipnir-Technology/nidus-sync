@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 	"github.com/twilio/twilio-go/twiml"
@@ -49,7 +50,7 @@ func splitPhoneSource(s string) (string, string) {
 func twilioMessagePost(w http.ResponseWriter, r *http.Request) {
 	message_sid := r.PostFormValue("MessageSid")
 	log.Info().Str("sid", message_sid).Msg("Twilio Message POST")
-	fmt.Fprintf(w, "")
+	lint.Fprintf(w, "")
 }
 func twilioCallPost(w http.ResponseWriter, r *http.Request) {
 	called := r.PostFormValue("Called")
@@ -93,7 +94,7 @@ func twilioCallPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	w.Header().Set("Content-Type", "text/xml")
-	fmt.Fprintf(w, "%s", twimlResult)
+	lint.Fprintf(w, "%s", twimlResult)
 }
 
 func twilioCallStatusPost(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +109,7 @@ func twilioCallStatusPost(w http.ResponseWriter, r *http.Request) {
 	caller_name := r.PostFormValue("CallerName")
 	parent_call_sid := r.PostFormValue("ParentCallSid")
 	log.Info().Str("call_sid", call_sid).Str("account_sid", account_sid).Str("from", from).Str("to", to).Str("call_status", call_status).Str("api_version", api_version).Str("direction", direction).Str("forwarded_from", forwarded_from).Str("caller_name", caller_name).Str("parent_call_sid", parent_call_sid)
-	fmt.Fprintf(w, "")
+	lint.Fprintf(w, "")
 }
 func twilioTextPost(w http.ResponseWriter, r *http.Request) {
 	message_sid := r.PostFormValue("MessageSid")
@@ -147,12 +148,12 @@ func twilioTextPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	w.Header().Set("Content-Type", "text/xml")
-	fmt.Fprintf(w, "%s", twiml)
+	lint.Fprintf(w, "%s", twiml)
 }
 func twilioTextStatusPost(w http.ResponseWriter, r *http.Request) {
 	message_sid := r.PostFormValue("MessageSid")
 	message_status := r.PostFormValue("MessageStatus")
 	log.Info().Str("sid", message_sid).Str("status", message_status).Msg("Updated message status")
 	text.UpdateMessageStatus(message_sid, message_status)
-	fmt.Fprintf(w, "")
+	lint.Fprintf(w, "")
 }

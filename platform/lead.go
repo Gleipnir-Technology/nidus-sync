@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	query "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
@@ -23,13 +24,15 @@ func LeadCreate(ctx context.Context, user User, signal_id int32, site_id int32, 
 	if err != nil {
 		return model.Lead{}, fmt.Errorf("start transaction: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	lead, err := leadCreate(ctx, txn, user, signal_id, site_id, pool_location)
 	if err != nil {
 		return model.Lead{}, fmt.Errorf("inner leadcreate: %w", err)
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return model.Lead{}, fmt.Errorf("commit: %w", err)
+	}
 	return lead, nil
 }
 

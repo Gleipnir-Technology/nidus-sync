@@ -14,6 +14,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/h3utils"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
@@ -191,19 +192,25 @@ func insertFlyover(ctx context.Context, txn bob.Tx, file *models.FileuploadFile,
 			if err == nil {
 				setter.Condition = omit.From(condition)
 			} else {
-				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", value, poolConditionValidValues()))
+				lint.LogOnErrCtx(func(ctx context.Context) error {
+					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", value, poolConditionValidValues()))
+				}, ctx, "add pool condition error")
 				continue
 			}
 		case headerFlyoverLatitude:
 			lat, err = strconv.ParseFloat(value, 10)
 			if err != nil {
-				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not decimal value", value))
+				lint.LogOnErrCtx(func(ctx context.Context) error {
+					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not decimal value", value))
+				}, ctx, "add lat error")
 				continue
 			}
 		case headerFlyoverLongitude:
 			lng, err = strconv.ParseFloat(value, 10)
 			if err != nil {
-				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not decimal value", value))
+				lint.LogOnErrCtx(func(ctx context.Context) error {
+					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not decimal value", value))
+				}, ctx, "add lng error")
 				continue
 			}
 		}

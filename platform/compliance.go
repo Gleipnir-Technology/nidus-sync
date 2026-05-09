@@ -10,6 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
@@ -25,7 +26,7 @@ func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int64
 	if err != nil {
 		return 0, fmt.Errorf("start txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	site, err := querypublic.SiteFromIDForOrg(ctx, txn, site_id, int64(user.Organization.ID))
 	if err != nil {
 		return 0, fmt.Errorf("find site: %w", err)

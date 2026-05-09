@@ -10,6 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	//"github.com/gorilla/mux"
 	"github.com/stephenafamo/scan"
 	//"github.com/rs/zerolog/log"
@@ -78,7 +79,7 @@ func getReportSuggestion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonBody)
+	lint.Write(w, jsonBody)
 }
 
 func partialSearchParam(p string) string {
