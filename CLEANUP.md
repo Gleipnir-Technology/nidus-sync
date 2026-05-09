@@ -169,14 +169,9 @@ The map-locator, address-suggestion, and photo-upload functionality has Vue equi
 
 ---
 
-## 5. TomTom Integration — Unused
+## 5. TomTom Integration — Removed ✅
 
-**Status:** The `tomtom/` directory contains a TomTom routing/geocoding client. It is not imported by any file outside the `tomtom/` directory. Stadia Maps is now used for geocoding and tiles.
-
-### 5a. Remove TomTom entirely
-
-- `tomtom/` — entire directory
-- `tomtom/example/` — example code
+*(Completed 2026-05-09: `tomtom/` directory removed — zero imports outside itself, Stadia Maps is now the geocoding/tile provider)*
 
 ---
 
@@ -295,7 +290,7 @@ Empty placeholder file. Remove.
 ## Priority Summary
 
 1. **High impact, low effort:**
-   - Remove `tomtom/` (unused, no imports)
+   - ~~Remove `tomtom/` (unused, no imports)~~ ✅
    - Remove `build.js` (dead, replaced by Vite)
    - Remove commented-out routes in `sync/routes.go` and `rmo/routes.go`
    - Remove `query.go` commented-out code
