@@ -43,9 +43,12 @@ func setPhoneStatus(ctx context.Context, txn bob.Executor, src types.E164, statu
 	if err != nil {
 		return fmt.Errorf("Failed to determine if '%s' is subscribed: %w", src, err)
 	}
-	phone.Update(ctx, txn, &models.CommsPhoneSetter{
+	err = phone.Update(ctx, txn, &models.CommsPhoneSetter{
 		Status: omit.From(status),
 	})
+	if err != nil {
+		return fmt.Errorf("update phone status: %w", err)
+	}
 	log.Info().Str("src", src.PhoneString()).Str("status", string(status)).Msg("Set number subscribed")
 	return nil
 }

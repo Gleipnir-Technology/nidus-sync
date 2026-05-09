@@ -100,7 +100,9 @@ func ComplianceRequestMailerCreate(ctx context.Context, user User, site_id int64
 		return 0, fmt.Errorf("create background compliance mailer job: %w", err)
 	}
 	event.Updated(event.TypeSite, user.Organization.ID, strconv.Itoa(int(site.ID)))
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("commit: %w", err)
+	}
 
 	return req.ID, nil
 }

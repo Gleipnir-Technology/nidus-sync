@@ -13,6 +13,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
@@ -109,7 +110,7 @@ func bulkGeocode(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c
 		error_count++
 	}
 	if error_count > 0 {
-		txn.Rollback(ctx)
+		lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 		return fmt.Errorf("%d errors encountered in bulk geocode", error_count)
 	}
 	update_query := `

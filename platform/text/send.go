@@ -159,7 +159,7 @@ func sendTextComplete(ctx context.Context, job *models.CommsTextJob) error {
 		if err != nil {
 			return fmt.Errorf("insert report_text: %w", err)
 		}
-		models.PublicreportReportLogs.Insert(&models.PublicreportReportLogSetter{
+		_, err = models.PublicreportReportLogs.Insert(&models.PublicreportReportLogSetter{
 			Created:    omit.From(time.Now()),
 			EmailLogID: omitnull.FromPtr[int32](nil),
 			// ID
@@ -168,6 +168,9 @@ func sendTextComplete(ctx context.Context, job *models.CommsTextJob) error {
 			Type:      omit.From(enums.PublicreportReportlogtypeMessageText),
 			UserID:    omitnull.From(creator_id),
 		}).One(ctx, txn)
+		if err != nil {
+			return fmt.Errorf("insert report log: %w", err)
+		}
 		report, err := models.FindPublicreportReport(ctx, txn, report_id)
 		if err != nil {
 			return fmt.Errorf("find public report: %w", err)

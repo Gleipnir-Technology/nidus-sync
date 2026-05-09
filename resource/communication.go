@@ -194,7 +194,9 @@ func (res *communicationR) markCommunication(ctx context.Context, r *http.Reques
 	if err != nil {
 		return communication{}, nhttp.NewBadRequest("can't turn report ID into an int: %w", err)
 	}
-	m(ctx, user, int32(comm_id))
+	if err := m(ctx, user, int32(comm_id)); err != nil {
+		return communication{}, nhttp.NewError("mark communication: %w", err)
+	}
 	result, err := platform.CommunicationFromID(ctx, user, int64(comm_id))
 	if result == nil {
 		return communication{}, nhttp.NewUnauthorized("you are not authorized to modify communication %d", comm_id)

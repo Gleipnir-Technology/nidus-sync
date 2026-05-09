@@ -47,11 +47,14 @@ func ReviewPoolCreate(ctx context.Context, user User, task_id int32, status stri
 	if err != nil {
 		return 0, fmt.Errorf("status '%s' is not recognized: %w", status, err)
 	}
-	review_task.Update(ctx, txn, &models.ReviewTaskSetter{
+	err = review_task.Update(ctx, txn, &models.ReviewTaskSetter{
 		Resolution: omitnull.From(resolution),
 		Reviewed:   omitnull.From(time.Now()),
 		ReviewerID: omitnull.From(int32(user.ID)),
 	})
+	if err != nil {
+		return 0, fmt.Errorf("update review task: %w", err)
+	}
 	review_task_pool, err := models.ReviewTaskPools.Query(
 		models.SelectWhere.ReviewTaskPools.ReviewTaskID.EQ(review_task.ID),
 	).One(ctx, txn)

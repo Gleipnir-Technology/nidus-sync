@@ -269,10 +269,16 @@ func (res *complianceR) byID(ctx context.Context, r *http.Request, is_public boo
 	return res.complianceHydrate(report, is_public)
 }
 func (res *complianceR) complianceHydrate(report *types.PublicReportCompliance, is_public bool) (*types.PublicReportCompliance, *nhttp.ErrorWithStatus) {
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router, is_public)
+	if err := populateDistrictURI(&report.PublicReport, res.router); err != nil {
+		return nil, nhttp.NewError("populate district URI: %w", err)
+	}
+	if err := populateReportURI(&report.PublicReport, res.router, is_public); err != nil {
+		return nil, nhttp.NewError("populate report URI: %w", err)
+	}
 	for _, e := range report.Concerns {
-		e.PopulateURL(res.router.router)
+		if err := e.PopulateURL(res.router.router); err != nil {
+			return nil, nhttp.NewError("populate concern URL: %w", err)
+		}
 	}
 	return report, nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/email"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
@@ -41,7 +42,9 @@ func RegisterNotificationEmail(ctx context.Context, txn bob.Executor, report_id 
 	if err != nil {
 		return err
 	}
-	email.SendReportConfirmation(ctx, destination, report_id)
+	lint.LogOnErrCtx(func(ctx context.Context) error {
+		return email.SendReportConfirmation(ctx, destination, report_id)
+	}, ctx, "send report confirmation")
 	return nil
 }
 
@@ -58,7 +61,9 @@ func RegisterNotificationPhone(ctx context.Context, txn bob.Executor, report_id 
 	if err != nil {
 		return err
 	}
-	text.ReportSubscriptionConfirmationText(ctx, db.PGInstance.BobDB, phone, report.PublicID)
+	lint.LogOnErrCtx(func(ctx context.Context) error {
+		return text.ReportSubscriptionConfirmationText(ctx, db.PGInstance.BobDB, phone, report.PublicID)
+	}, ctx, "report subscription confirmation text")
 	return nil
 }
 

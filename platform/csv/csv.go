@@ -15,6 +15,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
@@ -65,7 +66,7 @@ func JobCommit(ctx context.Context, file_id int32) error {
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	for _, row := range rows {
 		var a *types.Address
 		var parcel *models.Parcel
@@ -179,7 +180,7 @@ func JobCommit(ctx context.Context, file_id int32) error {
 		return fmt.Errorf("update file status to committed: %w", err)
 	}
 	event.Updated(event.TypeFileCSV, file.OrganizationID, strconv.Itoa(int(file.ID)))
-	defer txn.Commit(ctx)
+	lint.LogOnErrCtx(txn.Commit, ctx, "commit")
 	return nil
 }
 func JobImport(ctx context.Context, file_id int32) error {
@@ -238,7 +239,7 @@ func importCSV[T any](ctx context.Context, file_id int32, parser csvParserFunc[T
 	if err != nil {
 		return fmt.Errorf("Failed to start transaction: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	parsed, err := parser(ctx, txn, file, c)
 	if err != nil {
 		return fmt.Errorf("parse file: %w", err)
@@ -263,7 +264,9 @@ func importCSV[T any](ctx context.Context, file_id int32, parser csvParserFunc[T
 		return fmt.Errorf("update: %w", err)
 	}
 	log.Info().Int32("file.ID", file.ID).Msg("Set file to parsed")
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	return nil
 }
 func loadFileAndCSV(ctx context.Context, file_id int32) (*models.FileuploadFile, *models.FileuploadCSV, error) {

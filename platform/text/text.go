@@ -136,7 +136,7 @@ func respondText(ctx context.Context, log_id int32) error {
 		return fmt.Errorf("has open report: %w", err)
 	}
 	for _, report := range reports {
-		models.PublicreportReportLogs.Insert(&models.PublicreportReportLogSetter{
+		_, err = models.PublicreportReportLogs.Insert(&models.PublicreportReportLogSetter{
 			Created:    omit.From(time.Now()),
 			EmailLogID: omitnull.FromPtr[int32](nil),
 			// ID
@@ -145,6 +145,9 @@ func respondText(ctx context.Context, log_id int32) error {
 			Type:      omit.From(enums.PublicreportReportlogtypeMessageText),
 			UserID:    omitnull.FromPtr[int32](nil),
 		}).One(ctx, txn)
+		if err != nil {
+			return fmt.Errorf("insert report log: %w", err)
+		}
 		event.Updated(event.TypeRMOPublicReport, report.OrganizationID, report.PublicID)
 	}
 	// If humans are involved, wait for them.
