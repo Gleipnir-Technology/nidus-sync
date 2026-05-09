@@ -9,6 +9,7 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/Gleipnir-Technology/nidus-sync/resource"
@@ -216,7 +217,7 @@ func authenticatedHandlerPostMultipart[ResponseType any](f handlerFunctionPostAu
 			http.Error(w, "{\"message\": \"failed to marshal json\"}", http.StatusInternalServerError)
 			return
 		}
-		w.Write(body)
+		lint.Write(w, body)
 	})
 }
 func handlerBasic(f handlerBase) http.HandlerFunc {
@@ -251,7 +252,7 @@ func handlerJSON[T any](f handlerFunctionGet[T]) http.HandlerFunc {
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		lint.Write(w, body)
 	}
 }
 func handlerJSONSlice[T any](f handlerFunctionGetSlice[T]) http.HandlerFunc {
@@ -276,7 +277,7 @@ func handlerJSONSlice[T any](f handlerFunctionGetSlice[T]) http.HandlerFunc {
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		lint.Write(w, body)
 	}
 }
 
