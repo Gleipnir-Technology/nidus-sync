@@ -1,20 +1,15 @@
 package sync
 
 import (
-	"context"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/auth"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
-	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
-
-type contentOauthPrompt struct{}
 
 // Build the ArcGIS authorization URL with PKCE
 func buildArcGISAuthURL(clientID string) string {
@@ -66,7 +61,4 @@ func getArcgisOauthCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, config.MakeURLNidus("/"), http.StatusFound)
 }
 
-func getOAuthRefresh(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentOauthPrompt], *nhttp.ErrorWithStatus) {
-	data := contentOauthPrompt{}
-	return html.NewResponse("sync/oauth-prompt.html", data), nil
-}
+
