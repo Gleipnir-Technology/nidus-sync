@@ -115,15 +115,9 @@ Once all routes are ported or confirmed dead, remove the entire `html/template/`
 
 ---
 
-## 3. esbuild (`build.js`) — Dead Build Tool
+## 3. esbuild (`build.js`) — Removed ✅
 
-**Status:** `build.js` is an esbuild-based build script that predates the Vite migration. It is not referenced by `package.json` scripts (those use `vite build`). It is also not referenced by any CI or Nix config.
-
-### 3a. Remove esbuild-related files
-
-- `build.js` — the esbuild build script
-- Remove `pkgs.esbuild` from `flake.nix` devShell dependencies (if not used elsewhere)
-- Remove esbuild-related dependencies from `package.json` if present (currently no esbuild deps are in `package.json` — they may have been already cleaned)
+*(Completed 2026-05-09: `build.js` removed and `pkgs.esbuild` dropped from flake.nix devShell — Vite is the build tool)*
 
 ---
 
@@ -291,7 +285,7 @@ Empty placeholder file. Remove.
 
 1. **High impact, low effort:**
    - ~~Remove `tomtom/` (unused, no imports)~~ ✅
-   - Remove `build.js` (dead, replaced by Vite)
+   - ~~Remove `build.js` (dead, replaced by Vite)~~ ✅
    - Remove commented-out routes in `sync/routes.go` and `rmo/routes.go`
    - Remove `query.go` commented-out code
    - Remove `static/gen/main.js` stale artifact

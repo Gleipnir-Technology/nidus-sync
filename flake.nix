@@ -31,7 +31,6 @@
 						pkgs.air
 						pkgs.autoprefixer
 						pkgs.dart-sass
-						pkgs.esbuild
 						pkgs.go
 						pkgs.go-jet
 						pkgs.golangci-lint
