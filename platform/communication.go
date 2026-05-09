@@ -10,7 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
 	"github.com/Gleipnir-Technology/nidus-sync/lint"
-	//"github.com/go-jet/jet/v2/postgres"
+	//"github.com/Gleipnir-Technology/jet/postgres"
 )
 
 func CommunicationsForOrganization(ctx context.Context, org_id int64) ([]model.Communication, error) {

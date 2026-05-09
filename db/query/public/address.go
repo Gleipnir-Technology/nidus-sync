@@ -8,9 +8,9 @@ import (
 	//"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	//"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/enum"
+	"github.com/Gleipnir-Technology/jet/postgres"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/table"
-	"github.com/go-jet/jet/v2/postgres"
 )
 
 func AddressFromComplianceReportRequestID(ctx context.Context, txn db.Ex, public_id string) (model.Address, error) {

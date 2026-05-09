@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/Gleipnir-Technology/jet/postgres"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/arcgis/table"
-	"github.com/go-jet/jet/v2/postgres"
 )
 
 func OAuthTokenInsert(ctx context.Context, m *model.OAuthToken) (model.OAuthToken, error) {

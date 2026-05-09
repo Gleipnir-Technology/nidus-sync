@@ -11,7 +11,7 @@ import (
 	//"github.com/georgysavva/scany/v2/pgxscan"
 	//"github.com/jackc/pgx/v5"
 	"github.com/Gleipnir-Technology/bob"
-	"github.com/go-jet/jet/v2/postgres"
+	"github.com/Gleipnir-Technology/jet/postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"

@@ -5,10 +5,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/go-jet/jet/v2/generator/metadata"
-	genpostgres "github.com/go-jet/jet/v2/generator/postgres"
-	"github.com/go-jet/jet/v2/generator/template"
-	"github.com/go-jet/jet/v2/postgres"
+	"github.com/Gleipnir-Technology/jet/generator/metadata"
+	genpostgres "github.com/Gleipnir-Technology/jet/generator/postgres"
+	"github.com/Gleipnir-Technology/jet/generator/template"
+	"github.com/Gleipnir-Technology/jet/postgres"
 	_ "github.com/lib/pq"
 	"github.com/twpayne/go-geom"
 )

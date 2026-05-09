@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Gleipnir-Technology/jet/postgres"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	tablepublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/table"
@@ -22,7 +23,6 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/platform/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
-	"github.com/go-jet/jet/v2/postgres"
 	"github.com/rs/zerolog/log"
 )
 

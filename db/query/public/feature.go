@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Gleipnir-Technology/jet/postgres"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/table"
-	"github.com/go-jet/jet/v2/postgres"
 )
 
 func FeaturesFromSiteID(ctx context.Context, txn db.Ex, site_id int64) ([]model.Feature, error) {

@@ -7,10 +7,10 @@ import (
 	//"time"
 
 	//"github.com/Gleipnir-Technology/bob"
+	"github.com/Gleipnir-Technology/jet/postgres"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/table"
-	"github.com/go-jet/jet/v2/postgres"
 )
 
 type ReportUpdater = db.Updater[table.ReportTable, model.Report]

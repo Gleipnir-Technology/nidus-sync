@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	//"github.com/go-jet/jet/v2"
-	"github.com/go-jet/jet/v2/postgres"
+	//"github.com/Gleipnir-Technology/jet"
+	"github.com/Gleipnir-Technology/jet/postgres"
 )
 
 type Updater[T postgres.Table, M any] struct {
