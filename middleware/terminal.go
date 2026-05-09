@@ -59,9 +59,12 @@ func cW(w io.Writer, useColor bool, color []byte, s string, args ...interface{})
 			return fmt.Errorf("write color: %w", err)
 		}
 	}
-	fmt.Fprintf(w, s, args...)
+	_, err := fmt.Fprintf(w, s, args...)
+	if err != nil {
+		return fmt.Errorf("fprintf: %w", err)
+	}
 	if IsTTY && useColor {
-		_, err := w.Write(reset)
+		_, err = w.Write(reset)
 		if err != nil {
 			return fmt.Errorf("write color: %w", err)
 		}

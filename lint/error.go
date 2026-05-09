@@ -51,3 +51,11 @@ func Write(w io.Writer, p []byte) {
 		log.Error().Err(err).Msg("write failed")
 	}
 }
+
+// Fprint writes a string to w, logging any error.
+func Fprint(w io.Writer, a ...any) {
+	_, err := fmt.Fprint(w, a...)
+	if err != nil {
+		log.Error().Err(err).Msg("fprint failed")
+	}
+}

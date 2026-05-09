@@ -2,11 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/aarondl/opt/omit"
@@ -80,5 +80,5 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u platform.User
 	}
 	w.WriteHeader(http.StatusOK)
 	log.Printf("Saved image file %s\n", imageUUID)
-	fmt.Fprintf(w, "PNG uploaded successfully")
+	lint.Fprintf(w, "PNG uploaded successfully")
 }

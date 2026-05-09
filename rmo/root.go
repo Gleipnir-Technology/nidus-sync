@@ -1,11 +1,11 @@
 package rmo
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
 	"github.com/rs/zerolog/log"
 )
@@ -76,8 +76,8 @@ func getRootDistrict(w http.ResponseWriter, r *http.Request) {
 }
 
 func getRobots(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "User-agent: *\n")
-	fmt.Fprint(w, "Allow: /\n")
+	lint.Fprint(w, "User-agent: *\n")
+	lint.Fprint(w, "Allow: /\n")
 }
 func getTerms(w http.ResponseWriter, r *http.Request) {
 	html.RenderOrError(

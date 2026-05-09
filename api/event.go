@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/Gleipnir-Technology/nidus-sync/version"
@@ -135,7 +136,7 @@ func streamEvents(w http.ResponseWriter, r *http.Request, u platform.User) {
 		return
 	}
 
-	fmt.Fprintf(w, "data: %s\n\n", body)
+	lint.Fprintf(w, "data: %s\n\n", body)
 	w.(http.Flusher).Flush()
 
 	// Keep the connection open with a ticker sending periodic events
