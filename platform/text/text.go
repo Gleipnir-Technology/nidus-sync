@@ -9,6 +9,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
@@ -32,7 +33,7 @@ func HandleTextMessage(ctx context.Context, source string, destination string, c
 	if err != nil {
 		return fmt.Errorf("start txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	status, err := phoneStatus(ctx, *src)
 	if err != nil {
@@ -60,7 +61,9 @@ func HandleTextMessage(ctx context.Context, source string, destination string, c
 	if err != nil {
 		return fmt.Errorf("text respond: %w", err)
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	return err
 }
 
@@ -69,7 +72,7 @@ func respondText(ctx context.Context, log_id int32) error {
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	l, err := models.FindCommsTextLog(ctx, txn, log_id)
 	if err != nil {
 		return fmt.Errorf("find comms: %w", err)
@@ -98,7 +101,9 @@ func respondText(ctx context.Context, log_id int32) error {
 			if err != nil {
 				return fmt.Errorf("send response: %w", err)
 			}
-			handleWaitingTextJobs(ctx, *src)
+			lint.LogOnErrCtx(func(ctx context.Context) error {
+				return handleWaitingTextJobs(ctx, *src)
+			}, ctx, "handle waiting text jobs")
 		// We don't handle 'stop' here because we allow them to say 'stop' at any time, regardless of
 		// phone status.
 		//case "stop":
@@ -118,7 +123,9 @@ func respondText(ctx context.Context, log_id int32) error {
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to send unsubscribe acknowledgement.")
 		}
-		setPhoneStatus(ctx, txn, *src, enums.CommsPhonestatustypeStopped)
+		lint.LogOnErrCtx(func(ctx context.Context) error {
+			return setPhoneStatus(ctx, txn, *src, enums.CommsPhonestatustypeStopped)
+		}, ctx, "set phone status")
 		return nil
 	case "reset conversation":
 		err = handleResetConversation(ctx, txn, *src)
@@ -172,12 +179,14 @@ func respondTextLLM(ctx context.Context, src types.E164) error {
 	if err != nil {
 		return fmt.Errorf("start txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	_, err = sendTextDirect(ctx, txn, enums.CommsTextoriginLLM, src.PhoneString(), next_message.Content, true, false)
 	if err != nil {
 		return fmt.Errorf("Failed to send response text: %w", err)
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	return nil
 }
 

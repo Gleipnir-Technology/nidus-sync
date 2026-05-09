@@ -3,11 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/text"
 	"github.com/rs/zerolog/log"
 )
@@ -101,5 +101,5 @@ func voipmsTextPost(w http.ResponseWriter, r *http.Request) {
 			log.Error().Err(err).Msg("failed to handle VoIP.ms incoming text")
 		}
 	}()
-	fmt.Fprintf(w, "ok")
+	lint.Fprintf(w, "ok")
 }

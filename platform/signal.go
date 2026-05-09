@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	tablepublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/table"
@@ -69,7 +70,7 @@ func SignalCreateFromPool(ctx context.Context, txn db.Ex, user User, site_id int
 // Create a lead from the given signal and site
 func SignalCreateFromPublicreport(ctx context.Context, user User, report_id string) (*int32, error) {
 	txn, err := db.BeginTxn(ctx)
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	if err != nil {
 		return nil, fmt.Errorf("start transaction: %w", err)
 	}
@@ -166,7 +167,9 @@ func SignalCreateFromPublicreport(ctx context.Context, user User, report_id stri
 		return nil, fmt.Errorf("failed to update report %d: %w", report_id, err)
 	}
 	event.Created(event.TypeSignal, user.Organization.ID, strconv.Itoa(int(signal.ID)))
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
+	}
 
 	return &signal.ID, nil
 }

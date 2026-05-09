@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/report"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
@@ -26,7 +27,7 @@ func PublicreportNotificationCreate(ctx context.Context, pn PublicreportNotifica
 	if err != nil {
 		return fmt.Errorf("begin txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	rep, err := models.PublicreportReports.Query(
 		models.SelectWhere.PublicreportReports.PublicID.EQ(pn.ReportID),
 	).One(ctx, db.PGInstance.BobDB)
@@ -66,7 +67,9 @@ func PublicreportNotificationCreate(ctx context.Context, pn PublicreportNotifica
 			}
 		}
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	PublicReportReporterUpdated(ctx, rep.OrganizationID, pn.ReportID)
 	return nil
 }

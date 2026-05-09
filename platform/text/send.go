@@ -10,6 +10,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
@@ -105,7 +106,7 @@ func sendTextComplete(ctx context.Context, job *models.CommsTextJob) error {
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	dst, err := ParsePhoneNumber(job.Destination)
 	if err != nil {
 		return fmt.Errorf("parse phone: %w", err)
@@ -134,7 +135,9 @@ func sendTextComplete(ctx context.Context, job *models.CommsTextJob) error {
 	//case enums.CommsPhonestatustypeOkToSend:
 	// allow to drop through
 	case enums.CommsPhonestatustypeStopped:
-		resendInitialText(ctx, txn, *dst)
+		lint.LogOnErrCtx(func(ctx context.Context) error {
+			return resendInitialText(ctx, txn, *dst)
+		}, ctx, "resend initial text")
 		return nil
 	}
 	text_log, err := sendTextDirect(ctx, txn, origin, job.Destination, job.Content, true, false)
@@ -179,7 +182,9 @@ func sendTextComplete(ctx context.Context, job *models.CommsTextJob) error {
 	} else {
 		log.Debug().Msg("no report info on text")
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	return nil
 }
 

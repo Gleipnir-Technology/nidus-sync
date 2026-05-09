@@ -106,16 +106,16 @@ func (l *DefaultLogFormatter) NewLogEntry(r *http.Request) LogEntry {
 
 	reqID := GetReqID(r.Context())
 	if reqID != "" {
-		cW(entry.buf, useColor, nYellow, "[%s] ", reqID)
+		_ = cW(entry.buf, useColor, nYellow, "[%s] ", reqID)
 	}
-	cW(entry.buf, useColor, nCyan, "\"")
-	cW(entry.buf, useColor, bMagenta, "%s ", r.Method)
+	_ = cW(entry.buf, useColor, nCyan, "\"")
+	_ = cW(entry.buf, useColor, bMagenta, "%s ", r.Method)
 
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	cW(entry.buf, useColor, nCyan, "%s://%s%s %s\" ", scheme, r.Host, r.RequestURI, r.Proto)
+	_ = cW(entry.buf, useColor, nCyan, "%s://%s%s %s\" ", scheme, r.Host, r.RequestURI, r.Proto)
 
 	entry.buf.WriteString("from ")
 	entry.buf.WriteString(r.RemoteAddr)
@@ -134,26 +134,26 @@ type defaultLogEntry struct {
 func (l *defaultLogEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
 	switch {
 	case status < 200:
-		cW(l.buf, l.useColor, bBlue, "%03d", status)
+		_ = cW(l.buf, l.useColor, bBlue, "%03d", status)
 	case status < 300:
-		cW(l.buf, l.useColor, bGreen, "%03d", status)
+		_ = cW(l.buf, l.useColor, bGreen, "%03d", status)
 	case status < 400:
-		cW(l.buf, l.useColor, bCyan, "%03d", status)
+		_ = cW(l.buf, l.useColor, bCyan, "%03d", status)
 	case status < 500:
-		cW(l.buf, l.useColor, bYellow, "%03d", status)
+		_ = cW(l.buf, l.useColor, bYellow, "%03d", status)
 	default:
-		cW(l.buf, l.useColor, bRed, "%03d", status)
+		_ = cW(l.buf, l.useColor, bRed, "%03d", status)
 	}
 
-	cW(l.buf, l.useColor, bBlue, " %dB", bytes)
+	_ = cW(l.buf, l.useColor, bBlue, " %dB", bytes)
 
 	l.buf.WriteString(" in ")
 	if elapsed < 500*time.Millisecond {
-		cW(l.buf, l.useColor, nGreen, "%s", elapsed)
+		_ = cW(l.buf, l.useColor, nGreen, "%s", elapsed)
 	} else if elapsed < 5*time.Second {
-		cW(l.buf, l.useColor, nYellow, "%s", elapsed)
+		_ = cW(l.buf, l.useColor, nYellow, "%s", elapsed)
 	} else {
-		cW(l.buf, l.useColor, nRed, "%s", elapsed)
+		_ = cW(l.buf, l.useColor, nRed, "%s", elapsed)
 	}
 
 	l.Logger.Print(l.buf.String())

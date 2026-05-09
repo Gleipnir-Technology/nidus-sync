@@ -12,6 +12,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
@@ -31,7 +32,7 @@ func ReviewPoolCreate(ctx context.Context, user User, task_id int32, status stri
 	if err != nil {
 		return 0, nhttp.NewError("start txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	review_task, err := models.ReviewTasks.Query(
 		models.SelectWhere.ReviewTasks.ID.EQ(task_id),
 		models.SelectWhere.ReviewTasks.OrganizationID.EQ(user.Organization.ID),
@@ -70,7 +71,9 @@ func ReviewPoolCreate(ctx context.Context, user User, task_id int32, status stri
 		return 0, err
 	}
 	event.Updated(event.TypeReviewTask, user.Organization.ID, strconv.Itoa(int(review_task.ID)))
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return 0, nhttp.NewError("commit: %w", err)
+	}
 	log.Info().Int32("id", review_task.ID).Str("status", status).Msg("review completed")
 	return review_task.ID, err
 }

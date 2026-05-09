@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -48,7 +49,9 @@ func apiImagePost(w http.ResponseWriter, r *http.Request, u platform.User) {
 	}
 	err = platform.NoteImageCreate(ctx, u, setter)
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		if err := renderShim(w, r, errRender(err)); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
@@ -75,7 +78,9 @@ func apiImageContentPost(w http.ResponseWriter, r *http.Request, u platform.User
 	}
 	err = file.ImageFileFromReader(file.CollectionImageRaw, imageUUID, r.Body)
 	if err != nil {
-		renderShim(w, r, errRender(err))
+		if err := renderShim(w, r, errRender(err)); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusOK)

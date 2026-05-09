@@ -153,11 +153,15 @@ func geocodePool(ctx context.Context, txn bob.Tx, client *stadia.StadiaMaps, job
 	}
 	geo, err := geocode.GeocodeStructured(ctx, job.org, a)
 	if err != nil {
-		addError(ctx, txn, job.csv, pool.LineNumber, 0, err.Error())
+		lint.LogOnErrCtx(func(ctx context.Context) error {
+			return addError(ctx, txn, job.csv, pool.LineNumber, 0, err.Error())
+		}, ctx, "add geocode error")
 		return nil
 	}
 	if geo.Address.Location == nil {
-		addError(ctx, txn, job.csv, pool.LineNumber, 0, "nil location from geocoding")
+		lint.LogOnErrCtx(func(ctx context.Context) error {
+			return addError(ctx, txn, job.csv, pool.LineNumber, 0, "nil location from geocoding")
+		}, ctx, "add nil location error")
 		return nil
 	}
 	geom_query := geom.PostgisPointQuery(*geo.Address.Location)
@@ -187,7 +191,9 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 	header_types, header_names := parseHeaders(h)
 	missing_headers := missingRequiredHeaders(header_types)
 	for _, mh := range missing_headers {
-		errorMissingHeader(ctx, txn, c, mh)
+		lint.LogOnErrCtx(func(ctx context.Context) error {
+			return errorMissingHeader(ctx, txn, c, mh)
+		}, ctx, "error missing header")
 		err = f.Update(ctx, txn, &models.FileuploadFileSetter{
 			Status: omit.From(enums.FileuploadFilestatustypeError),
 		})
@@ -253,7 +259,9 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 				// This type of spreadsheet normally has '123 Main Str'
 				parts := strings.SplitN(col, " ", 2)
 				if len(parts) != 2 {
-					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a house number and street. It needs to be in the form '123 main'", col))
+					lint.LogOnErrCtx(func(ctx context.Context) error {
+					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a house number and street. It needs to be in the form '123 main'", col))
+				}, ctx, "add address parse error")
 					continue
 				}
 				setter.AddressNumber = omit.From(parts[0])
@@ -268,7 +276,9 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 				}
 				err := condition.Scan(col_translated)
 				if err != nil {
-					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", col, poolConditionValidValues()))
+					lint.LogOnErrCtx(func(ctx context.Context) error {
+					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", col, poolConditionValidValues()))
+				}, ctx, "add pool condition error")
 					setter.Condition = omit.From(enums.PoolconditiontypeUnknown)
 					continue
 				}
@@ -280,7 +290,9 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 			case headerPoolPropertyOwnerPhone:
 				phone, err := text.ParsePhoneNumber(col)
 				if err != nil {
-					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+					lint.LogOnErrCtx(func(ctx context.Context) error {
+					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+				}, ctx, "add phone number error")
 					continue
 				}
 				err = text.EnsureInDB(ctx, txn, *phone)
@@ -292,14 +304,18 @@ func parseCSVPoollist(ctx context.Context, txn bob.Tx, f *models.FileuploadFile,
 			case headerPoolResidentOwned:
 				boolValue, err := parseBool(col)
 				if err != nil {
-					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not something that we recognize as a true/false value. Please use either 'true' or 'false'", col))
+					lint.LogOnErrCtx(func(ctx context.Context) error {
+						return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not something that we recognize as a true/false value. Please use either 'true' or 'false'", col))
+					}, ctx, "add bool error")
 					continue
 				}
 				setter.ResidentOwned = omitnull.From(boolValue)
 			case headerPoolResidentPhone:
 				phone, err := text.ParsePhoneNumber(col)
 				if err != nil {
-					addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+					lint.LogOnErrCtx(func(ctx context.Context) error {
+						return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a phone number that we recognize. Ideally it should be of the form '+12223334444'", col))
+					}, ctx, "add phone number error")
 					continue
 				}
 				err = text.EnsureInDB(ctx, txn, *phone)

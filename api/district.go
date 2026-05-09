@@ -33,12 +33,16 @@ func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
 	}
 	lng, err := strconv.ParseFloat(lngStr, 64)
 	if err != nil {
-		renderShim(w, r, errRender(fmt.Errorf("Failed to parse lng as float: %w", err)))
+		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to parse lng as float: %w", err))); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 	org, err := platform.DistrictForLocation(r.Context(), lng, lat)
 	if err != nil {
-		renderShim(w, r, errRender(fmt.Errorf("Failed to get district: %w", err)))
+		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to get district: %w", err))); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 	if org == nil {
@@ -52,7 +56,9 @@ func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
 		Website: org.Website.GetOr(""),
 	}
 	if err := renderShim(w, r, d); err != nil {
-		renderShim(w, r, errRender(err))
+		if err := renderShim(w, r, errRender(err)); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 	}
 }
 

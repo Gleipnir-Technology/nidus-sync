@@ -351,7 +351,7 @@ func handlerFormPost[RequestType any, ResponseType any](f handlerFunctionPostFor
 			respondErrorStatus(w, nhttp.NewError("failed to marshal json: %w", err))
 			return
 		}
-		w.Write(body)
+		lint.Write(w, body)
 	}
 }
 func parseRequest[RequestType any](r *http.Request) (*RequestType, *nhttp.ErrorWithStatus) {

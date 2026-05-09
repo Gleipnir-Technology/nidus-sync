@@ -10,6 +10,7 @@ import (
 	//tablepublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/table"
 	//querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/html"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
@@ -150,7 +151,11 @@ func (res *nuisanceR) byID(ctx context.Context, r *http.Request, is_public bool)
 	if err != nil {
 		return nil, nhttp.NewError("get report: %w", err)
 	}
-	populateDistrictURI(&report.PublicReport, res.router)
-	populateReportURI(&report.PublicReport, res.router, is_public)
+	lint.LogOnErr(func() error {
+		return populateDistrictURI(&report.PublicReport, res.router)
+	}, "populate district URI")
+	lint.LogOnErr(func() error {
+		return populateReportURI(&report.PublicReport, res.router, is_public)
+	}, "populate report URI")
 	return report, nil
 }

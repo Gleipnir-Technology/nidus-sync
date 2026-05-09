@@ -11,6 +11,7 @@ import (
 	"github.com/Gleipnir-Technology/bob/dialect/psql/sm"
 	"github.com/Gleipnir-Technology/bob/dialect/psql/um"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/enums"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/background"
@@ -86,7 +87,7 @@ func NewUpload(ctx context.Context, u User, upload file.Upload, t enums.Fileuplo
 	if err != nil {
 		return nil, fmt.Errorf("Failed to begin transaction: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	file, err := models.FileuploadFiles.Insert(&models.FileuploadFileSetter{
 		ContentType:    omit.From(upload.ContentType),
@@ -117,7 +118,9 @@ func NewUpload(ctx context.Context, u User, upload file.Upload, t enums.Fileuplo
 	if err != nil {
 		return nil, fmt.Errorf("background job create: %w", err)
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
+	}
 	return &file.ID, nil
 }
 func UploadCommit(ctx context.Context, org Organization, file_id int32, committer User) error {
@@ -125,7 +128,7 @@ func UploadCommit(ctx context.Context, org Organization, file_id int32, committe
 	if err != nil {
 		return fmt.Errorf("Failed to begin transaction: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	_, err = psql.Update(
 		um.Table(models.FileuploadFiles.Alias()),

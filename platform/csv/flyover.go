@@ -317,7 +317,9 @@ func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadF
 			if err == nil {
 				setter.Condition = omit.From(condition)
 			} else {
-				addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", value, poolConditionValidValues()))
+				lint.LogOnErrCtx(func(ctx context.Context) error {
+					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", value, poolConditionValidValues()))
+				}, ctx, "add pool condition error")
 				continue
 			}
 		}

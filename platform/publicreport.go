@@ -11,6 +11,7 @@ import (
 
 	"github.com/Gleipnir-Technology/jet/postgres"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	tablepublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/table"
 	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
@@ -109,7 +110,7 @@ func PublicReportMessageCreate(ctx context.Context, user User, public_id, messag
 	if err != nil {
 		return nil, fmt.Errorf("create txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
@@ -128,7 +129,9 @@ func PublicReportMessageCreate(ctx context.Context, user User, public_id, messag
 		if err != nil {
 			return nil, fmt.Errorf("send text: %w", err)
 		}
-		txn.Commit(ctx)
+		if err := txn.Commit(ctx); err != nil {
+			return nil, fmt.Errorf("commit: %w", err)
+		}
 		//log.Debug().Int32("msg_id", *msg_id).Msg("Created text.ReportMessage")
 		return msg_id, nil
 	} else if report.ReporterEmail != "" {
@@ -136,7 +139,9 @@ func PublicReportMessageCreate(ctx context.Context, user User, public_id, messag
 		if err != nil {
 			return nil, fmt.Errorf("send email: %w", err)
 		}
-		txn.Commit(ctx)
+		if err := txn.Commit(ctx); err != nil {
+			return nil, fmt.Errorf("commit: %w", err)
+		}
 		return msg_id, nil
 	} else {
 		log.Debug().Str("public_id", public_id).Msg("contacting via email")
@@ -149,7 +154,7 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 	if err != nil {
 		return fmt.Errorf("create txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
@@ -213,7 +218,9 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 			return fmt.Errorf("update location: %w", err)
 		}
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	return nil
 }
 func PublicReportReporterUpdated(ctx context.Context, org_id int32, report_id string) {
@@ -240,7 +247,7 @@ func PublicReportImageCreate(ctx context.Context, public_id string, images []Ima
 	if err != nil {
 		return fmt.Errorf("create txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
 	if err != nil {
@@ -264,7 +271,9 @@ func PublicReportImageCreate(ctx context.Context, public_id string, images []Ima
 		}
 		log.Info().Int("len", len(images)).Msg("saved uploaded images")
 	}
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
 	return nil
 }
 func PublicReportNuisanceCreate(ctx context.Context, setter_report modelpublicreport.Report, setter_nuisance modelpublicreport.Nuisance, location types.Location, address Address, images []ImageUpload) (modelpublicreport.Report, error) {
@@ -303,7 +312,7 @@ func publicReportCreate(ctx context.Context, setter_report modelpublicreport.Rep
 	if err != nil {
 		return result, fmt.Errorf("create txn: %w", err)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 
 	if setter_report.PublicID == "" {
 		public_id, err := GenerateReportID()
@@ -354,7 +363,9 @@ func publicReportCreate(ctx context.Context, setter_report modelpublicreport.Rep
 	if location != nil {
 		l := *location
 		if l.Latitude != 0 && l.Longitude != 0 {
-			publicReportUpdateLocation(ctx, txn, result.ID, l)
+			lint.LogOnErrCtx(func(ctx context.Context) error {
+				return publicReportUpdateLocation(ctx, txn, result.ID, l)
+			}, ctx, "update location")
 		}
 	}
 	log.Info().Str("public_id", setter_report.PublicID).Int32("id", result.ID).Msg("Created base report")
@@ -403,7 +414,9 @@ func publicReportCreate(ctx context.Context, setter_report modelpublicreport.Rep
 		log.Debug().Int32("id", comm.ID).Msg("inserted new communication")
 	}
 
-	txn.Commit(ctx)
+	if err := txn.Commit(ctx); err != nil {
+		return result, fmt.Errorf("commit: %w", err)
+	}
 
 	event.Created(
 		event.TypeRMOPublicReport,
