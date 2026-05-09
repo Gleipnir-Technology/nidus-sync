@@ -12,6 +12,7 @@ import (
 	//"github.com/jackc/pgx/v5"
 	"github.com/Gleipnir-Technology/bob"
 	"github.com/Gleipnir-Technology/jet/postgres"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -58,7 +59,7 @@ func ExecuteNoneTxBob(ctx context.Context, txn bob.Tx, stmt postgres.Statement) 
 	if err != nil {
 		return fmt.Errorf("query: %w", err)
 	}
-	r.Close()
+	defer lint.LogOnErr(r.Close, "close rows")
 	return nil
 }
 func ExecuteOne[T any](ctx context.Context, stmt postgres.Statement) (T, error) {

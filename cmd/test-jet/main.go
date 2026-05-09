@@ -8,6 +8,7 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/config"
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/query/public"
+	"github.com/Gleipnir-Technology/nidus-sync/lint"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 		log.Printf("failed on txn: %v", err)
 		os.Exit(3)
 	}
-	defer txn.Rollback(ctx)
+	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
 	log.Printf("doing address")
 	gid := "openaddresses:address:us/ca/tulare-addresses-county:0dc28458fd03e3fa"
 	address, err := public.AddressFromGID(ctx, txn, gid)
@@ -38,7 +39,7 @@ func main() {
 	}
 	//log.Printf("address %d lat %f lng %f", address.ID, *address.LocationLatitude, *address.LocationLongitude)
 	log.Printf("Address id %d location %s", address.ID, address.Location)
-	txn.Commit(ctx)
+	lint.LogOnErrCtx(txn.Commit, ctx, "commit")
 
 	/*
 		log.Printf("doing comm")
