@@ -109,4 +109,4 @@ require (
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob
 // replace github.com/Gleipnir-Technology/arcgis-go v0.0.12 => ./arcgis-go
-// replace github.com/go-jet/jet/v2 v2.14.1 => ../jet
+replace github.com/go-jet/jet/v2 v2.14.1 => ../jet
