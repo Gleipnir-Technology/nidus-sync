@@ -10,12 +10,6 @@ import (
 	//"github.com/rs/zerolog/log"
 )
 
-type contentEmailInitial struct {
-	Base         contentEmailBase
-	Destination  string
-	URLSubscribe string
-}
-
 func maybeSendInitialEmail(ctx context.Context, destination string) error {
 	err := EnsureInDB(ctx, destination)
 	if err != nil {

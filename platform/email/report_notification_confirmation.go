@@ -8,11 +8,6 @@ import (
 	//"github.com/rs/zerolog/log"
 )
 
-type contentEmailReportConfirmation struct {
-	Base            contentEmailBase
-	URLReportStatus string
-}
-
 func SendReportConfirmation(ctx context.Context, destination, report_id string) error {
 	err := maybeSendInitialEmail(ctx, destination)
 	if err != nil {
@@ -31,7 +26,4 @@ func SendReportConfirmation(ctx context.Context, destination, report_id string) 
 	return sendEmailBegin(ctx, config.ForwardEmailRMOAddress, destination, templateReportNotificationConfirmationID, subject, data)
 }
 
-func newContentEmailNotificationConfirmation(report_id string) (result contentEmailReportConfirmation) {
-	result.URLReportStatus = config.MakeURLReport("/status/%s", report_id)
-	return result
-}
+
