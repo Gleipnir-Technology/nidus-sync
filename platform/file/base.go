@@ -12,10 +12,6 @@ import (
 	//"github.com/rs/zerolog/log"
 )
 
-func audioFileContentWrite(audioUUID uuid.UUID, body io.Reader) error {
-	return nil
-}
-
 var collectionToExtension map[Collection]string = map[Collection]string{
 	CollectionAudioNormalized: "ogg",
 	CollectionAudioRaw:        "raw",

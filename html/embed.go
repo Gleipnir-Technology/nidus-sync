@@ -10,9 +10,6 @@ import (
 	"io/fs"
 	//"math"
 	"net/http"
-	//"path"
-	//"strconv"
-	"strings"
 	//"time"
 
 	//"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -75,34 +72,6 @@ func (ts templateSystemEmbed) loadTemplateSubdir(subdir string) error {
 	return err
 }
 
-func (ts templateSystemEmbed) addSubdirTemplates(t *template.Template, subdir string) error {
-	var err = fs.WalkDir(ts.sourceFS, subdir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-
-		content, err := fs.ReadFile(ts.sourceFS, path)
-		if err != nil {
-			return fmt.Errorf("error reading template %s: %w", path, err)
-		}
-
-		new_t := template.New(path)
-		addFuncMap(new_t)
-		_, err = new_t.Parse(string(content))
-		if err != nil {
-			return fmt.Errorf("error parsing '%s': %w", path, err)
-		}
-		short_path := removeLeadingDir(path)
-		_, err = t.AddParseTree(short_path, new_t.Tree)
-		if err != nil {
-			return fmt.Errorf("error adding parse tree '%s': %w", path, err)
-		}
-		log.Debug().Str("path", short_path).Msg("Loaded shared component template")
-		return nil
-	})
-	return err
-}
-
 func (ts templateSystemEmbed) renderOrError(w http.ResponseWriter, template_name string, context interface{}) {
 	buf := &bytes.Buffer{}
 
@@ -125,24 +94,4 @@ func (ts templateSystemEmbed) renderOrError(w http.ResponseWriter, template_name
 		log.Error().Err(err).Msg("failed to write buffer on render")
 	}
 }
-func loadTemplateEmbedded(sourceFS fs.FS, path string) (*template.Template, error) {
-	content, err := fs.ReadFile(sourceFS, "template/"+path)
-	if err != nil {
-		return nil, fmt.Errorf("error reading template template/%s: %w", path, err)
-	}
 
-	new_t := template.New(path)
-	addFuncMap(new_t)
-	_, err = new_t.Parse(string(content))
-	if err != nil {
-		return nil, fmt.Errorf("error parsing '%s': %w", path, err)
-	}
-	return new_t, nil
-}
-func removeLeadingDir(path string) string {
-	parts := strings.SplitN(path, "/", 2)
-	if len(parts) == 2 {
-		return parts[1]
-	}
-	return path
-}

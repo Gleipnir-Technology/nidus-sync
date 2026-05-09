@@ -50,14 +50,6 @@ func (srr ServiceRequest) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func formatTime(t null.Val[time.Time]) string {
-	if t.IsNull() {
-		return ""
-	}
-	v := t.MustGet()
-	return v.Format("2006-01-02T15:04:05.000Z")
-}
-
 func toBool(t null.Val[int32]) *bool {
 	if t.IsNull() {
 		return nil

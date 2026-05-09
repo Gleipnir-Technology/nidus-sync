@@ -1,66 +1,13 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/models"
-	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/file"
 	"github.com/gorilla/mux"
 )
-
-func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
-	var latStr, lngStr string
-	err := r.ParseForm()
-	if err != nil {
-		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err))); err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-		return
-	} else {
-		latStr = r.FormValue("lat")
-		lngStr = r.FormValue("lng")
-	}
-	lat, err := strconv.ParseFloat(latStr, 64)
-	if err != nil {
-		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to parse lat as float: %w", err))); err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-		return
-	}
-	lng, err := strconv.ParseFloat(lngStr, 64)
-	if err != nil {
-		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to parse lng as float: %w", err))); err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-		return
-	}
-	org, err := platform.DistrictForLocation(r.Context(), lng, lat)
-	if err != nil {
-		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to get district: %w", err))); err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-		return
-	}
-	if org == nil {
-		http.NotFound(w, r)
-		return
-	}
-	d := ResponseDistrict{
-		Agency:  org.Name,
-		Manager: org.GeneralManagerName.GetOr(""),
-		Phone:   org.OfficePhone.GetOr(""),
-		Website: org.Website.GetOr(""),
-	}
-	if err := renderShim(w, r, d); err != nil {
-		if err := renderShim(w, r, errRender(err)); err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-	}
-}
 
 func apiGetDistrictLogo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)

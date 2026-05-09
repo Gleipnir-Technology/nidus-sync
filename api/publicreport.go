@@ -21,10 +21,6 @@ func postPublicreportSignal(ctx context.Context, r *http.Request, user platform.
 	return fmt.Sprintf("/signal/%d", *signal_id), nil
 }
 
-type formPublicreportInvalid struct {
-	ReportID string `json:"reportID"`
-}
-
 func postPublicreportInvalid(ctx context.Context, r *http.Request, user platform.User, req formPublicreportSignal) (string, *nhttp.ErrorWithStatus) {
 	err := platform.PublicReportInvalid(ctx, user, req.ReportID)
 	if err != nil {

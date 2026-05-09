@@ -15,10 +15,6 @@ import (
 
 type H3Cell uint64
 
-type hasCreated interface {
-	getCreated() string
-}
-
 type Bounds struct {
 	East  float64
 	North float64
@@ -300,16 +296,4 @@ func toBool16(t null.Val[int16]) *bool {
 	}
 	return &b
 }
-func toBool(t null.Val[int32]) *bool {
-	if t.IsNull() {
-		return nil
-	}
-	val := t.MustGet()
-	var b bool
-	if val == 0 {
-		b = false
-	} else {
-		b = true
-	}
-	return &b
-}
+

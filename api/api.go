@@ -14,7 +14,6 @@ import (
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/Gleipnir-Technology/nidus-sync/platform/types"
 	"github.com/Gleipnir-Technology/nidus-sync/resource"
 	"github.com/Gleipnir-Technology/nidus-sync/version"
 	//"github.com/gorilla/mux"
@@ -179,39 +178,6 @@ func apiTrapData(w http.ResponseWriter, r *http.Request, u platform.User) {
 	data := []Renderable{}
 	for _, td := range trap_data {
 		data = append(data, NewResponseTrapDatum(td))
-	}
-	if err := renderList(w, r, data); err != nil {
-		err = renderShim(w, r, errRender(err))
-		if err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-	}
-}
-
-func apiServiceRequest(w http.ResponseWriter, r *http.Request, u platform.User) {
-	bounds, err := parseBounds(r)
-	if err != nil {
-		err = renderShim(w, r, errRender(err))
-		if err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-		return
-	}
-	query := db.NewGeoQuery()
-	query.Bounds = *bounds
-	query.Limit = 100
-	requests, err := platform.ServiceRequestQuery()
-	if err != nil {
-		err = renderShim(w, r, errRender(err))
-		if err != nil {
-			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
-		}
-		return
-	}
-
-	data := []Renderable{}
-	for _, sr := range requests {
-		data = append(data, types.ServiceRequestFromModel(sr))
 	}
 	if err := renderList(w, r, data); err != nil {
 		err = renderShim(w, r, errRender(err))

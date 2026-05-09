@@ -273,61 +273,6 @@ func hasExistingPool(ctx context.Context, txn bob.Executor, setter *models.Fileu
 		Bool("exists", exists).Msg("checking pool exists")
 	return exists, nil
 }
-func insertPoollistRow(ctx context.Context, txn bob.Tx, file *models.FileuploadFile, c *models.FileuploadCSV, line_number int32, header_types []headerFlyoverEnum, header_names []string, row []string) (*models.FileuploadPool, error) {
-	tags := make(map[string]string, 0)
-	// Start with a setter with default values, comment out the required fields to ensure they're set
-	setter := models.FileuploadPoolSetter{
-		// AddressCity: omit.From(),
-		// AddressPostalCode: omit.From(),
-		// AddressStreet: omit.From(),
-		Committed: omit.From(false),
-		Condition: omit.From(enums.PoolconditiontypeUnknown),
-		Created:   omit.From(time.Now()),
-		CreatorID: omit.From(file.CreatorID),
-		CSVFile:   omit.From(file.ID),
-		Deleted:   omitnull.FromPtr[time.Time](nil),
-		Geom:      omitnull.FromPtr[string](nil),
-		H3cell:    omitnull.FromPtr[string](nil),
-		// ID - generated
-		IsInDistrict:           omit.From(false),
-		IsNew:                  omit.From(true),
-		LineNumber:             omit.From(line_number),
-		Notes:                  omit.From(""),
-		PropertyOwnerName:      omit.From(""),
-		PropertyOwnerPhoneE164: omitnull.FromPtr[string](nil),
-		ResidentOwned:          omitnull.FromPtr[bool](nil),
-		ResidentPhoneE164:      omitnull.FromPtr[string](nil),
-		// Can't set this via a Setter
-		// Tags:       		convertToPGData(tags),
-	}
-	for i, value := range row {
-		if value == "" {
-			continue
-		}
-		header_type := header_types[i]
-		switch header_type {
-		case headerFlyoverAddressLocality:
-			setter.AddressLocality = omit.From(value)
-		case headerFlyoverAddressPostalCode:
-			setter.AddressPostalCode = omit.From(value)
-		case headerFlyoverAddressStreet:
-			setter.AddressStreet = omit.From(value)
-		case headerFlyoverComment:
-			condition, err := parsePoolCondition(value)
-			if err == nil {
-				setter.Condition = omit.From(condition)
-			} else {
-				lint.LogOnErrCtx(func(ctx context.Context) error {
-					return addError(ctx, txn, c, int32(line_number), int32(i), fmt.Sprintf("'%s' is not a pool condition that we recognize. It should be one of %s", value, poolConditionValidValues()))
-				}, ctx, "add pool condition error")
-				continue
-			}
-		}
-
-	}
-	setter.Tags = omit.From(db.ConvertToPGData(tags))
-	return models.FileuploadPools.Insert(&setter).One(ctx, txn)
-}
 
 type parseHeaderFunc[EnumType any] = func(row []string) ([]EnumType, []string)
 

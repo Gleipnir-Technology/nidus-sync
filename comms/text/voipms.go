@@ -56,26 +56,6 @@ func sendTextVoipms(ctx context.Context, to string, content string, media ...str
 	return strconv.Itoa(response.MMS), nil
 }
 
-func sendSMSVoipms(to string, content string) (string, error) {
-	if len(content) > 160 {
-		return "", errors.New("Message content is more than 160 characters")
-	}
-	params := url.Values{}
-	params.Add("api_password", config.VoipMSPassword)
-	params.Add("api_username", config.VoipMSUsername)
-	params.Add("method", "sendSMS")
-	params.Add("did", config.VoipMSNumber)
-	params.Add("dst", to)
-	params.Add("message", content)
-
-	response, err := makeVoipMSRequest(params)
-	if err != nil {
-		return "", fmt.Errorf("Failed to send SMS: %w", err)
-	}
-	log.Info().Str("status", response.Status).Int("sms", response.SMS).Msg("Sent MMS message")
-	return strconv.Itoa(response.SMS), nil
-}
-
 func makeVoipMSRequest(params url.Values) (VoipMSResponse, error) {
 	result := VoipMSResponse{}
 	// Construct the URL with query parameters

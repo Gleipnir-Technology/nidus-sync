@@ -33,19 +33,6 @@ func SaveFileUploads(r *http.Request, collection Collection) ([]Upload, error) {
 	}
 	return results, nil
 }
-func saveFileUploads(r *http.Request, collection Collection) ([]Upload, error) {
-	results := make([]Upload, 0)
-	for name, fheaders := range r.MultipartForm.File {
-		for _, headers := range fheaders {
-			upload, err := saveFileUpload(headers, collection)
-			if err != nil {
-				return results, fmt.Errorf("Failed to save upload '%s': %w", name, err)
-			}
-			results = append(results, upload)
-		}
-	}
-	return results, nil
-}
 func saveFileUpload(headers *multipart.FileHeader, collection Collection) (upload Upload, err error) {
 	file, err := headers.Open()
 	if err != nil {

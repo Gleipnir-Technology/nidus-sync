@@ -37,23 +37,6 @@ func H3ToGeoJSON(indexes []h3.Cell) (interface{}, error) {
 	return featureCollection.JSON(), nil
 }
 
-// Given a cell at a smaller resolution remap it to the larger resolution
-func scaleCell(cell h3.Cell, resolution int) (h3.Cell, error) {
-	r := cell.Resolution()
-	if r == resolution {
-		return cell, nil
-	}
-	latLong, err := cell.LatLng()
-	if err != nil {
-		return 0, fmt.Errorf("Failed to get latlng: %w", err)
-	}
-	scaled, err := h3.LatLngToCell(latLong, resolution)
-	if err != nil {
-		return 0, fmt.Errorf("Failed to create latlng: %w", err)
-	}
-	return scaled, nil
-}
-
 func GetCell(x, y float64, resolution int) (h3.Cell, error) {
 	latLng := h3.NewLatLng(y, x)
 	return h3.LatLngToCell(latLng, resolution)

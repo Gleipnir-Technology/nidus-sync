@@ -8,30 +8,10 @@ import (
 	"github.com/Gleipnir-Technology/nidus-sync/comms/email"
 	"github.com/Gleipnir-Technology/nidus-sync/comms/text"
 	"github.com/Gleipnir-Technology/nidus-sync/config"
-	"github.com/Gleipnir-Technology/nidus-sync/html"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
 )
-
-type contentSudo struct {
-	ForwardEmailRMOAddress   string
-	ForwardEmailNidusAddress string
-}
-
-func getSudo(ctx context.Context, r *http.Request, user platform.User) (*html.Response[contentSudo], *nhttp.ErrorWithStatus) {
-	if !user.HasRoot() {
-		return nil, &nhttp.ErrorWithStatus{
-			Message: "You have to be a root user to access this",
-			Status:  http.StatusForbidden,
-		}
-	}
-	content := contentSudo{
-		ForwardEmailRMOAddress:   config.ForwardEmailRMOAddress,
-		ForwardEmailNidusAddress: config.ForwardEmailNidusAddress,
-	}
-	return html.NewResponse("sync/sudo.html", content), nil
-}
 
 type FormEmail struct {
 	Body    string `schema:"emailBody"`

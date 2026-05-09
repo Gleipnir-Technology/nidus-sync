@@ -13,10 +13,6 @@ import (
 	//"github.com/rs/zerolog/log"
 )
 
-type _rowWithID struct {
-	ID int32 `db:"id"`
-}
-
 // Ensure the provided address exists. If it doesn't add it to the database.
 func EnsureAddress(ctx context.Context, txn db.Ex, a types.Address) (types.Address, error) {
 	existing, err := querypublic.AddressFromGID(ctx, txn, a.GID)

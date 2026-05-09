@@ -2,7 +2,6 @@ package text
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/Gleipnir-Technology/nidus-sync/config"
@@ -32,21 +31,3 @@ func sendTextTwilio(ctx context.Context, source string, destination string, mess
 	return *resp.Sid, nil
 }
 
-func sendSMSTwilio(destination, source, message string) error {
-	client := twilio.NewRestClientWithParams(twilio.ClientParams{
-		Username: config.TwilioAccountSID,
-		Password: config.TwilioAuthToken,
-	})
-	params := &twilioApi.CreateMessageParams{}
-	params.SetTo("+15558675309")
-	params.SetFrom("+15017250604")
-	params.SetBody("Hello from Go!")
-
-	resp, err := client.Api.CreateMessage(params)
-	if err != nil {
-		return fmt.Errorf("Error sending SMS message: %w", err)
-	}
-	response, _ := json.Marshal(*resp)
-	log.Debug().Str("response", string(response)).Msg("Send SMS")
-	return nil
-}

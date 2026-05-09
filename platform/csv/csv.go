@@ -295,9 +295,6 @@ func addError(ctx context.Context, txn bob.Tx, c *models.FileuploadCSV, row_numb
 	log.Info().Int32("id", r.ID).Int32("file_id", c.FileID).Str("msg", msg).Int32("row", row_number).Int32("col", column_number).Msg("Created CSV file error")
 	return nil
 }
-func addImportError(file *models.FileuploadFile, err error) {
-	log.Debug().Err(err).Int32("file_id", file.ID).Msg("Fake add import error")
-}
 func parseBool(s string) (bool, error) {
 	sl := strings.ToLower(s)
 	boolValue, err := strconv.ParseBool(sl)

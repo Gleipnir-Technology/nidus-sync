@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
-	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/minio/minio-go/v7"
@@ -31,20 +29,6 @@ func NewClient(baseURL string, accessKeyID string, secretAccessKey string) (*Cli
 	}, nil
 }
 
-func signUrl(minioClient *minio.Client, bucketName string, filePath string) {
-	// Set request parameters for content-disposition.
-	reqParams := make(url.Values)
-	reqParams.Set("response-content-disposition", "attachment; filename=\""+filePath+"\"")
-
-	// Generates a presigned url which expires in a day.
-	presignedURL, err := minioClient.PresignedGetObject(context.Background(), bucketName, filePath, time.Second*24*60*60, reqParams)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	fmt.Println("Successfully generated presigned URL", presignedURL)
-}
 func (minioClient *Client) ObjectExists(bucket string, path string) bool {
 	ctx := context.Background()
 	opts := minio.ListObjectsOptions{
