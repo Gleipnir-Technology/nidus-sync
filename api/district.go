@@ -16,7 +16,9 @@ func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
 	var latStr, lngStr string
 	err := r.ParseForm()
 	if err != nil {
-		renderShim(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err)))
+		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to parse GET form: %w", err))); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	} else {
 		latStr = r.FormValue("lat")
@@ -24,7 +26,9 @@ func apiGetDistrict(w http.ResponseWriter, r *http.Request) {
 	}
 	lat, err := strconv.ParseFloat(latStr, 64)
 	if err != nil {
-		renderShim(w, r, errRender(fmt.Errorf("Failed to parse lat as float: %w", err)))
+		if err := renderShim(w, r, errRender(fmt.Errorf("Failed to parse lat as float: %w", err))); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 	lng, err := strconv.ParseFloat(lngStr, 64)

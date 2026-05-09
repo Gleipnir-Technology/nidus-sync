@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -51,7 +52,9 @@ func apiAudioPost(w http.ResponseWriter, r *http.Request, u platform.User) {
 		UUID:                    omit.From(noteUUID),
 	}
 	if err := platform.NoteAudioCreate(ctx, u, setter); err != nil {
-		renderShim(w, r, errRender(err))
+		if err := renderShim(w, r, errRender(err)); err != nil {
+			http.Error(w, fmt.Sprintf("render shim: %v", err), http.StatusInternalServerError)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
