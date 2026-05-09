@@ -52,7 +52,6 @@ func (r Result) RowsAffected() (int64, error) {
 }
 
 type Rows struct {
-	tag pgconn.CommandTag
 }
 
 func (r Rows) Close() error {

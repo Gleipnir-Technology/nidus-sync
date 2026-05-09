@@ -16,12 +16,6 @@ type contentSignin struct {
 	Next               string
 }
 
-func getSignin(w http.ResponseWriter, r *http.Request) {
-	errorCode := r.URL.Query().Get("error")
-	next := r.URL.Query().Get("next")
-	signin(w, errorCode, next)
-}
-
 func getSignout(w http.ResponseWriter, r *http.Request, user platform.User) {
 	auth.SignoutUser(r, user)
 	http.Redirect(w, r, "/signin", http.StatusFound)

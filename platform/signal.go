@@ -39,10 +39,6 @@ type Signal struct {
 	Type      string              `db:"type" json:"type"`
 }
 
-type _rowWithID struct {
-	ID int32 `db:"id"`
-}
-
 func SignalCreateFromPool(ctx context.Context, txn db.Ex, user User, site_id int32, feature_id int32, location types.Location) (modelpublic.Signal, error) {
 	g := location.ToGeom()
 	signal := modelpublic.Signal{

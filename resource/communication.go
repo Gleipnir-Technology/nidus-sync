@@ -6,12 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Gleipnir-Technology/nidus-sync/config"
 	modelpublic "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -57,17 +55,6 @@ type resourceStub struct {
 	URI     string    `json:"uri"`
 }
 
-func toImageURLs(m map[string][]uuid.UUID, id string) []string {
-	uuids, ok := m[id]
-	if !ok {
-		return []string{}
-	}
-	urls := make([]string, len(uuids))
-	for i, u := range uuids {
-		urls[i] = config.MakeURLNidus("/api/image/%s/content", u.String())
-	}
-	return urls
-}
 func (res *communicationR) Get(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*communication, *nhttp.ErrorWithStatus) {
 	return nil, nil
 }
@@ -230,9 +217,4 @@ func emailURI(r router, id int32) (string, error) {
 func textURI(r router, id int32) (string, error) {
 	return "fake text uri", nil
 }
-func userURI(r *router, id *int32) (string, error) {
-	if id == nil {
-		return "", nil
-	}
-	return r.IDToURI("user.ByIDGet", int(*id))
-}
+

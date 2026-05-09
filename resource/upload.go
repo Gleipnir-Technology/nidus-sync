@@ -39,11 +39,6 @@ func (res *uploadR) ByIDGet(ctx context.Context, r *http.Request, u platform.Use
 	return detail, nil
 }
 
-type contentUploadList struct {
-	RecentUploads []platform.Upload
-}
-type contentUploadPlaceholder struct{}
-
 func (res *uploadR) List(ctx context.Context, r *http.Request, user platform.User, req QueryParams) (*contentUploadPoolList, *nhttp.ErrorWithStatus) {
 	rows, err := platform.UploadList(ctx, user.Organization)
 	if err != nil {
@@ -54,11 +49,6 @@ func (res *uploadR) List(ctx context.Context, r *http.Request, user platform.Use
 	}, nil
 }
 
-type contentUploadDetail struct {
-	CSVFileID    int32
-	Organization platform.Organization
-	Upload       platform.Upload
-}
 type contentUploadPoolList struct {
 	Uploads []platform.Upload `json:"uploads"`
 }

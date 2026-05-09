@@ -71,10 +71,6 @@ func (res *userR) response(u *platform.User) (*user, error) {
 type userR struct {
 	router *router
 }
-type responseListUser struct {
-	Users []*platform.User `json:"users"`
-}
-
 func (res *userR) ByIDGet(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*platform.User, *nhttp.ErrorWithStatus) {
 	vars := mux.Vars(r)
 	user_id_str := vars["id"]
