@@ -236,9 +236,7 @@ Verify that all code references use the external package, not a local path.
 
 ## 10. Old Generated Files & Artifacts
 
-### 10a. `query.go` at project root
-
-Contains a commented-out Bob query interface and an unused `QueryWriter` interface. The `insertQueryToString` function is entirely commented out. Either repurpose or remove.
+### 10a. `query.go` at project root — Removed ✅
 
 ### 10b. `db/sql/` directory
 
@@ -287,7 +285,7 @@ Empty placeholder file. Remove.
    - ~~Remove `tomtom/` (unused, no imports)~~ ✅
    - ~~Remove `build.js` (dead, replaced by Vite)~~ ✅
    - Remove commented-out routes in `sync/routes.go` and `rmo/routes.go`
-   - Remove `query.go` commented-out code
+   - ~~Remove `query.go` commented-out code~~ ✅
    - Remove `static/gen/main.js` stale artifact
    - Remove `static/css/placeholder`
 
