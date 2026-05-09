@@ -77,10 +77,10 @@ func (s prettyStack) parse(debugStack []byte, rvr interface{}) ([]byte, error) {
 	useColor := true
 	buf := &bytes.Buffer{}
 
-	cW(buf, false, bRed, "\n")
-	cW(buf, useColor, bCyan, " panic: ")
-	cW(buf, useColor, bBlue, "%v", rvr)
-	cW(buf, false, bWhite, "\n \n")
+	_ = cW(buf, false, bRed, "\n")
+	_ = cW(buf, useColor, bCyan, " panic: ")
+	_ = cW(buf, useColor, bBlue, "%v", rvr)
+	_ = cW(buf, false, bWhite, "\n \n")
 
 	// process debug stack info
 	stack := strings.Split(string(debugStack), "\n")
@@ -157,14 +157,14 @@ func (s prettyStack) decorateFuncCallLine(line string, useColor bool, num int) (
 	methodColor := bGreen
 
 	if num == 0 {
-		cW(buf, useColor, bRed, " -> ")
+		_ = cW(buf, useColor, bRed, " -> ")
 		pkgColor = bMagenta
 		methodColor = bRed
 	} else {
-		cW(buf, useColor, bWhite, "    ")
+		_ = cW(buf, useColor, bWhite, "    ")
 	}
-	cW(buf, useColor, pkgColor, "%s", pkg)
-	cW(buf, useColor, methodColor, "%s\n", method)
+	_ = cW(buf, useColor, pkgColor, "%s", pkg)
+	_ = cW(buf, useColor, methodColor, "%s\n", method)
 	// cW(buf, useColor, nBlack, "%s", addr)
 	return buf.String(), nil
 }
@@ -191,19 +191,19 @@ func (s prettyStack) decorateSourceLine(line string, useColor bool, num int) (st
 	lineColor := bGreen
 
 	if num == 1 {
-		cW(buf, useColor, bRed, " ->   ")
+		_ = cW(buf, useColor, bRed, " ->   ")
 		fileColor = bRed
 		lineColor = bMagenta
 	} else {
-		cW(buf, false, bWhite, "      ")
+		_ = cW(buf, false, bWhite, "      ")
 	}
-	cW(buf, useColor, bWhite, "%s", dir)
-	cW(buf, useColor, fileColor, "%s", file)
-	cW(buf, useColor, lineColor, "%s", lineno)
+	_ = cW(buf, useColor, bWhite, "%s", dir)
+	_ = cW(buf, useColor, fileColor, "%s", file)
+	_ = cW(buf, useColor, lineColor, "%s", lineno)
 	if num == 1 {
-		cW(buf, false, bWhite, "\n")
+		_ = cW(buf, false, bWhite, "\n")
 	}
-	cW(buf, false, bWhite, "\n")
+	_ = cW(buf, false, bWhite, "\n")
 
 	return buf.String(), nil
 }

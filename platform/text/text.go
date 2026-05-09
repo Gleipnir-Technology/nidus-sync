@@ -132,7 +132,9 @@ func respondText(ctx context.Context, log_id int32) error {
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to wipe memory")
 			content := "Failed to wipe memory"
-			sendTextCommandResponse(ctx, txn, *src, content)
+			lint.LogOnErrCtx(func(ctx context.Context) error {
+				return sendTextCommandResponse(ctx, txn, *src, content)
+			}, ctx, "send text command response")
 			return fmt.Errorf("reset conversation: %w", err)
 		}
 		return nil
