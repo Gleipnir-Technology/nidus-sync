@@ -294,7 +294,7 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 	}
 	for name, values := range r.Header {
 		for _, value := range values {
-			fmt.Fprintf(file, "%s: %s\n", name, value)
+			lint.Fprintf(file, "%s: %s\n", name, value)
 		}
 	}
 
@@ -323,11 +323,11 @@ func webhookFieldseeker(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(body) == 0 {
-			fmt.Fprintf(file, "(empty body)")
+			lint.Fprintf(file, "(empty body)")
 		}
 	}
 
-	fmt.Fprintf(file, "\n=== End of request ===\n\n")
+	lint.Fprintf(file, "\n=== End of request ===\n\n")
 
 	// Extract the crc_token value for the signature portion
 

@@ -2,6 +2,8 @@ package lint
 
 import (
 	"context"
+	"fmt"
+	"io"
 
 	"github.com/rs/zerolog/log"
 )
@@ -31,5 +33,21 @@ func LogOnErrRollback(f ErrorableCtx, ctx context.Context, msg string) {
 			return
 		}
 		log.Error().Err(e).Msg(msg)
+	}
+}
+
+// Fprintf writes a formatted string to w, logging any error.
+func Fprintf(w io.Writer, format string, args ...any) {
+	_, err := fmt.Fprintf(w, format, args...)
+	if err != nil {
+		log.Error().Err(err).Msg("fprintf failed")
+	}
+}
+
+// Write writes p to w, logging any error.
+func Write(w io.Writer, p []byte) {
+	_, err := w.Write(p)
+	if err != nil {
+		log.Error().Err(err).Msg("write failed")
 	}
 }
