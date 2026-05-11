@@ -28,7 +28,7 @@ type handlerBase func(context.Context, http.ResponseWriter, *http.Request) *nhtt
 type handlerBaseAuthenticated func(context.Context, http.ResponseWriter, *http.Request, platform.User) *nhttp.ErrorWithStatus
 type handlerFunctionDelete func(context.Context, *http.Request, platform.User) *nhttp.ErrorWithStatus
 type handlerFunctionGet[T any] func(context.Context, *http.Request, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
-type handlerFunctionGetAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (*T, *nhttp.ErrorWithStatus)
+type handlerFunctionGetAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) (T, *nhttp.ErrorWithStatus)
 type handlerFunctionGetImage func(context.Context, *http.Request, platform.User) (file.Collection, uuid.UUID, *nhttp.ErrorWithStatus)
 type handlerFunctionGetSlice[T any] func(context.Context, *http.Request, resource.QueryParams) ([]*T, *nhttp.ErrorWithStatus)
 type handlerFunctionGetSliceAuthenticated[T any] func(context.Context, *http.Request, platform.User, resource.QueryParams) ([]T, *nhttp.ErrorWithStatus)
