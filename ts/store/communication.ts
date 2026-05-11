@@ -14,8 +14,11 @@ export const useCommunicationStore = defineStore("communication", () => {
 
 	// Subscription
 	SSEManager.subscribe((msg: SSEMessageResource) => {
-		if (msg.resource.startsWith("rmo:")) {
-			fetchAll();
+		if (
+			msg.resource.startsWith("sync:communication") &&
+			msg.type == "updated"
+		) {
+			fetchOne(msg.uri);
 		}
 	});
 	// Actions
@@ -42,6 +45,18 @@ export const useCommunicationStore = defineStore("communication", () => {
 			throw err;
 		} finally {
 			loading.value = false;
+		}
+	}
+	async function fetchOne(uri: string) {
+		const data = (await apiClient.JSONGet(uri)) as CommunicationDTO;
+		if (!all.value) {
+			return;
+		}
+		for (var i = 0; i < all.value.length; i++) {
+			const c = all.value[i];
+			if (c.uri == data.uri) {
+				all.value[i] = Communication.fromJSON(data);
+			}
 		}
 	}
 	return {
