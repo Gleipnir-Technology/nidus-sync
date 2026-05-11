@@ -3,14 +3,14 @@ package platform
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
-	//"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/enum"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
 	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
 	"github.com/Gleipnir-Technology/nidus-sync/lint"
-	//"github.com/Gleipnir-Technology/jet/postgres"
+	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 )
 
 func CommunicationsForOrganization(ctx context.Context, org_id int64) ([]model.Communication, error) {
@@ -63,5 +63,7 @@ func communicationMark(ctx context.Context, user User, comm_id int32, status mod
 	if err := txn.Commit(ctx); err != nil {
 		return fmt.Errorf("commit: %w", err)
 	}
+
+	event.Updated(event.TypeCommunication, user.Organization.ID, strconv.Itoa(int(comm_id)))
 	return nil
 }

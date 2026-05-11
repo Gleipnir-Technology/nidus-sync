@@ -89,6 +89,7 @@ type ResourceType int
 
 const (
 	TypeUnknown = iota
+	TypeCommunication
 	TypeFileCSV
 	TypeNoteAudio
 	TypeNoteImage
@@ -151,6 +152,8 @@ func Send(env Envelope) {
 }
 func resourceString(t ResourceType) string {
 	switch t {
+	case TypeCommunication:
+		return "sync:communication"
 	case TypeFileCSV:
 		return "sync:filecsv"
 	case TypeNoteAudio:
@@ -179,6 +182,8 @@ func resourceString(t ResourceType) string {
 }
 func makeURI(t ResourceType, id string) string {
 	switch t {
+	case TypeCommunication:
+		return config.MakeURLNidus("/api/communication/%s", id)
 	case TypeFileCSV:
 		return config.MakeURLNidus("/api/upload/%s", id)
 	case TypeNoteAudio:
