@@ -533,6 +533,7 @@ export interface CommunicationDTO {
 	created: string;
 	id: string;
 	source: string;
+	status: string;
 	type: string;
 	uri: string;
 }
@@ -541,6 +542,7 @@ export class Communication {
 		public created: Date,
 		public id: string,
 		public source: string,
+		public status: string,
 		public type: string,
 		public uri: string,
 	) {}
@@ -549,6 +551,7 @@ export class Communication {
 			new Date(json.created),
 			json.id,
 			json.source,
+			json.status,
 			json.type,
 			json.uri,
 		);

@@ -14,7 +14,7 @@
 		</template>
 		<template #left>
 			<CommunicationColumnList
-				:all="storeCommunication.all"
+				:all="visibleCommunications"
 				@deselect="handleDeselect"
 				:loading="storeCommunication.loading"
 				:selectedID="selectedId"
@@ -192,6 +192,14 @@ const selectedReport = computedAsync(
 		return await storePublicReport.byURI(selectedCommunication.value.source);
 	},
 );
+const visibleCommunications = computed((): Communication[] => {
+	if (!storeCommunication.all) {
+		return [];
+	}
+	return storeCommunication.all.filter((c: Communication) => {
+		return c.status == "new" || c.status == "opened";
+	});
+});
 const handleDeselect = (id: string) => {
 	selectedId.value = undefined;
 };
