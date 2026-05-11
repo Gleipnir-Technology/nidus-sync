@@ -11,7 +11,7 @@ import (
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/gorilla/mux"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 type communicationR struct {
@@ -55,8 +55,12 @@ type resourceStub struct {
 	URI     string    `json:"uri"`
 }
 
-func (res *communicationR) Get(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (*communication, *nhttp.ErrorWithStatus) {
-	return nil, nil
+func (res *communicationR) Get(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (communication, *nhttp.ErrorWithStatus) {
+	comm_id, error_with_status := communicationIDFromMux(r)
+	if error_with_status != nil {
+		return communication{}, error_with_status
+	}
+	return res.hydratedCommunicationFromID(ctx, user, int32(comm_id))
 }
 func (res *communicationR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) ([]communicationStub, *nhttp.ErrorWithStatus) {
 	comms, err := platform.CommunicationsForOrganization(ctx, int64(user.Organization.ID))
@@ -162,41 +166,52 @@ func (res *communicationR) hydrateCommunicationStub(comm modelpublic.Communicati
 	}, nil
 }
 
-type markFunc = func(context.Context, platform.User, int32) error
-
-func (res *communicationR) markCommunication(ctx context.Context, r *http.Request, user platform.User, status string, m markFunc) (communication, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	comm_id_str := vars["id"]
-	if comm_id_str == "" {
-		return communication{}, nhttp.NewBadRequest("no id provided")
-	}
-	comm_id, err := strconv.Atoi(comm_id_str)
-	if err != nil {
-		return communication{}, nhttp.NewBadRequest("can't turn report ID into an int: %w", err)
-	}
-	if err := m(ctx, user, int32(comm_id)); err != nil {
-		return communication{}, nhttp.NewError("mark communication: %w", err)
-	}
+func (res *communicationR) hydratedCommunicationFromID(ctx context.Context, user platform.User, comm_id int32) (communication, *nhttp.ErrorWithStatus) {
 	result, err := platform.CommunicationFromID(ctx, user, int64(comm_id))
 	if result == nil {
 		return communication{}, nhttp.NewUnauthorized("you are not authorized to modify communication %d", comm_id)
 	}
+	comm, err := platform.CommunicationFromID(ctx, user, int64(comm_id))
+	if err != nil {
+		return communication{}, nhttp.NewError("comm from ID: %w", err)
+	}
 	var public_report modelpublicreport.Report
-	if result.SourceReportID != nil {
-		comm_ids := []int64{int64(*result.SourceReportID)}
+	if comm.SourceReportID != nil {
+		comm_ids := []int64{int64(*comm.SourceReportID)}
 		public_reports, err := platform.PublicReportsFromIDs(ctx, comm_ids)
 		if err != nil {
-			return communication{}, nhttp.NewError("Get report %d: %w", *result.SourceReportID, err)
+			return communication{}, nhttp.NewError("Get report %d: %w", *comm.SourceReportID, err)
 		}
 		public_report = public_reports[0]
 	}
 
-	err = m(ctx, user, int32(comm_id))
+	return res.hydrateCommunication(*comm, &public_report)
+}
+
+type markFunc = func(context.Context, platform.User, int32) error
+
+func (res *communicationR) markCommunication(ctx context.Context, r *http.Request, user platform.User, status string, m markFunc) (communication, *nhttp.ErrorWithStatus) {
+	comm_id, err_with_status := communicationIDFromMux(r)
+	if err_with_status != nil {
+		return communication{}, err_with_status
+	}
+	err := m(ctx, user, int32(comm_id))
 	if err != nil {
 		return communication{}, nhttp.NewError("failed to mark %d: %w", comm_id, err)
 	}
-	log.Info().Int("communication", comm_id).Str("status", status).Msg("Marked communication")
-	return res.hydrateCommunication(*result, &public_report)
+	return res.hydratedCommunicationFromID(ctx, user, int32(comm_id))
+}
+func communicationIDFromMux(r *http.Request) (int, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(r)
+	comm_id_str := vars["id"]
+	if comm_id_str == "" {
+		return 0, nhttp.NewBadRequest("no id provided")
+	}
+	comm_id, err := strconv.Atoi(comm_id_str)
+	if err != nil {
+		return 0, nhttp.NewBadRequest("can't turn report ID into an int: %w", err)
+	}
+	return comm_id, nil
 }
 func responseURI(r router, comm modelpublic.Communication) (string, error) {
 	if comm.ResponseEmailLogID != nil {
