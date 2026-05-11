@@ -28,12 +28,7 @@ func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]model.
 	statement := table.Communication.SELECT(
 		table.Communication.AllColumns,
 	).FROM(table.Communication).
-		WHERE(
-			table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
-				table.Communication.Status.EQ(postgres.NewEnumValue(
-					model.Communicationstatus_New.String())).OR(
-					table.Communication.Status.EQ(postgres.NewEnumValue(
-						model.Communicationstatus_Opened.String()))))).
+		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id))).
 		ORDER_BY(table.Communication.Created.DESC())
 	return db.ExecuteMany[model.Communication](ctx, statement)
 }
