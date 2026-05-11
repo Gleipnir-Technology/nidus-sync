@@ -155,7 +155,7 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 		return fmt.Errorf("create txn: %w", err)
 	}
 	defer lint.LogOnErrRollback(txn.Rollback, ctx, "rollback")
-	report, err := querypublicreport.ReportFromPublicID(ctx, db.PGInstance.PGXPool, public_id)
+	report, err := querypublicreport.ReportFromPublicID(ctx, txn, public_id)
 	if err != nil {
 		return fmt.Errorf("query report existence: %w", err)
 	}
@@ -170,8 +170,14 @@ func PublicReportUpdateCompliance(ctx context.Context, public_id string, report_
 			compliance_updates.Unset(tablepublicreport.Compliance.Submitted)
 		} else {
 			comm := model.Communication{
-				OrganizationID: report.OrganizationID,
-				SourceReportID: &report.ID,
+				Created:            time.Now(),
+				OrganizationID:     report.OrganizationID,
+				ResponseEmailLogID: nil,
+				ResponseTextLogID:  nil,
+				SourceEmailLogID:   nil,
+				SourceReportID:     &report.ID,
+				SourceTextLogID:    nil,
+				Status:             model.Communicationstatus_New,
 			}
 			comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
 			if err != nil {
@@ -404,8 +410,15 @@ func publicReportCreate(ctx context.Context, setter_report modelpublicreport.Rep
 	report_type := setter_report.ReportType
 	if report_type != modelpublicreport.Reporttype_Compliance {
 		comm := model.Communication{
-			OrganizationID: result.OrganizationID,
-			SourceReportID: &result.ID,
+			Created: time.Now(),
+
+			OrganizationID:     result.OrganizationID,
+			ResponseEmailLogID: nil,
+			ResponseTextLogID:  nil,
+			SourceEmailLogID:   nil,
+			SourceReportID:     &result.ID,
+			SourceTextLogID:    nil,
+			Status:             model.Communicationstatus_New,
 		}
 		comm, err = querypublic.CommunicationInsert(ctx, txn, comm)
 		if err != nil {

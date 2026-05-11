@@ -11,7 +11,7 @@ import (
 )
 
 func NuisanceInsert(ctx context.Context, txn db.Ex, m model.Nuisance) (model.Nuisance, error) {
-	statement := table.Nuisance.INSERT(table.Nuisance.MutableColumns).
+	statement := table.Nuisance.INSERT(table.Nuisance.AllColumns).
 		MODEL(m).
 		RETURNING(table.Nuisance.AllColumns)
 	return db.ExecuteOneTx[model.Nuisance](ctx, txn, statement)

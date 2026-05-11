@@ -15,7 +15,7 @@ func CommunicationInsert(ctx context.Context, txn db.Tx, m model.Communication) 
 	statement := table.Communication.INSERT(table.Communication.MutableColumns).
 		MODEL(m).
 		RETURNING(table.Communication.AllColumns)
-	return db.ExecuteOne[model.Communication](ctx, statement)
+	return db.ExecuteOneTx[model.Communication](ctx, txn, statement)
 }
 func CommunicationFromID(ctx context.Context, comm_id int64) (model.Communication, error) {
 	statement := table.Communication.SELECT(
