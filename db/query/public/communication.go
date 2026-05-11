@@ -35,7 +35,7 @@ func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]model.
 func CommunicationSetStatus(ctx context.Context, txn db.Tx, org_id int64, comm_id int64, status model.Communicationstatus) error {
 	statement := table.Communication.UPDATE().
 		SET(
-			table.Communication.Status.SET(postgres.String(status.String())),
+			table.Communication.Status.SET(postgres.NewEnumValue(status.String())),
 		).
 		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id)).AND(
 			table.Communication.ID.EQ(postgres.Int(comm_id))))
