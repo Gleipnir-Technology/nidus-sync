@@ -83,9 +83,9 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 		if !ok {
 			return nil, nhttp.NewError("lookup report id %d failed", comm.SourceReportID)
 		}
-		c, err := res.hydrateCommunicationStub(comm, &public_report)
-		if err != nil {
-			return nil, err
+		c, e := res.hydrateCommunicationStub(comm, &public_report)
+		if e != nil {
+			return nil, e
 		}
 		result[i] = c
 	}
@@ -107,10 +107,9 @@ func (res *communicationR) MarkPossibleResolved(ctx context.Context, r *http.Req
 	return res.markCommunication(ctx, r, user, "possible-resolved", platform.CommunicationMarkPossibleResolved)
 }
 func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, public_report *modelpublicreport.Report) (communication, *nhttp.ErrorWithStatus) {
-	var err error
-	stub, err := res.hydrateCommunicationStub(comm, public_report)
-	if err != nil {
-		return communication{}, nhttp.NewError("hydrate stub: %w", err)
+	stub, e := res.hydrateCommunicationStub(comm, public_report)
+	if e != nil {
+		return communication{}, e
 	}
 	response, err := responseURI(*res.router, comm)
 	if err != nil {
@@ -149,12 +148,6 @@ func (res *communicationR) hydrateCommunicationStub(comm modelpublic.Communicati
 		}
 		source_uri = "text"
 	}
-	/*
-		response, err := responseURI(*res.router, comm)
-		if err != nil {
-			return communicationStub{}, nhttp.NewError("gen response URI: %w", err)
-		}
-	*/
 	uri, err := res.router.IDToURI("communication.ByIDGet", int(comm.ID))
 	if err != nil {
 		return communicationStub{}, nhttp.NewError("gen comm uri: %w", err)
