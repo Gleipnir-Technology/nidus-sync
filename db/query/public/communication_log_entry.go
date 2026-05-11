@@ -12,8 +12,8 @@ import (
 
 func CommunicationLogEntryInsert(ctx context.Context, txn db.Tx, m model.CommunicationLogEntry) (model.CommunicationLogEntry, error) {
 	m.Created = time.Now()
-	statement := table.Communication.INSERT(table.Communication.MutableColumns).
+	statement := table.CommunicationLogEntry.INSERT(table.CommunicationLogEntry.MutableColumns).
 		MODEL(m).
-		RETURNING(table.Communication.AllColumns)
+		RETURNING(table.CommunicationLogEntry.AllColumns)
 	return db.ExecuteOne[model.CommunicationLogEntry](ctx, statement)
 }

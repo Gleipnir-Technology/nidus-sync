@@ -191,6 +191,10 @@ func (res *communicationR) markCommunication(ctx context.Context, r *http.Reques
 		public_report = public_reports[0]
 	}
 
+	err = m(ctx, user, int32(comm_id))
+	if err != nil {
+		return communication{}, nhttp.NewError("failed to mark %d: %w", comm_id, err)
+	}
 	log.Info().Int("communication", comm_id).Str("status", status).Msg("Marked communication")
 	return res.hydrateCommunication(*result, &public_report)
 }
