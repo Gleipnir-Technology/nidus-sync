@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,8 +11,7 @@ import (
 	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/gorilla/mux"
-	//"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 )
 
 type communicationR struct {
@@ -24,45 +24,58 @@ func Communication(r *router) *communicationR {
 	}
 }
 
+type communicationLogType string
+type communicationType string
+
+const (
+	communicationTypeUnknown          communicationType = "unknown"
+	communicationTypeReportCompliance                   = "publicreport.compliance"
+	communicationTypeReportNuisance                     = "publicreport.nuisance"
+	communicationTypeReportWater                        = "publicreport.water"
+)
+
 type communicationLog struct {
-	Created time.Time `json:"created"`
-	ID      string    `json:"id"`
-	Type    string    `json:"type"`
-	User    string    `json:"user"`
+	Created time.Time            `json:"created"`
+	ID      string               `json:"id"`
+	Type    communicationLogType `json:"type"`
+	User    string               `json:"user"`
 }
 type communication struct {
-	Context  []resourceStub     `json:"context"`
 	Created  time.Time          `json:"created"`
 	ID       string             `json:"id"`
 	Log      []communicationLog `json:"log"`
+	Related  []resourceStub     `json:"related"`
 	Response string             `json:"response"`
 	Source   string             `json:"source"`
 	Status   string             `json:"status"`
-	Type     string             `json:"type"`
+	Type     communicationType  `json:"type"`
 	URI      string             `json:"uri"`
 }
-type communicationStub struct {
-	Created time.Time `json:"created"`
-	ID      string    `json:"id"`
-	Source  string    `json:"source"`
-	Status  string    `json:"status"`
-	Type    string    `json:"type"`
-	URI     string    `json:"uri"`
-}
+type resourceType string
+
+const (
+	resourceTypeUnknown          resourceType = "unknown"
+	resourceTypeEmail                         = "email"
+	resourceTypeReportCompliance              = "publicreport.compliance"
+	resourceTypeReportNuisance                = "publicreport.nuisance"
+	resourceTypeReportWater                   = "publicreport.water"
+	resourceTypeText                          = "text"
+)
+
 type resourceStub struct {
-	Created time.Time `json:"created"`
-	Type    string    `json:"type"`
-	URI     string    `json:"uri"`
+	Created time.Time    `json:"created"`
+	Type    resourceType `json:"type"`
+	URI     string       `json:"uri"`
 }
 
 func (res *communicationR) Get(ctx context.Context, r *http.Request, user platform.User, query QueryParams) (communication, *nhttp.ErrorWithStatus) {
-	comm_id, error_with_status := communicationIDFromMux(r)
+	comm_id, error_with_status := res.router.IDFromMux(r)
 	if error_with_status != nil {
 		return communication{}, error_with_status
 	}
 	return res.hydratedCommunicationFromID(ctx, user, int32(comm_id))
 }
-func (res *communicationR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) ([]communicationStub, *nhttp.ErrorWithStatus) {
+func (res *communicationR) List(ctx context.Context, r *http.Request, user platform.User, query QueryParams) ([]communication, *nhttp.ErrorWithStatus) {
 	comms, err := platform.CommunicationsForOrganization(ctx, int64(user.Organization.ID))
 	if err != nil {
 		return nil, nhttp.NewError("nuisance report query: %w", err)
@@ -81,13 +94,17 @@ func (res *communicationR) List(ctx context.Context, r *http.Request, user platf
 	for _, pr := range public_reports {
 		public_report_id_to_report[pr.ID] = pr
 	}
-	result := make([]communicationStub, len(comms))
+	result := make([]communication, len(comms))
 	for i, comm := range comms {
 		public_report, ok := public_report_id_to_report[*comm.SourceReportID]
 		if !ok {
 			return nil, nhttp.NewError("lookup report id %d failed", comm.SourceReportID)
 		}
-		c, e := res.hydrateCommunicationStub(comm, &public_report)
+		related_records, err := platform.CommunicationRelatedRecords(ctx, user, &comm)
+		if err != nil {
+			return nil, nhttp.NewError("related records: %w", err)
+		}
+		c, e := res.hydrateCommunication(comm, related_records, &public_report)
 		if e != nil {
 			return nil, e
 		}
@@ -110,59 +127,89 @@ func (res *communicationR) MarkPossibleIssue(ctx context.Context, r *http.Reques
 func (res *communicationR) MarkPossibleResolved(ctx context.Context, r *http.Request, user platform.User, cmr communicationMarkRequest) (communication, *nhttp.ErrorWithStatus) {
 	return res.markCommunication(ctx, r, user, "possible-resolved", platform.CommunicationMarkPossibleResolved)
 }
-func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, public_report *modelpublicreport.Report) (communication, *nhttp.ErrorWithStatus) {
-	stub, e := res.hydrateCommunicationStub(comm, public_report)
-	if e != nil {
-		return communication{}, e
+func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, related_records []platform.RelatedRecord, public_report *modelpublicreport.Report) (communication, *nhttp.ErrorWithStatus) {
+	var err error
+	source_uri := "unknown"
+	type_ := communicationTypeUnknown
+	if comm.SourceReportID != nil && public_report != nil {
+		source_uri, err = reportURI(res.router, "", public_report.PublicID)
+		if err != nil {
+			return communication{}, nhttp.NewError("gen report URI: %w", err)
+		}
+		switch public_report.ReportType {
+		case modelpublicreport.Reporttype_Compliance:
+			type_ = communicationTypeReportCompliance
+		case modelpublicreport.Reporttype_Nuisance:
+			type_ = communicationTypeReportNuisance
+		case modelpublicreport.Reporttype_Water:
+			type_ = communicationTypeReportWater
+		default:
+			type_ = communicationTypeUnknown
+		}
+	} else if comm.SourceEmailLogID != nil {
+		source_uri, err = emailURI(*res.router, *comm.SourceEmailLogID)
+		if err != nil {
+			return communication{}, nhttp.NewError("gen email URI: %w", err)
+		}
+		type_ = "email"
+	} else if comm.SourceTextLogID != nil {
+		source_uri, err = textURI(*res.router, *comm.SourceTextLogID)
+		if err != nil {
+			return communication{}, nhttp.NewError("gen email URI: %w", err)
+		}
+		source_uri = "text"
+	}
+	uri, err := res.router.IDToURI("communication.ByIDGet", int(comm.ID))
+	if err != nil {
+		return communication{}, nhttp.NewError("gen comm uri: %w", err)
+	}
+	related := make([]resourceStub, len(related_records))
+	for i, rr := range related_records {
+		var uri string
+		var r_type resourceType
+		switch rr.Type {
+		case platform.RelatedRecordTypeEmail:
+			r_type = resourceTypeEmail
+			uri, err = res.router.IDStrToURI("email.GetByID", rr.ID)
+		case platform.RelatedRecordTypeReportCompliance:
+			r_type = resourceTypeReportCompliance
+			uri, err = res.router.IDStrToURI("publicreport.compliance.GetByID", rr.ID)
+		case platform.RelatedRecordTypeReportNuisance:
+			r_type = resourceTypeReportNuisance
+			uri, err = res.router.IDStrToURI("publicreport.nuisance.GetByID", rr.ID)
+		case platform.RelatedRecordTypeReportWater:
+			r_type = resourceTypeReportWater
+			uri, err = res.router.IDStrToURI("publicreport.water.GetByID", rr.ID)
+		case platform.RelatedRecordTypeText:
+			r_type = resourceTypeText
+			uri, err = res.router.IDStrToURI("text.GetByID", rr.ID)
+		default:
+			r_type = resourceTypeUnknown
+			err = fmt.Errorf("unrecognized related record type '%s'", rr.Type)
+		}
+		if err != nil {
+			return communication{}, nhttp.NewError("related record hydration: %w", err)
+		}
+		related[i] = resourceStub{
+			Created: rr.Created,
+			Type:    r_type,
+			URI:     uri,
+		}
+		log.Debug().Str("created", rr.Created.String()).Str("id", rr.ID).Str("uri", uri).Msg("related record")
 	}
 	response, err := responseURI(*res.router, comm)
 	if err != nil {
 		return communication{}, nhttp.NewError("gen response URI: %w", err)
 	}
 	return communication{
-		Created:  stub.Created,
-		ID:       stub.ID,
+		Created:  comm.Created,
+		ID:       strconv.Itoa(int(comm.ID)),
+		Related:  related,
 		Response: response,
-		Source:   stub.Source,
-		Status:   stub.Status,
-		Type:     stub.Type,
-		URI:      stub.URI,
-	}, nil
-}
-func (res *communicationR) hydrateCommunicationStub(comm modelpublic.Communication, public_report *modelpublicreport.Report) (communicationStub, *nhttp.ErrorWithStatus) {
-	var err error
-	source_uri := "unknown"
-	type_ := "unknown"
-	if comm.SourceReportID != nil && public_report != nil {
-		source_uri, err = reportURI(res.router, "", public_report.PublicID)
-		if err != nil {
-			return communicationStub{}, nhttp.NewError("gen report URI: %w", err)
-		}
-		type_ = "publicreport." + public_report.ReportType.String()
-	} else if comm.SourceEmailLogID != nil {
-		source_uri, err = emailURI(*res.router, *comm.SourceEmailLogID)
-		if err != nil {
-			return communicationStub{}, nhttp.NewError("gen email URI: %w", err)
-		}
-		type_ = "email"
-	} else if comm.SourceTextLogID != nil {
-		source_uri, err = textURI(*res.router, *comm.SourceTextLogID)
-		if err != nil {
-			return communicationStub{}, nhttp.NewError("gen email URI: %w", err)
-		}
-		source_uri = "text"
-	}
-	uri, err := res.router.IDToURI("communication.ByIDGet", int(comm.ID))
-	if err != nil {
-		return communicationStub{}, nhttp.NewError("gen comm uri: %w", err)
-	}
-	return communicationStub{
-		Created: comm.Created,
-		ID:      strconv.Itoa(int(comm.ID)),
-		Source:  source_uri,
-		Status:  comm.Status.String(),
-		Type:    type_,
-		URI:     uri,
+		Source:   source_uri,
+		Status:   comm.Status.String(),
+		Type:     type_,
+		URI:      uri,
 	}, nil
 }
 
@@ -184,14 +231,18 @@ func (res *communicationR) hydratedCommunicationFromID(ctx context.Context, user
 		}
 		public_report = public_reports[0]
 	}
+	related_records, err := platform.CommunicationRelatedRecords(ctx, user, comm)
+	if err != nil {
+		return communication{}, nhttp.NewError("related records: %w", err)
+	}
 
-	return res.hydrateCommunication(*comm, &public_report)
+	return res.hydrateCommunication(*comm, related_records, &public_report)
 }
 
 type markFunc = func(context.Context, platform.User, int32) error
 
 func (res *communicationR) markCommunication(ctx context.Context, r *http.Request, user platform.User, status string, m markFunc) (communication, *nhttp.ErrorWithStatus) {
-	comm_id, err_with_status := communicationIDFromMux(r)
+	comm_id, err_with_status := res.router.IDFromMux(r)
 	if err_with_status != nil {
 		return communication{}, err_with_status
 	}
@@ -200,18 +251,6 @@ func (res *communicationR) markCommunication(ctx context.Context, r *http.Reques
 		return communication{}, nhttp.NewError("failed to mark %d: %w", comm_id, err)
 	}
 	return res.hydratedCommunicationFromID(ctx, user, int32(comm_id))
-}
-func communicationIDFromMux(r *http.Request) (int, *nhttp.ErrorWithStatus) {
-	vars := mux.Vars(r)
-	comm_id_str := vars["id"]
-	if comm_id_str == "" {
-		return 0, nhttp.NewBadRequest("no id provided")
-	}
-	comm_id, err := strconv.Atoi(comm_id_str)
-	if err != nil {
-		return 0, nhttp.NewBadRequest("can't turn report ID into an int: %w", err)
-	}
-	return comm_id, nil
 }
 func responseURI(r router, comm modelpublic.Communication) (string, error) {
 	if comm.ResponseEmailLogID != nil {
@@ -229,4 +268,3 @@ func emailURI(r router, id int32) (string, error) {
 func textURI(r router, id int32) (string, error) {
 	return "fake text uri", nil
 }
-

@@ -28,6 +28,14 @@ func ReportInsert(ctx context.Context, txn db.Ex, m model.Report) (model.Report,
 		RETURNING(table.Report.AllColumns)
 	return db.ExecuteOneTx[model.Report](ctx, txn, statement)
 }
+func ReportsFromAddressID(ctx context.Context, txn db.Ex, org_id int64, address_id int64) ([]model.Report, error) {
+	statement := table.Report.SELECT(
+		table.Report.AllColumns,
+	).FROM(table.Report).
+		WHERE(table.Report.AddressID.EQ(postgres.Int(address_id)).AND(
+			table.Report.OrganizationID.EQ(postgres.Int(org_id))))
+	return db.ExecuteManyTx[model.Report](ctx, txn, statement)
+}
 func ReportFromID(ctx context.Context, report_id int64) (model.Report, error) {
 	statement := table.Report.SELECT(
 		table.Report.AllColumns,
@@ -86,6 +94,14 @@ func ReportFromPublicIDForOrg(ctx context.Context, txn db.Ex, public_id string, 
 		return nil, fmt.Errorf("query: %w", err)
 	}
 	return &result, nil
+}
+func ReportsFromReporterName(ctx context.Context, txn db.Ex, org_id int64, name string) ([]model.Report, error) {
+	statement := table.Report.SELECT(
+		table.Report.AllColumns,
+	).FROM(table.Report).
+		WHERE(table.Report.ReporterName.EQ(postgres.String(name)).AND(
+			table.Report.OrganizationID.EQ(postgres.Int(org_id))))
+	return db.ExecuteManyTx[model.Report](ctx, txn, statement)
 }
 func ReportsUnreviewedForOrganization(ctx context.Context, txn db.Ex, org_id int64) ([]model.Report, error) {
 	statement := table.Report.SELECT(

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
@@ -18,6 +19,18 @@ func NewRouter(r *mux.Router) *router {
 	return &router{
 		router: r,
 	}
+}
+func (r *router) IDFromMux(req *http.Request) (int, *nhttp.ErrorWithStatus) {
+	vars := mux.Vars(req)
+	comm_id_str := vars["id"]
+	if comm_id_str == "" {
+		return 0, nhttp.NewBadRequest("no id provided")
+	}
+	comm_id, err := strconv.Atoi(comm_id_str)
+	if err != nil {
+		return 0, nhttp.NewBadRequest("can't turn report ID into an int: %w", err)
+	}
+	return comm_id, nil
 }
 func (r *router) IDFromURI(route string, uri string) (*int, error) {
 	var match mux.RouteMatch

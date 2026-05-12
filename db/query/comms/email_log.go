@@ -18,21 +18,6 @@ func CommunicationInsert(ctx context.Context, txn db.Tx, m model.Communication) 
 		RETURNING(table.Communication.AllColumns)
 	return db.ExecuteOneTx[model.Communication](ctx, txn, statement)
 }
-func CommunicationFromID(ctx context.Context, comm_id int64) (model.Communication, error) {
-	statement := table.Communication.SELECT(
-		table.Communication.AllColumns,
-	).FROM(table.Communication).
-		WHERE(table.Communication.ID.EQ(postgres.Int(comm_id)))
-	return db.ExecuteOne[model.Communication](ctx, statement)
-}
-func CommunicationsFromOrganization(ctx context.Context, org_id int64) ([]model.Communication, error) {
-	statement := table.Communication.SELECT(
-		table.Communication.AllColumns,
-	).FROM(table.Communication).
-		WHERE(table.Communication.OrganizationID.EQ(postgres.Int(org_id))).
-		ORDER_BY(table.Communication.Created.DESC())
-	return db.ExecuteMany[model.Communication](ctx, statement)
-}
 func CommunicationSetStatus(ctx context.Context, txn db.Tx, org_id int64, comm_id int64, status model.Communicationstatus) error {
 	statement := table.Communication.UPDATE().
 		SET(
@@ -50,4 +35,12 @@ func EmailLogFromID(ctx context.Context, id int64) (model.EmailLog, error) {
 	).FROM(table.EmailLog).
 		WHERE(table.EmailLog.ID.EQ(postgres.Int(id)))
 	return db.ExecuteOne[model.EmailLog](ctx, statement)
+}
+func EmailLogsFromAddress(ctx context.Context, address string) ([]model.EmailLog, error) {
+	statement := table.EmailLog.SELECT(
+		table.EmailLog.AllColumns,
+	).FROM(table.EmailLog).
+		WHERE(table.EmailLog.Source.EQ(postgres.String(address)).OR(
+			table.EmailLog.Destination.EQ(postgres.String(address))))
+	return db.ExecuteMany[model.EmailLog](ctx, statement)
 }
