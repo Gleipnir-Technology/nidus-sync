@@ -245,10 +245,12 @@ func userSuggestionRoot(ctx context.Context, user User, query_arg string) ([]*Us
 	return results, nil
 }
 func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User, error) {
+	log.Info().Msg("getUser start")
 	user, err := models.Users.Query(
 		models.Preload.User.Organization(),
 		where,
 	).One(ctx, db.PGInstance.BobDB)
+	log.Info().Msg("getUser done, creating organization")
 	if err != nil {
 		if err.Error() == "No such user" || err.Error() == "sql: no rows in result set" {
 			return nil, &NoUserError{}
@@ -263,6 +265,7 @@ func getUser(ctx context.Context, where mods.Where[*dialect.SelectQuery]) (*User
 	org := newOrganization(user.R.Organization)
 
 	u := newUser(ctx, org, user)
+	log.Info().Msg("done with getUser")
 	return &u, nil
 }
 func extractInitials(name string) string {
