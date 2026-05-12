@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
 	"github.com/rs/zerolog/log"
@@ -211,14 +212,21 @@ func validatePassword(password, hash string) bool {
 }
 
 func validateUser(ctx context.Context, username string, password string) (*platform.User, error) {
+	start := time.Now()
 	passwordHash, err := HashPassword(password)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to hash password: %w", err)
 	}
+	t1 := time.Now()
+	elapsed := t1.Sub(start)
+	log.Info().Int64("elapsed ms", elapsed.Milliseconds()).Msg("calculated hash")
+	t2 := time.Now()
 	user, err := platform.UserByUsername(ctx, username)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to query for user: %w", err)
 	}
+	elapsed = t2.Sub(t1)
+	log.Info().Int64("elapsed ms", elapsed.Milliseconds()).Str("username", username).Msg("queried user")
 	if user == nil {
 		log.Info().Str("username", username).Str("password", redact(password)).Msg("Invalid username")
 		return nil, InvalidUsername{}
