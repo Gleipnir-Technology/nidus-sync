@@ -9,7 +9,7 @@ class ApiClient {
 
 	constructor() {
 		this.client = axios.create({
-			timeout: 10000,
+			timeout: 30000,
 			withCredentials: true,
 		});
 

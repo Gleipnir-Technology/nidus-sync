@@ -212,6 +212,7 @@ func validatePassword(password, hash string) bool {
 }
 
 func validateUser(ctx context.Context, username string, password string) (*platform.User, error) {
+	log.Info().Str("username", username).Msg("begin validateUser. Hashing...")
 	start := time.Now()
 	passwordHash, err := HashPassword(password)
 	if err != nil {
