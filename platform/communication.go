@@ -113,8 +113,9 @@ func CommunicationRelatedRecords(ctx context.Context, user User, comm *modelpubl
 			for _, r := range reports_by_address {
 				record_type := recordTypeFromReportType(r.ReportType)
 				result = append(result, RelatedRecord{
-					ID:   r.PublicID,
-					Type: record_type,
+					Created: r.Created,
+					ID:      r.PublicID,
+					Type:    record_type,
 				})
 			}
 		}
