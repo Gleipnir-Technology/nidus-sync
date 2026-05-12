@@ -63,10 +63,10 @@ func CommunicationRelatedRecords(ctx context.Context, user User, comm *modelpubl
 		if err != nil {
 			return result, fmt.Errorf("email log from ID: %w", err)
 		}
-		for _, log := range email_logs {
+		for _, l := range email_logs {
 			result = append(result, RelatedRecord{
-				Created: log.Created,
-				ID:      strconv.Itoa(int(log.ID)),
+				Created: l.Created,
+				ID:      strconv.Itoa(int(l.ID)),
 				Type:    RelatedRecordTypeEmail,
 			})
 		}
@@ -79,10 +79,10 @@ func CommunicationRelatedRecords(ctx context.Context, user User, comm *modelpubl
 		if err != nil {
 			return result, fmt.Errorf("text log from ID: %w", err)
 		}
-		for _, log := range text_logs {
+		for _, l := range text_logs {
 			result = append(result, RelatedRecord{
-				Created: log.Created,
-				ID:      strconv.Itoa(int(log.ID)),
+				Created: l.Created,
+				ID:      strconv.Itoa(int(l.ID)),
 				Type:    RelatedRecordTypeText,
 			})
 		}

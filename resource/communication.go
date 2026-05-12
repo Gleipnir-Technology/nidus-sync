@@ -11,7 +11,7 @@ import (
 	modelpublicreport "github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/publicreport/model"
 	nhttp "github.com/Gleipnir-Technology/nidus-sync/http"
 	"github.com/Gleipnir-Technology/nidus-sync/platform"
-	"github.com/rs/zerolog/log"
+	//"github.com/rs/zerolog/log"
 )
 
 type communicationR struct {
@@ -195,7 +195,6 @@ func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, 
 			Type:    r_type,
 			URI:     uri,
 		}
-		log.Debug().Str("created", rr.Created.String()).Str("id", rr.ID).Str("uri", uri).Msg("related record")
 	}
 	response, err := responseURI(*res.router, comm)
 	if err != nil {
