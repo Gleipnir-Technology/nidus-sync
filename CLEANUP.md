@@ -279,6 +279,89 @@ Empty placeholder file. Remove.
 
 ---
 
+## 13. Normalize Query Function Signatures to `db.Ex`
+
+**Status:** The `db/query/` packages have inconsistent transaction parameter conventions. Some functions accept `db.Ex`, some accept `db.Tx` (concrete type), some accept `bob.Tx`, and some accept no transaction parameter at all (using the global `db.PGInstance` singleton). This blocks transaction-based testing and creates inconsistent patterns.
+
+### 13a. Functions missing transaction parameter (use global pool)
+
+These functions have no `txn` parameter and call `db.ExecuteOne`/`db.ExecuteMany`/`db.ExecuteNone` which use the global `PGInstance.PGXPool`:
+
+**`db/query/public/communication.go`:**
+- `CommunicationFromID(ctx, comm_id int64)` → add `txn db.Ex`, switch to `ExecuteOneTx`
+- `CommunicationsFromOrganization(ctx, org_id int64)` → add `txn db.Ex`, switch to `ExecuteManyTx`
+
+**`db/query/publicreport/report.go`:**
+- `ReportFromID(ctx, report_id int64)` → add `txn db.Ex`, switch to `ExecuteOneTx`
+- `ReportsFromIDs(ctx, report_ids []int64)` → add `txn db.Ex`, switch to `ExecuteManyTx`
+
+**`db/query/arcgis/account.go`:**
+- `AccountFromID(ctx, org_id string)` → add `txn db.Ex`, switch to `ExecuteOneTx`
+
+**`db/query/arcgis/oauth.go` (all 9 functions use global pool):**
+- `OAuthTokenInsert`, `OAuthTokenInvalidate`, `OAuthTokensValid`, `OAuthTokenFromID`, `OAuthTokenForUser`, `OAuthTokensForUser`, `OAuthTokenForUserExists`, `OAuthTokenUpdateAccessToken`, `OAuthTokenUpdateRefreshToken`, `OAuthTokenUpdateLicense` — add `txn db.Ex` to all, switch to `ExecuteOneTx`/`ExecuteManyTx`/`ExecuteNoneTx`
+
+**`db/query/arcgis/service_feature.go`:**
+- `ServiceFeatureFromID(ctx, id string)` → add `txn db.Ex`
+- `ServiceFeatureFromURL(ctx, url string)` → add `txn db.Ex`
+
+**`db/query/arcgis/service_map.go`:**
+- `ServiceMapFromID(ctx, id string)` → add `txn db.Ex`
+- `ServiceMapsFromAccountID(ctx, account_id string)` → add `txn db.Ex`
+
+**Caller impact:** All callers will need to be updated to pass a `db.Ex`. Most platform callers either have a `db.Tx` from `db.BeginTxn()` already in scope (e.g., `communicationMark`, `SignalCreateFromPublicreport`) or can pass `db.PGInstance.PGXPool` (which implements `db.Ex`).
+
+### 13b. Functions using `db.Tx` instead of `db.Ex`
+
+These functions accept the concrete `db.Tx` type. While `db.Tx` implements `db.Ex`, using the concrete type prevents callers from passing other `db.Ex` implementors (e.g., `*pgxpool.Pool` or mock implementations). Change all to accept `db.Ex`:
+
+**`db/query/public/communication.go`:**
+- `CommunicationInsert(ctx, txn db.Tx, m)` → `txn db.Ex`
+- `CommunicationSetStatus(ctx, txn db.Tx, ...)` → `txn db.Ex`
+
+**`db/query/public/communication_log_entry.go`:**
+- `CommunicationLogEntryInsert(ctx, txn db.Tx, m)` → `txn db.Ex`
+
+**`db/query/publicreport/compliance.go`:**
+- `ComplianceFromID(ctx, txn db.Tx, report_id)` → `txn db.Ex`
+
+### 13c. Functions using `bob.Tx` instead of `db.Ex`
+
+These are Bob-specific and need to be migrated to Jet's `db.Ex` pattern. This is part of the broader Bob→Jet migration (item 1):
+
+**`db/query/arcgis/account.go`:**
+- `AccountInsert(ctx, txn bob.Tx, m)` → `txn db.Ex`, switch from `ExecuteOneTxBob` to `ExecuteOneTx`
+
+**`db/query/arcgis/service_feature.go`:**
+- `ServiceFeatureInsert(ctx, txn bob.Tx, m)` → `txn db.Ex`, switch from `ExecuteOneTxBob` to `ExecuteOneTx`
+
+**`db/query/arcgis/service_map.go`:**
+- `ServiceMapInsert(ctx, txn bob.Tx, m)` → `txn db.Ex`, switch from `ExecuteOneTxBob` to `ExecuteOneTx`
+
+**`db/query/arcgis/user.go`:**
+- `UserInsert(ctx, txn bob.Tx, m)` → `txn db.Ex`, switch from `ExecuteOneTxBob` to `ExecuteOneTx`
+
+**`db/query/arcgis/user_privileges.go`:**
+- `UserPrivilegesDeleteByUserID(ctx, txn bob.Tx, id)` → `txn db.Ex`
+- `UserPrivilegeInsert(ctx, txn bob.Tx, m)` → `txn db.Ex`
+
+### 13d. Bug: `AddressFromID` ignores its transaction parameter
+
+**`db/query/public/address.go` `AddressFromID`:** takes `txn db.Ex` but calls `db.ExecuteOne` (global pool) instead of `db.ExecuteOneTx`. This works when `txn` is the pool itself (callers pass `db.PGInstance.PGXPool`) but is a latent bug when called from within a transaction (caller in `platform/signal.go:85` and `platform/compliance.go:37`). Fix by switching to `db.ExecuteOneTx`.
+
+Same bug in `AddressFromComplianceReportRequestID` (line 31 uses `ExecuteOne` instead of `ExecuteOneTx`).
+
+### 13e. Migration strategy
+
+1. Fix 13d first (one-character bugs — swap `ExecuteOne` → `ExecuteOneTx`)
+2. Convert 13b next (signature-compatible change — `db.Tx` → `db.Ex` is widening)
+3. Convert 13a next (add `txn db.Ex` parameter, update all callers)
+4. Convert 13c last (part of broader Bob→Jet migration, item 1)
+
+After all conversions, every query function will have a consistent `(ctx context.Context, txn db.Ex, ...)` signature, enabling uniform transaction-based testing.
+
+---
+
 ## Priority Summary
 
 1. **High impact, low effort:**
@@ -288,12 +371,15 @@ Empty placeholder file. Remove.
    - ~~Remove `query.go` commented-out code~~ ✅
    - Remove `static/gen/main.js` stale artifact
    - Remove `static/css/placeholder`
+   - **Fix `AddressFromID`/`AddressFromComplianceReportRequestID` — swap `ExecuteOne` → `ExecuteOneTx`** (item 13d)
+   - **Convert `db.Tx` → `db.Ex` in query functions** (item 13b)
 
 2. **Medium impact, medium effort:**
    - Remove unused Go HTML templates (confirm which are still active first)
    - Remove unused `static/js/` files (verify against active templates)
    - Remove `arcgis-go` submodule
    - Clean up Nix devShell
+   - **Add `txn db.Ex` to query functions missing it** (item 13a)
 
 3. **High impact, high effort:**
    - Complete Bob → Jet migration across all schemas
@@ -301,3 +387,4 @@ Empty placeholder file. Remove.
    - Remove Bob from go.mod
    - Consolidate `api/` and `resource/` handler patterns
    - Remove `html/` package (after all Go templates are gone)
+   - **Convert `bob.Tx` → `db.Ex` in arcgis query functions** (item 13c)
