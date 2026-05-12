@@ -170,19 +170,19 @@ func (res *communicationR) hydrateCommunication(comm modelpublic.Communication, 
 		switch rr.Type {
 		case platform.RelatedRecordTypeEmail:
 			r_type = resourceTypeEmail
-			uri, err = res.router.IDStrToURI("email.GetByID", rr.ID)
+			uri, err = res.router.IDStrToURI("email.ByIDGet", rr.ID)
 		case platform.RelatedRecordTypeReportCompliance:
 			r_type = resourceTypeReportCompliance
-			uri, err = res.router.IDStrToURI("publicreport.compliance.GetByID", rr.ID)
+			uri, err = res.router.IDStrToURI("publicreport.compliance.ByIDGet", rr.ID)
 		case platform.RelatedRecordTypeReportNuisance:
 			r_type = resourceTypeReportNuisance
-			uri, err = res.router.IDStrToURI("publicreport.nuisance.GetByID", rr.ID)
+			uri, err = res.router.IDStrToURI("publicreport.nuisance.ByIDGet", rr.ID)
 		case platform.RelatedRecordTypeReportWater:
 			r_type = resourceTypeReportWater
-			uri, err = res.router.IDStrToURI("publicreport.water.GetByID", rr.ID)
+			uri, err = res.router.IDStrToURI("publicreport.water.ByIDGet", rr.ID)
 		case platform.RelatedRecordTypeText:
 			r_type = resourceTypeText
-			uri, err = res.router.IDStrToURI("text.GetByID", rr.ID)
+			uri, err = res.router.IDStrToURI("text.ByIDGet", rr.ID)
 		default:
 			r_type = resourceTypeUnknown
 			err = fmt.Errorf("unrecognized related record type '%s'", rr.Type)
