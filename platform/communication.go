@@ -8,12 +8,49 @@ import (
 
 	"github.com/Gleipnir-Technology/nidus-sync/db"
 	"github.com/Gleipnir-Technology/nidus-sync/db/gen/nidus-sync/public/model"
+	querycomms "github.com/Gleipnir-Technology/nidus-sync/db/query/comms"
 	querypublic "github.com/Gleipnir-Technology/nidus-sync/db/query/public"
+	querypublicreport "github.com/Gleipnir-Technology/nidus-sync/db/query/publicreport"
 	"github.com/Gleipnir-Technology/nidus-sync/lint"
 	"github.com/Gleipnir-Technology/nidus-sync/platform/event"
 	"github.com/rs/zerolog/log"
 )
 
+type RelatedRecord struct {
+	ID   int32
+	Type string
+}
+
+func CommunicationRelatedRecords(ctx context.Context, user User, comm *model.Communication) ([]RelatedRecord, error) {
+	// Gather associated records
+	//  * address
+	//  * phone number
+	//  * email
+	//  * name
+	result := make([]RelatedRecord, 0)
+	if comm.SourceEmailLogID != nil {
+		email_log, err := querycomms.EmailLogFromID(ctx, int64(*comm.SourceEmailLogID))
+		if err != nil {
+			return result, fmt.Errorf("email log from ID: %w", err)
+		}
+		log.Debug().Int32("id", email_log.ID).Send()
+	}
+	if comm.SourceTextLogID != nil {
+		text_log, err := querycomms.TextLogFromID(ctx, int64(*comm.SourceTextLogID))
+		if err != nil {
+			return result, fmt.Errorf("text log from ID: %w", err)
+		}
+		log.Debug().Int32("id", text_log.ID).Send()
+	}
+	if comm.SourceReportID != nil {
+		report, err := querypublicreport.ReportFromID(ctx, int64(*comm.SourceReportID))
+		if err != nil {
+			return result, fmt.Errorf("report from ID: %w", err)
+		}
+		log.Debug().Int32("id", report.ID).Send()
+	}
+	return result, nil
+}
 func CommunicationsForOrganization(ctx context.Context, org_id int64) ([]model.Communication, error) {
 	return querypublic.CommunicationsFromOrganization(ctx, org_id)
 }

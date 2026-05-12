@@ -6,6 +6,7 @@ require (
 	github.com/Gleipnir-Technology/arcgis-go v0.0.12
 	github.com/Gleipnir-Technology/bob v0.42.5
 	github.com/Gleipnir-Technology/go-geojson2h3/v2 v2.0.0
+	github.com/Gleipnir-Technology/jet v0.0.0-20260509014340-4474319e732c
 	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
 	github.com/alexedwards/scs/pgxstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
@@ -16,7 +17,6 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/getsentry/sentry-go v0.42.0
 	github.com/getsentry/sentry-go/zerolog v0.42.0
-	github.com/go-jet/jet/v2 v2.14.1
 	github.com/google/go-querystring v1.2.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
@@ -45,7 +45,6 @@ require (
 )
 
 require (
-	github.com/Gleipnir-Technology/jet v0.0.0-20260509014340-4474319e732c // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
@@ -65,6 +64,7 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/pgtype v1.14.4 // indirect
+	github.com/jackc/pgx/v4 v4.18.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/klauspost/compress v1.18.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
@@ -107,4 +107,4 @@ require (
 
 // replace github.com/stephenafamo/bob v0.42.0 => ../bob
 // replace github.com/Gleipnir-Technology/arcgis-go v0.0.12 => ./arcgis-go
-replace github.com/go-jet/jet/v2 v2.14.1 => ../jet
+// replace github.com/go-jet/jet/v2 v2.14.1 => ../jet
