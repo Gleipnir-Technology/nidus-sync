@@ -15,6 +15,7 @@ import (
 
 var schemas []string = []string{
 	"arcgis",
+	"comms",
 	"public",
 	"publicreport",
 	"stadia",
